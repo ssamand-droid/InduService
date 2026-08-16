@@ -1,0 +1,327 @@
+/* src/components/editor/TiptapEditor.css */
+.tiptap-editor-wrapper {
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.tiptap-editor-wrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.tiptap-editor-wrapper.fullscreen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  border-radius: 0;
+  border: none;
+  background: white;
+}
+
+/* منو بار */
+.tiptap-menu-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.tiptap-menu-bar .menu-group {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tiptap-menu-bar .menu-divider {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
+  margin: 0 4px;
+}
+
+.tiptap-menu-bar button {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  border-radius: 6px;
+  color: #475569;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.tiptap-menu-bar button:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.tiptap-menu-bar button.is-active {
+  background: #3b82f6;
+  color: white;
+}
+
+.tiptap-menu-bar button:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.tiptap-menu-bar .highlight-icon {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* منطقه ویرایش */
+.tiptap-editor-area {
+  padding: 20px;
+  min-height: 300px;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.tiptap-editor-wrapper.fullscreen .tiptap-editor-area {
+  max-height: calc(100vh - 150px);
+  min-height: calc(100vh - 150px);
+}
+
+/* محتوای ادیتور */
+.tiptap-editor-content {
+  outline: none;
+  direction: rtl;
+  font-size: 16px;
+  line-height: 2;
+  color: #1e293b;
+  min-height: 200px;
+}
+
+.tiptap-editor-content:focus {
+  outline: none;
+}
+
+/* Placeholder */
+.tiptap-editor-content p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: right;
+  color: #94a3b8;
+  pointer-events: none;
+  height: 0;
+}
+
+/* استایل‌های محتوا */
+.tiptap-editor-content h1 {
+  font-size: 28px;
+  font-weight: 700;
+  margin: 20px 0 12px;
+  color: #0f172a;
+}
+
+.tiptap-editor-content h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 18px 0 10px;
+  color: #1e293b;
+}
+
+.tiptap-editor-content h3 {
+  font-size: 20px;
+  font-weight: 600;
+  margin: 16px 0 8px;
+  color: #334155;
+}
+
+.tiptap-editor-content h4 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 14px 0 8px;
+  color: #475569;
+}
+
+.tiptap-editor-content p {
+  margin: 0 0 12px;
+  line-height: 2;
+}
+
+.tiptap-editor-content ul,
+.tiptap-editor-content ol {
+  padding-right: 20px;
+  margin: 10px 0;
+}
+
+.tiptap-editor-content li {
+  margin: 4px 0;
+  line-height: 1.8;
+}
+
+.tiptap-editor-content blockquote {
+  border-right: 4px solid #3b82f6;
+  padding: 12px 20px;
+  margin: 16px 0;
+  background: #f1f5f9;
+  border-radius: 4px;
+  font-style: italic;
+}
+
+.tiptap-editor-content .tiptap-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 16px 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.tiptap-editor-content .tiptap-link {
+  color: #3b82f6;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.tiptap-editor-content .tiptap-link:hover {
+  color: #2563eb;
+}
+
+.tiptap-editor-content mark {
+  background-color: #fef08a;
+  padding: 2px 4px;
+  border-radius: 2px;
+}
+
+/* جدول */
+.tiptap-editor-content table {
+  border-collapse: collapse;
+  margin: 16px 0;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.tiptap-editor-content table td,
+.tiptap-editor-content table th {
+  border: 1px solid #e2e8f0;
+  padding: 10px 14px;
+  text-align: right;
+}
+
+.tiptap-editor-content table th {
+  background: #f1f5f9;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.tiptap-editor-content table tr:hover {
+  background: #f8fafc;
+}
+
+/* کد */
+.tiptap-editor-content code {
+  background: #f1f5f9;
+  color: #e11d48;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.tiptap-editor-content pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  padding: 16px 20px;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 16px 0;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.tiptap-editor-content pre code {
+  background: transparent;
+  color: inherit;
+  padding: 0;
+}
+
+/* فوتر */
+.tiptap-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  font-size: 13px;
+  color: #64748b;
+}
+
+.tiptap-footer .footer-info {
+  display: flex;
+  gap: 16px;
+}
+
+.tiptap-footer .footer-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.tiptap-footer button {
+  background: none;
+  border: none;
+  color: #64748b;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.tiptap-footer button:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.character-count {
+  font-weight: 500;
+}
+
+.character-count.warning {
+  color: #f59e0b;
+}
+
+.character-count.danger {
+  color: #ef4444;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tiptap-menu-bar {
+    padding: 6px 8px;
+    gap: 1px;
+  }
+
+  .tiptap-menu-bar button {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .tiptap-editor-area {
+    padding: 12px;
+    min-height: 200px;
+  }
+
+  .tiptap-editor-content {
+    font-size: 15px;
+  }
+}

@@ -1,0 +1,22 @@
+# ============ Import ============
+python manage.py import_products data/products.xlsx --force
+python manage.py import_services data/services.xlsx --force
+python manage.py import_blog data/blog.xlsx --force
+# Import کاربران
+python manage.py import_users data/users.xlsx --force
+
+# ============ Export ============
+python manage.py export_products data/products_export.xlsx
+python manage.py export_services data/services_export.xlsx
+python manage.py export_blog data/blog_export.xlsx
+# Export کامل
+python manage.py export_all data/full_export.xlsx
+
+# Export فقط کاربران
+python manage.py export_users data/users_export.xlsx
+
+# Export فقط خدمات
+python manage.py export_services data/services_export.xlsx
+
+# Export فقط محصولات
+python manage.py export_products data/products_export.xlsx

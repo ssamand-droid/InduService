@@ -1,0 +1,90 @@
+# =========================================================
+# InduService - Git Ignore
+# =========================================================
+
+# -------------------------
+# Python
+# -------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Django
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# Django generated files
+staticfiles/
+media/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# -------------------------
+# Node / React / Vite
+# -------------------------
+node_modules/
+dist/
+.vite/
+
+# Environment
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
+# -------------------------
+# Testing / Coverage
+# -------------------------
+.coverage
+.coverage.*
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+
+# -------------------------
+# IDE
+# -------------------------
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+.idea/
+*.iml
+
+# -------------------------
+# OS
+# -------------------------
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# -------------------------
+# Temporary files
+# -------------------------
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# -------------------------
+# Build / cache
+# -------------------------
+.cache/
+.parcel-cache/
+
+# -------------------------
+# Local backups
+# -------------------------
+*.bak
+*.backup

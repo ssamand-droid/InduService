@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"><metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description><dc:creator>RealFaviconGenerator</dc:creator><dc:source>https://realfavicongenerator.net</dc:source></rdf:Description></rdf:RDF></metadata><rect width="120" height="120" fill="#FFFFFF"></rect><g transform="translate(60, 60)">
+    <polygon points="0,-50 43,-25 43,25 0,50 -43,25 -43,-25" fill="none" stroke="#0B2B5B" stroke-width="6" stroke-linejoin="round"></polygon>
+    <path d="M 43,-25 Q 70,0 43,25" fill="none" stroke="#F15A24" stroke-width="6" stroke-linecap="round"></path>
+    <circle cx="0" cy="0" r="16" fill="#0B2B5B"></circle>
+    <circle cx="0" cy="-50" r="5" fill="#F15A24"></circle>
+    <circle cx="0" cy="50" r="5" fill="#F15A24"></circle>
+  </g></svg>
