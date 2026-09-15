@@ -31,7 +31,7 @@ function DashboardPage() {
 
   // حالت لودینگ
   if (isLoading) return <LoadingDashboard />;
-  
+
   // عدم احراز هویت - مهمترین شرط
   if (!isAuthenticated || !user) {
     console.log('DashboardPage - Redirecting to login');
@@ -61,10 +61,10 @@ function DashboardPage() {
           <div className="relative">
             {/* راهنمای گام‌ها (فقط برای کاربران جدید) */}
             <OnboardingGuide />
-            
+
             {/* بنر تکمیل پروفایل */}
             <ProfileIncompleteBanner />
-            
+
             {/* محتوای اصلی داشبورد فروشنده */}
             <SellerDashboard />
           </div>
@@ -98,9 +98,9 @@ export const RoleBadge = ({ role }) => {
     seller: { label: 'ارائه‌دهنده خدمت', icon: '🔧', color: 'green' },
     admin: { label: 'مدیر سیستم', icon: '👑', color: 'purple' },
   };
-  
+
   const info = roleInfo[role] || { label: role, icon: '👤', color: 'gray' };
-  
+
   return (
     <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 bg-${info.color}-50 text-${info.color}-700 rounded-full text-xs font-medium`}>
       <span>{info.icon}</span>
@@ -112,7 +112,7 @@ export const RoleBadge = ({ role }) => {
 // هدر مشترک داشبورد
 export const DashboardHeader = ({ title, subtitle, user, actions }) => {
   return (
-    <div  data-tour="dashboard" className="bg-white border-b border-slate-200 sticky top-0 z-20">
+    <div className="bg-white border-b border-slate-200 sticky top-0 z-20">
       <div className="container-custom py-4 md:py-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -122,19 +122,19 @@ export const DashboardHeader = ({ title, subtitle, user, actions }) => {
             </div>
             <p className="text-slate-500 text-sm">{subtitle}</p>
           </div>
-          
+
           {actions && (
             <div className="flex items-center gap-3">
               {actions}
             </div>
           )}
-          
+
           {user && (
             <div className="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-2">
               {user.profile?.avatar ? (
-                <img 
-                  src={user.profile.avatar} 
-                  alt={user.full_name} 
+                <img
+                  src={user.profile.avatar}
+                  alt={user.full_name}
                   className="w-10 h-10 rounded-full object-cover border-2 border-white shadow"
                 />
               ) : (
@@ -163,7 +163,7 @@ export const StatsCard = ({ title, value, icon: Icon, trend, color = 'blue' }) =
     purple: 'bg-purple-50 text-purple-600',
     red: 'bg-red-50 text-red-600',
   };
-  
+
   return (
     <div className="bg-white rounded-2xl border border-slate-200 p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1">
       <div className="flex items-center justify-between mb-4">
@@ -227,7 +227,7 @@ export const DashboardTable = ({ columns, data, loading, onRowClick }) => {
       </div>
     );
   }
-  
+
   if (data.length === 0) {
     return (
       <div className="text-center py-12 bg-slate-50 rounded-2xl">
@@ -236,7 +236,7 @@ export const DashboardTable = ({ columns, data, loading, onRowClick }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">
@@ -277,14 +277,14 @@ export const TaskCard = ({ title, description, dueDate, status, onAction }) => {
     completed: 'bg-green-100 text-green-700',
     cancelled: 'bg-red-100 text-red-700',
   };
-  
+
   const statusLabels = {
     pending: 'در انتظار',
     in_progress: 'در حال انجام',
     completed: 'تکمیل شده',
     cancelled: 'لغو شده',
   };
-  
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition">
       <div className="flex items-start justify-between mb-3">

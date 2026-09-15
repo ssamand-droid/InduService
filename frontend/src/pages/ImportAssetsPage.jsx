@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { 
-  Upload, FileSpreadsheet, Download, CheckCircle, 
+import {
+  Upload, FileSpreadsheet, Download, CheckCircle,
   AlertTriangle, ArrowRight, Info
 } from 'lucide-react'
 import assetService from '@services/assetService'
@@ -10,7 +10,7 @@ import { Spinner } from '@components/ui'
 const ImportAssetsPage = () => {
   const navigate = useNavigate()
   const fileInputRef = useRef(null)
-  
+
   const [step, setStep] = useState(1) // 1=آپلود, 2=پیش‌نمایش, 3=نتیجه
   const [file, setFile] = useState(null)
   const [importing, setImporting] = useState(false)
@@ -46,7 +46,7 @@ const ImportAssetsPage = () => {
     try {
       const formData = new FormData()
       formData.append('file', file)
-      
+
       const response = await assetService.bulkImport(formData)
       setResult(response.data)
       setStep(3)
@@ -114,8 +114,8 @@ const ImportAssetsPage = () => {
             onDragOver={(e) => e.preventDefault()}
             onClick={() => fileInputRef.current?.click()}
             className={`border-2 border-dashed rounded-2xl p-12 text-center cursor-pointer transition ${
-              file 
-                ? 'border-green-400 bg-green-50' 
+              file
+                ? 'border-green-400 bg-green-50'
                 : 'border-gray-300 hover:border-indigo-400 hover:bg-indigo-50'
             }`}
           >
@@ -126,7 +126,7 @@ const ImportAssetsPage = () => {
               onChange={handleFileChange}
               className="hidden"
             />
-            
+
             {file ? (
               <div>
                 <CheckCircle className="mx-auto text-green-500 mb-3" size={48} />

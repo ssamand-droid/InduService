@@ -9,10 +9,11 @@ import { useAuthStore } from '@stores/authStore'
 export const NotificationBell = () => {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef(null)
-  
+
+  // ✅ همه هوک‌ها در بالای کامپوننت
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const accessToken = useAuthStore((state) => state.accessToken)
-  
+
   const { data: unreadData } = useUnreadCount()
   const { data: notificationsData, isLoading } = useNotifications(1)
   const { mutate: markAsRead } = useMarkAsRead()
@@ -31,6 +32,7 @@ export const NotificationBell = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  // ✅ early return بعد از همه هوک‌ها
   if (!isAuthenticated || !accessToken) {
     return null
   }
@@ -93,24 +95,23 @@ export const NotificationBell = () => {
 
       {isOpen && (
         <>
-          <div 
+          <div
             className="fixed inset-0 bg-black/50 z-40 sm:hidden"
             onClick={() => setIsOpen(false)}
           />
-          
+
           <div className={`
-            fixed sm:absolute 
-            left-0 sm:left-auto sm:right-0 
-            bottom-0 sm:bottom-auto sm:top-full 
-            w-full sm:w-96 
-            max-h-[70vh] sm:max-h-96 
-            rounded-t-2xl sm:rounded-lg 
-            bg-white dark:bg-gray-800 
-            shadow-lg border-t sm:border 
-            border-gray-200 dark:border-gray-700 
+            fixed sm:absolute
+            left-0 sm:left-auto sm:right-0
+            bottom-0 sm:bottom-auto sm:top-full
+            w-full sm:w-96
+            max-h-[70vh] sm:max-h-96
+            rounded-t-2xl sm:rounded-lg
+            bg-white dark:bg-gray-800
+            shadow-lg border-t sm:border
+            border-gray-200 dark:border-gray-700
             z-50
             flex flex-col
-            animate-slide-up sm:animate-none
           `}>
             <div className="sticky top-0 bg-white dark:bg-gray-800 z-10 flex items-center justify-between p-3 border-b border-gray-200 dark:border-gray-700 rounded-t-2xl sm:rounded-t-lg">
               <h3 className="font-medium text-gray-900 dark:text-white">اعلان‌ها</h3>
@@ -123,7 +124,7 @@ export const NotificationBell = () => {
                   خواندن همه
                 </button>
               )}
-              <button 
+              <button
                 onClick={() => setIsOpen(false)}
                 className="sm:hidden text-gray-500 hover:text-gray-700"
               >
@@ -187,25 +188,6 @@ export const NotificationBell = () => {
           </div>
         </>
       )}
-
-      <style>{`
-        @keyframes slideUp {
-          from {
-            transform: translateY(100%);
-          }
-          to {
-            transform: translateY(0);
-          }
-        }
-        .animate-slide-up {
-          animation: slideUp 0.3s ease-out;
-        }
-        @media (min-width: 640px) {
-          .animate-slide-up {
-            animation: none;
-          }
-        }
-      `}</style>
     </div>
   )
 }

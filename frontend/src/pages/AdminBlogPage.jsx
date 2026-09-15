@@ -11,7 +11,7 @@ export default function AdminBlogPage() {
   const [showForm, setShowForm] = useState(false);
   const [editingPost, setEditingPost] = useState(null);
   const [submitting, setSubmitting] = useState(false);
-  
+
   const [formData, setFormData] = useState({
     title: '',
     excerpt: '',
@@ -19,7 +19,7 @@ export default function AdminBlogPage() {
     read_time: 5,
     is_featured: false,
   });
-  
+
   // ✅ State برای محتوای ادیتور
   const [editorContent, setEditorContent] = useState({
     html: '',
@@ -99,7 +99,7 @@ export default function AdminBlogPage() {
         await api.post('/api/blog/posts/', submitData);
         toast.success('مقاله جدید ایجاد شد');
       }
-      
+
       setShowForm(false);
       setEditingPost(null);
       setFormData({ title: '', excerpt: '', status: 'published', read_time: 5, is_featured: false });
@@ -170,8 +170,8 @@ export default function AdminBlogPage() {
                     </td>
                     <td className="p-3">
                       <span className={`px-2 py-1 rounded-full text-xs ${
-                        post.status === 'published' 
-                          ? 'bg-green-100 text-green-800' 
+                        post.status === 'published'
+                          ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'
                       }`}>
                         {post.status === 'published' ? 'منتشر شده' : 'پیش‌نویس'}

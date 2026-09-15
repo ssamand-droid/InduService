@@ -17,13 +17,13 @@ const PlanCard = ({ plan, isCurrentPlan, onSelect, isLoading }) => {
   return (
     <div className={`
       relative rounded-2xl p-6 md:p-8 transition-all duration-300
-      ${plan.is_featured 
-        ? 'border-2 border-indigo-500 shadow-xl shadow-indigo-500/20 scale-105 bg-white dark:bg-gray-800' 
+      ${plan.is_featured
+        ? 'border-2 border-indigo-500 shadow-xl shadow-indigo-500/20 scale-105 bg-white dark:bg-gray-800'
         : 'border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:shadow-lg'
       }
       ${isCurrentPlan ? 'ring-2 ring-green-500 ring-offset-2' : ''}
     `}>
-      
+
       {plan.is_featured && (
         <div className="absolute -top-3 right-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white px-4 py-1 rounded-full text-xs font-bold">
           محبوب‌ترین
@@ -86,10 +86,10 @@ const PlanCard = ({ plan, isCurrentPlan, onSelect, isLoading }) => {
         disabled={isCurrentPlan || isLoading}
         className={`
           w-full py-3 rounded-xl font-bold transition
-          ${isCurrentPlan 
-            ? 'bg-green-100 text-green-700 cursor-default' 
-            : plan.price_monthly === 0 
-              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+          ${isCurrentPlan
+            ? 'bg-green-100 text-green-700 cursor-default'
+            : plan.price_monthly === 0
+              ? 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-500/25'
           }
         `}

@@ -3,13 +3,12 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   X, BookOpen, Home, Wrench, FileText,
-  ChevronRight, ChevronDown, ChevronLeft,
-  HelpCircle, User,
+  ChevronLeft, ChevronDown, HelpCircle, User,
   Settings, Clipboard, Shield, Package,
   ShoppingBag, Monitor, Users, DollarSign, Percent,
   MessageSquare, Grid, Info, Mail, FileCheck, Clock,
   TrendingUp, Zap, Truck, HardDrive, Cpu, Factory,
-  Box,
+  Box,  // ← جایگزین Tool
   Briefcase,
   Award,
 } from 'lucide-react';
@@ -22,7 +21,7 @@ import { BUYER_ROLES, PROVIDER_ROLES } from '@lib/constants';
 // ============================================================
 const HELP_DATA = {
   sections: [
-    // ======== ۱. شروع سریع (همه کاربران) ========
+    // ======== ۱. شروع سریع ========
     {
       id: 'getting-started',
       title: 'شروع سریع',
@@ -41,7 +40,7 @@ const HELP_DATA = {
         },
         {
           title: 'نقش‌های کاربری',
-          content: 'پلتفرم دارای نقش‌های مختلف است که هر کدام امکانات خاص خود را دارند:',
+          content: 'پلتفرم دارای دو نقش اصلی است که هر کدام امکانات خاص خود را دارند:',
           roles: [
             { name: 'خریدار (کارخانه)', desc: 'ثبت درخواست تعمیر، مدیریت دستگاه‌ها، انتخاب بهترین پیشنهاد' },
             { name: 'خدمات‌دهنده', desc: 'اعلام قیمت، انجام تعمیرات، دریافت تسویه' },
@@ -62,12 +61,12 @@ const HELP_DATA = {
       ],
     },
 
-    // ======== ۲. راهنمای خریدار (فقط خریدار) ========
+    // ======== ۲. راهنمای خریدار ========
     {
       id: 'buyer',
       title: 'راهنمای خریدار',
       icon: User,
-      roles: ['buyer'],  // ← فقط خریدار
+      roles: ['buyer', 'all'],
       items: [
         {
           title: 'ثبت دستگاه‌ها و تجهیزات',
@@ -142,12 +141,12 @@ const HELP_DATA = {
       ],
     },
 
-    // ======== ۳. راهنمای خدمات‌دهنده (فقط خدمات‌دهنده) ========
+    // ======== ۳. راهنمای خدمات‌دهنده ========
     {
       id: 'provider',
       title: 'راهنمای خدمات‌دهنده',
       icon: Wrench,
-      roles: ['provider'],  // ← فقط خدمات‌دهنده
+      roles: ['provider', 'all'],
       items: [
         {
           title: 'تکمیل پروفایل تخصصی',
@@ -234,12 +233,12 @@ const HELP_DATA = {
       ],
     },
 
-    // ======== ۴. راهنمای فروشنده (فقط فروشنده) ========
+    // ======== ۴. راهنمای فروشنده ========
     {
       id: 'seller',
       title: 'راهنمای فروشنده',
       icon: Package,
-      roles: ['seller'],  // ← فقط فروشنده
+      roles: ['seller', 'all'],
       items: [
         {
           title: 'ثبت محصول جدید',
@@ -269,10 +268,10 @@ const HELP_DATA = {
       ],
     },
 
-    // ======== ۵. سناریوهای تعمیرات (همه کاربران) ========
+    // ======== ۵. سناریوهای تعمیرات ========
     {
       id: 'scenarios',
-      title: 'سناریوهای تعمیرات',
+      title: ' سناریوهای تعمیرات',
       icon: Clipboard,
       roles: ['all'],
       items: SERVICE_SCENARIO_GROUPS.map(group => ({
@@ -289,15 +288,15 @@ const HELP_DATA = {
       })),
     },
 
-    // ======== ۶. قراردادها (همه کاربران) ========
+    // ======== ۶. قراردادها ========
     {
       id: 'contracts',
-      title: 'قراردادها',
+      title: ' قراردادها',
       icon: FileText,
       roles: ['all'],
       items: [
         {
-          title: 'قرارداد نت فراگیر (Total Maintenance)',
+          title: ' قرارداد نت فراگیر (Total Maintenance)',
           content: 'قرارداد جامع نگهداری و تعمیرات شامل کلیه تجهیزات کارخانه.',
           features: [
             'پوشش کامل کلیه تجهیزات',
@@ -309,7 +308,7 @@ const HELP_DATA = {
           linkLabel: 'مشاهده جزئیات',
         },
         {
-          title: 'قرارداد PM (نگهداری پیشگیرانه)',
+          title: ' قرارداد PM (نگهداری پیشگیرانه)',
           content: 'قرارداد نگهداری پیشگیرانه برای افزایش عمر تجهیزات.',
           features: [
             'برنامه نگهداری منظم',
@@ -320,7 +319,7 @@ const HELP_DATA = {
           linkLabel: 'مشاهده جزئیات',
         },
         {
-          title: 'قرارداد مبتنی بر عملکرد (Performance)',
+          title: ' قرارداد مبتنی بر عملکرد (Performance)',
           content: 'قرارداد بر اساس عملکرد و راندمان تجهیزات.',
           features: [
             'پرداخت بر اساس عملکرد',
@@ -331,7 +330,7 @@ const HELP_DATA = {
           linkLabel: 'مشاهده جزئیات',
         },
         {
-          title: 'انبار امانی (Consignment)',
+          title: ' انبار امانی (Consignment)',
           content: 'مدیریت انبار قطعات یدکی به صورت امانی در کارخانه.',
           features: [
             'قطعات در محل کارخانه',
@@ -344,15 +343,15 @@ const HELP_DATA = {
       ],
     },
 
-    // ======== ۷. پرسش‌های متداول (همه کاربران) ========
+    // ======== ۷. پرسش‌های متداول ========
     {
       id: 'faq',
-      title: 'پرسش‌های متداول',
+      title: ' پرسش‌های متداول',
       icon: HelpCircle,
       roles: ['all'],
       items: [
         {
-          title: 'چگونه درخواست تعمیر ثبت کنم؟',
+          title: ' چگونه درخواست تعمیر ثبت کنم؟',
           content: 'برای ثبت درخواست تعمیر، مراحل زیر را دنبال کنید:',
           steps: [
             'وارد پلتفرم شوید',
@@ -363,7 +362,7 @@ const HELP_DATA = {
           ],
         },
         {
-          title: 'چگونه قیمت اعلام کنم؟',
+          title: ' چگونه قیمت اعلام کنم؟',
           content: 'برای اعلام قیمت به درخواست‌ها:',
           steps: [
             'وارد بخش "درخواست‌های خدمت" شوید',
@@ -374,7 +373,7 @@ const HELP_DATA = {
           ],
         },
         {
-          title: 'پروفایل من کامل است؟',
+          title: ' پروفایل من کامل است؟',
           content: 'برای اعلام قیمت و دریافت درخواست، این موارد باید کامل باشند:',
           steps: [
             'خدمات قابل ارائه (حداقل یک مورد)',
@@ -385,7 +384,7 @@ const HELP_DATA = {
           linkLabel: '✏️ تکمیل پروفایل',
         },
         {
-          title: 'چگونه کار را شروع کنم؟',
+          title: ' چگونه کار را شروع کنم؟',
           content: 'پس از انتخاب پیشنهاد شما توسط خریدار:',
           steps: [
             'وارد صفحه جزئیات درخواست شوید',
@@ -395,7 +394,7 @@ const HELP_DATA = {
           ],
         },
         {
-          title: 'چگونه مدارک و نمونه کارها را آپلود کنم؟',
+          title: ' چگونه مدارک و نمونه کارها را آپلود کنم؟',
           content: 'برای آپلود مدارک و نمونه کارها:',
           steps: [
             'وارد پروفایل خود شوید',
@@ -409,15 +408,15 @@ const HELP_DATA = {
       ],
     },
 
-    // ======== ۸. ارتباط با پشتیبانی (همه کاربران) ========
+    // ======== ۸. ارتباط با پشتیبانی ========
     {
       id: 'support',
-      title: 'ارتباط با پشتیبانی',
+      title: ' ارتباط با پشتیبانی',
       icon: MessageSquare,
       roles: ['all'],
       items: [
         {
-          title: 'تماس با پشتیبانی',
+          title: ' تماس با پشتیبانی',
           content: 'برای دریافت کمک و راهنمایی بیشتر، با تیم پشتیبانی تماس بگیرید.',
           contact: {
             email: 'support@induservice.pro',
@@ -428,7 +427,7 @@ const HELP_DATA = {
           linkLabel: ' ارسال تیکت پشتیبانی',
         },
         {
-          title: 'ارسال تیکت پشتیبانی',
+          title: ' ارسال تیکت پشتیبانی',
           content: 'برای مشکلات فنی، سوالات و راهنمایی بیشتر، تیکت ارسال کنید.',
           steps: [
             'وارد بخش "پشتیبانی" در داشبورد شوید',
@@ -453,7 +452,7 @@ export default function HelpCenter({ isOpen, onClose }) {
   const [expandedSection, setExpandedSection] = useState('getting-started');
   const [expandedItem, setExpandedItem] = useState(null);
 
-  // ========== تشخیص نقش کاربر ==========
+  // ========== فیلتر بر اساس نقش ==========
   const isBuyer = BUYER_ROLES.includes(user?.role);
   const isProvider = PROVIDER_ROLES.includes(user?.role);
   const isSeller = user?.role === 'seller' || user?.role === 'company_seller';
@@ -465,29 +464,9 @@ export default function HelpCenter({ isOpen, onClose }) {
     return 'all';
   };
 
-  // ========== فیلتر بخش‌ها بر اساس نقش ==========
   const filteredSections = HELP_DATA.sections.filter(section => {
-    // اگر نقش کاربر 'all' است، فقط بخش‌های عمومی را نشان بده
-    if (getUserRole() === 'all') {
-      return section.roles.includes('all');
-    }
-    // اگر نقش کاربر خاص است، بخش‌های مربوط به نقش + بخش‌های عمومی را نشان بده
     return section.roles.includes('all') || section.roles.includes(getUserRole());
   });
-
-  // ========== ترتیب بخش‌ها بر اساس نقش ==========
-  const orderedSections = () => {
-    const role = getUserRole();
-    const sections = [...filteredSections];
-    
-    // بخش‌های عمومی را در بالا قرار بده
-    const generalSections = sections.filter(s => s.roles.includes('all'));
-    const roleSections = sections.filter(s => s.roles.includes(role) && !s.roles.includes('all'));
-    
-    return [...generalSections, ...roleSections];
-  };
-
-  const finalSections = orderedSections();
 
   if (!isOpen) return null;
 
@@ -547,12 +526,10 @@ export default function HelpCenter({ isOpen, onClose }) {
             <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3 px-2">
               فهرست مطالب
             </p>
-            {finalSections.map((section) => {
+            {filteredSections.map((section) => {
               const Icon = section.icon;
               const isExpanded = expandedSection === section.id;
               const itemCount = section.items?.length || 0;
-              const isRoleSpecific = section.roles.includes(getUserRole()) && !section.roles.includes('all');
-              
               return (
                 <div key={section.id} className="mb-1">
                   <button
@@ -566,19 +543,10 @@ export default function HelpCenter({ isOpen, onClose }) {
                     <span className="flex items-center gap-2 text-sm">
                       <Icon size={18} className={isExpanded ? 'text-blue-600' : ''} />
                       {section.title}
-                      {isRoleSpecific && (
-                        <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">
-                          شما
-                        </span>
-                      )}
                     </span>
                     <div className="flex items-center gap-2">
                       <span className="text-xs text-slate-400">{itemCount}</span>
-                      {isExpanded ? (
-                        <ChevronDown size={16} className="text-blue-500" />
-                      ) : (
-                        <ChevronLeft size={16} className="text-slate-400" />
-                      )}
+                      {isExpanded ? <ChevronDown size={16} /> : <ChevronLeft size={16} />}
                     </div>
                   </button>
                   {isExpanded && (
@@ -607,7 +575,7 @@ export default function HelpCenter({ isOpen, onClose }) {
           <div className="flex-1 p-6 overflow-y-auto">
             {expandedSection && (
               <div className="space-y-4">
-                {finalSections
+                {filteredSections
                   .find(s => s.id === expandedSection)
                   ?.items.map((item, index) => (
                     <div
@@ -631,10 +599,12 @@ export default function HelpCenter({ isOpen, onClose }) {
                       </button>
                       {expandedItem === index && (
                         <div className="px-4 pb-4 space-y-4">
+                          {/* توضیحات اصلی */}
                           <p className="text-sm text-slate-600 leading-relaxed">
                             {item.content}
                           </p>
 
+                          {/* لینک سریع */}
                           {item.link && (
                             <button
                               onClick={() => handleNavigate(item.link)}
@@ -644,6 +614,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </button>
                           )}
 
+                          {/* مراحل */}
                           {item.steps && (
                             <div className="bg-slate-50 rounded-xl p-4">
                               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
@@ -662,6 +633,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* نکات */}
                           {item.tips && (
                             <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
                               <p className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2">
@@ -675,6 +647,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* ویژگی‌ها */}
                           {item.features && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {item.features.map((feature, i) => (
@@ -686,6 +659,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* سناریوها */}
                           {item.scenarios && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                               {item.scenarios.map((group, i) => (
@@ -703,6 +677,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* وضعیت‌ها */}
                           {item.statuses && (
                             <div className="flex flex-wrap gap-2">
                               {item.statuses.map((status) => (
@@ -716,6 +691,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* گردش کار */}
                           {item.workflow && (
                             <div className="relative">
                               <div className="absolute right-4 top-0 bottom-0 w-0.5 bg-blue-200" />
@@ -735,6 +711,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* گروه آیتم‌ها */}
                           {item.isGroup && item.groupItems && (
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               {item.groupItems.map((subItem, i) => (
@@ -746,6 +723,7 @@ export default function HelpCenter({ isOpen, onClose }) {
                             </div>
                           )}
 
+                          {/* اطلاعات تماس */}
                           {item.contact && (
                             <div className="bg-slate-50 rounded-xl p-4 space-y-1.5">
                               <p className="text-sm text-slate-600"><span className="font-medium">📧 ایمیل:</span> {item.contact.email}</p>
@@ -763,6 +741,7 @@ export default function HelpCenter({ isOpen, onClose }) {
         </div>
       </div>
 
+      {/* استایل انیمیشن */}
       <style>{`
         @keyframes fadeInUp {
           from {

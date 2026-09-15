@@ -128,9 +128,9 @@ export const router = createBrowserRouter([
       { path: 'pricing', element: <LazyLoad><PricingPage /></LazyLoad> },
       { path: '/demo', element: <LazyLoad><DemoPage /></LazyLoad> },
       // ========== حذف شد (به داشبورد منتقل شد) ==========
-      // { 
-      //   path: 'provider/onboarding', 
-      //   element: <PrivateRoute><LazyLoad><ProviderOnboardingWizard /></LazyLoad></PrivateRoute> 
+      // {
+      //   path: 'provider/onboarding',
+      //   element: <PrivateRoute><LazyLoad><ProviderOnboardingWizard /></LazyLoad></PrivateRoute>
       // },
       // ===================================================
     ],

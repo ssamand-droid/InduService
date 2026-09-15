@@ -9,7 +9,7 @@ export const useSubscription = () => {
   const [error, setError] = useState(null)
 
   const fetchSubscription = useCallback(async () => {
-  
+
     try {
       setLoading(true)
       const [subRes, usageRes] = await Promise.all([

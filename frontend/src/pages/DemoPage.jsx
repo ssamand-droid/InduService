@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react'
-import { 
+import {
   Play, Pause, SkipForward, SkipBack,
   Package, AlertTriangle, Wrench, Activity, Zap,
   TrendingUp, Shield, CheckCircle, Factory,
@@ -260,7 +260,7 @@ const DemoPage = () => {
       {/* Main Content */}
       <div className="relative z-10 pt-20 pb-12 px-6">
         <div className="max-w-6xl mx-auto">
-          
+
           {/* Progress */}
           {/* <div className="flex gap-1 mb-8">
             {demoSteps.map((_, i) => (
@@ -293,7 +293,7 @@ const DemoPage = () => {
           <div className={`bg-white/10 backdrop-blur-2xl rounded-3xl p-8 md:p-10 border border-white/20 shadow-2xl transition-all duration-400 ${
             isTransitioning ? 'opacity-0 translate-y-4' : 'opacity-100 translate-y-0'
           }`}>
-            
+
             {/* Image Section */}
             {current.image && (
               <div className="mb-8 -mx-8 md:-mx-10 -mt-8 md:-mt-10 rounded-t-3xl overflow-hidden h-48 md:h-64 bg-black/30">
@@ -387,7 +387,7 @@ const DemoPage = () => {
 
       {/* Footer CTA with Banner */}
       <div className="relative z-10 max-w-3xl mx-auto px-6 pb-16 text-center">
-        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20 
+        <div className="relative rounded-3xl overflow-hidden shadow-2xl border border-white/20
                   h-64 md:h-80">
           {/* 🆕 بنر کرونز جایگزین ستاره */}
           <img

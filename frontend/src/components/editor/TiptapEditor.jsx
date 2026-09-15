@@ -295,15 +295,15 @@ export default function TiptapEditor({
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();
       const text = editor.getText();
-      
+
       // ✅ محاسبه دستی تعداد کاراکترها و کلمات
       const cleanText = text.replace(/\s/g, '');
       const chars = cleanText.length;
       const words = text.split(/\s+/).filter(Boolean).length;
-      
+
       setCharacterCount(chars);
       setWordCount(words);
-      
+
       onChange({ html, text, characterCount: chars, wordCount: words });
     },
   });

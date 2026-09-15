@@ -103,15 +103,15 @@ class ServiceListSerializer(serializers.ModelSerializer):
         در غیر این صورت، مهمان و کاربران دیگر نام را نبینند.
         """
         request = self.context.get('request')
-        
+
         # مهمان (لاگین نکرده) - نام را نبیند
         if not request or not request.user.is_authenticated:
             return "🔒 تایید شده"
-        
+
         # ادمین - ببیند
         if request.user.role == 'admin' or request.user.is_staff:
             return obj.provider.full_name
-        
+
         # buyer - فقط اگر درخواست accepted/in_progress/completed داشته باشد
         if request.user.role in ['buyer', 'technician', 'maintenance_manager', 'procurement']:
             from .models import ServiceRequest
@@ -123,7 +123,7 @@ class ServiceListSerializer(serializers.ModelSerializer):
             if has_accepted:
                 return obj.provider.full_name
             return "🔒 پس از پذیرش درخواست نمایش داده می‌شود"
-        
+
         # seller/provider دیگر - نام را نبیند
         return "🔒 فروشنده"
 
@@ -165,9 +165,9 @@ class ServiceCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Service
         fields = [
-            'category', 'title', 'service_type', 'service_scenario', 'pricing_model', 
-            'base_price', 'hourly_rate', 'description', 'requirements', 
-            'estimated_duration_days', 'warranty_months', 'service_area', 
+            'category', 'title', 'service_type', 'service_scenario', 'pricing_model',
+            'base_price', 'hourly_rate', 'description', 'requirements',
+            'estimated_duration_days', 'warranty_months', 'service_area',
             'is_remote', 'is_onsite', 'is_active'
         ]
 
@@ -175,7 +175,7 @@ class ServiceCreateUpdateSerializer(serializers.ModelSerializer):
         validated_data['provider'] = self.context['request'].user
         validated_data['slug'] = slugify(validated_data['title'], allow_unicode=True)
         return super().create(validated_data)
-    
+
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

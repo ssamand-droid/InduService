@@ -3,21 +3,8 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
-import { FiSearch, FiRefreshCw, FiEye, FiTrash2, FiAlertCircle } from 'react-icons/fi'
 import api from '@lib/axios'
 import toast from 'react-hot-toast'
-
-// تابع امن فرمت تاریخ
-const safeFormatDate = (dateString) => {
-  if (!dateString) return ''
-  try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return ''
-    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
-  } catch (e) {
-    return ''
-  }
-}
 
 export default function AdminServiceRequestsPage() {
   const navigate = useNavigate()
@@ -53,8 +40,13 @@ export default function AdminServiceRequestsPage() {
     onError: (error) => toast.error(error.response?.data?.message || 'خطا در حذف درخواست'),
   })
 
+  const formatSimpleDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()}`
+  }
+
   const requests = data?.results || []
-  const unmatchedCount = requests.filter(r => r.service === null).length
 
   const filtered = requests.filter(r => {
     if (showUnmatchedOnly && r.service !== null) return false
@@ -128,18 +120,22 @@ export default function AdminServiceRequestsPage() {
     return colors[urgency] || '#f3f4f6'
   }
 
+  const unmatchedCount = requests.filter(r => r.service === null).length
+
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ marginTop: '0.5rem', color: '#6b7280' }}>در حال بارگذاری...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-center">
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '1rem', color: '#dc2626' }}>
           خطا در دریافت اطلاعات: {error.message}
         </div>
       </div>
@@ -147,21 +143,20 @@ export default function AdminServiceRequestsPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
+    <div style={{ padding: '1.5rem', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-gray-900">مدیریت درخواست‌های خدمت</h1>
-          <p className="text-sm text-gray-500 mt-1">مدیریت و بررسی تمام درخواست‌های ثبت شده</p>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>مدیریت درخواست‌های خدمت</h1>
+          <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>مدیریت و بررسی تمام درخواست‌های ثبت شده</p>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
           {unmatchedCount > 0 && (
-            <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm">
-              <FiAlertCircle className="w-4 h-4" />
-              {unmatchedCount} درخواست بدون تطابق
+            <span style={{ backgroundColor: '#fef3c7', color: '#92400e', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.875rem' }}>
+              ⚠️ {unmatchedCount} درخواست بدون تطابق
             </span>
           )}
-          <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+          <span style={{ backgroundColor: '#dbeafe', color: '#1e40af', padding: '0.25rem 0.75rem', borderRadius: '9999px', fontSize: '0.875rem' }}>
             مجموع: {requests.length} درخواست
           </span>
         </div>
@@ -169,72 +164,71 @@ export default function AdminServiceRequestsPage() {
 
       {/* Alert برای درخواست‌های بدون تطابق */}
       {unmatchedCount > 0 && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-          <div className="flex items-center gap-2">
-            <FiAlertCircle className="text-yellow-600" />
-            <span className="font-medium text-yellow-800">{unmatchedCount} درخواست بدون سرویس منطبق</span>
+        <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <span style={{ fontSize: '1.25rem' }}>⚠️</span>
+            <span style={{ fontWeight: '500', color: '#92400e' }}>{unmatchedCount} درخواست بدون سرویس منطبق</span>
           </div>
-          <p className="text-sm text-yellow-700 mt-1">
+          <p style={{ fontSize: '0.875rem', color: '#92400e', marginTop: '0.25rem' }}>
             این درخواست‌ها نیاز به بررسی دستی توسط ادمین دارند. لطفاً برای هر درخواست، سرویس مناسب را انتخاب کنید.
           </p>
         </div>
       )}
 
       {/* Filters */}
-      <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex-1 min-w-[200px]">
-            <div className="relative">
-              <FiSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
-              <input
-                type="text"
-                placeholder="جستجو بر اساس عنوان یا خریدار..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full pr-10 pl-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-              />
-            </div>
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', padding: '1rem', marginBottom: '1.5rem' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+          <div style={{ flex: 1, minWidth: '200px' }}>
+            <input
+              type="text"
+              placeholder="جستجو بر اساس ID, عنوان, خریدار, ارائه‌دهنده..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              style={{ width: '100%', padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', outline: 'none' }}
+            />
           </div>
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-lg bg-white text-sm"
-          >
-            {statusOptions.map((opt) => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
+          <div>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              style={{ padding: '0.5rem 1rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', backgroundColor: 'white' }}
+            >
+              {statusOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
+            </select>
+          </div>
           <button
             onClick={() => setShowUnmatchedOnly(!showUnmatchedOnly)}
-            className={`px-3 py-2 rounded-lg text-sm transition ${
-              showUnmatchedOnly 
-                ? 'bg-yellow-100 text-yellow-800 border border-yellow-300' 
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: showUnmatchedOnly ? '#fef3c7' : '#f3f4f6',
+              color: showUnmatchedOnly ? '#92400e' : '#374151',
+              borderRadius: '0.5rem',
+              border: 'none',
+              cursor: 'pointer'
+            }}
           >
             {showUnmatchedOnly ? '✅ نمایش همه' : '⚠️ فقط بدون تطابق'}
           </button>
           <button
             onClick={() => refetch()}
-            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-            title="بازخوانی"
+            style={{ padding: '0.5rem 1rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }}
           >
-            <FiRefreshCw className="w-5 h-5" />
+            🔄 بازخوانی
           </button>
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Modal */}
       {deleteId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-bold mb-2">تأیید حذف</h3>
-            <p className="text-gray-600 mb-6">آیا از حذف این درخواست اطمینان دارید؟</p>
-            <div className="flex justify-end gap-3">
-              <button onClick={() => setDeleteId(null)} className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition">
-                انصراف
-              </button>
-              <button onClick={() => deleteMutation.mutate(deleteId)} className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition" disabled={deleteMutation.isPending}>
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1.5rem', maxWidth: '28rem', width: '100%' }}>
+            <h3 style={{ fontSize: '1.125rem', fontWeight: 'bold', marginBottom: '1rem' }}>تأیید حذف</h3>
+            <p style={{ color: '#4b5563', marginBottom: '1.5rem' }}>آیا از حذف این درخواست اطمینان دارید؟</p>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem' }}>
+              <button onClick={() => setDeleteId(null)} style={{ padding: '0.5rem 1rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }}>انصراف</button>
+              <button onClick={() => deleteMutation.mutate(deleteId)} style={{ padding: '0.5rem 1rem', backgroundColor: '#dc2626', color: 'white', borderRadius: '0.5rem', border: 'none', cursor: 'pointer' }} disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? 'در حال حذف...' : 'حذف'}
               </button>
             </div>
@@ -243,82 +237,89 @@ export default function AdminServiceRequestsPage() {
       )}
 
       {/* Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[800px]">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr className="text-right text-sm font-medium text-gray-500">
-                <th className="p-3">ID</th>
-                <th className="p-3">عنوان درخواست</th>
-                <th className="p-3">خریدار</th>
-                <th className="p-3">ارائه‌دهنده</th>
-                <th className="p-3">تطابق سرویس</th>
-                <th className="p-3">وضعیت</th>
-                <th className="p-3">فوریت</th>
-                <th className="p-3">تاریخ ایجاد</th>
-                <th className="p-3">عملیات</th>
+      <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: '#f9fafb', borderBottom: '1px solid #e5e7eb' }}>
+              <tr style={{ textAlign: 'right', fontSize: '0.875rem', fontWeight: '500', color: '#6b7280' }}>
+                <th style={{ padding: '0.75rem' }}>ID</th>
+                <th style={{ padding: '0.75rem' }}>عنوان درخواست</th>
+                <th style={{ padding: '0.75rem' }}>Buyer</th>
+                <th style={{ padding: '0.75rem' }}>ارائه‌دهنده</th>
+                <th style={{ padding: '0.75rem' }}>تطابق سرویس</th>
+                <th style={{ padding: '0.75rem' }}>وضعیت</th>
+                <th style={{ padding: '0.75rem' }}>فوریت</th>
+                <th style={{ padding: '0.75rem' }}>تاریخ ایجاد</th>
+                <th style={{ padding: '0.75rem' }}>عملیات</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200">
+            <tbody>
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-gray-500">
-                    هیچ درخواستی یافت نشد
-                  </td>
+                  <td colSpan={9} style={{ padding: '2rem', textAlign: 'center', color: '#6b7280' }}>هیچ درخواستی یافت نشد</td>
                 </tr>
               ) : (
                 filtered.map((req) => (
-                  <tr key={req.id} className="hover:bg-gray-50 transition">
-                    <td className="p-3 font-mono text-sm">{req.id}</td>
-                    <td className="p-3">
-                      <div className="font-medium">{req.title}</div>
-                      <div className="text-xs text-gray-500 mt-1">{req.service_title || 'بدون سرویس'}</div>
+                  <tr key={req.id} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                    <td style={{ padding: '0.75rem', fontFamily: 'monospace', fontSize: '0.875rem' }}>{req.id}</td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <div style={{ fontWeight: '500' }}>{req.title}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>{req.service_title || 'بدون سرویس'}</div>
                     </td>
-                    <td className="p-3">
+                    <td style={{ padding: '0.75rem' }}>
                       <div>{req.buyer_name}</div>
-                      <div className="text-xs text-gray-500">{req.buyer_phone}</div>
+                      <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>{req.buyer_phone}</div>
                     </td>
-                    <td className="p-3">{req.provider_name || '—'}</td>
-                    <td className="p-3">
+                    <td style={{ padding: '0.75rem' }}>{req.provider_name || '—'}</td>
+                    <td style={{ padding: '0.75rem' }}>
                       {req.service ? (
-                        <span className="text-green-600 text-sm">✓ {req.service_title}</span>
+                        <span style={{ color: '#16a34a', fontSize: '0.875rem' }}>✓ {req.service_title}</span>
                       ) : (
-                        <span className="text-red-600 text-sm flex items-center gap-1">
-                          <FiAlertCircle className="w-3 h-3" />
-                          بدون تطابق
+                        <span style={{ color: '#dc2626', fontSize: '0.875rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                          ⚠️ بدون تطابق
+                          <span style={{ fontSize: '0.7rem', color: '#9ca3af' }}>(نیاز به بررسی)</span>
                         </span>
                       )}
                     </td>
-                    <td className="p-3">
-                      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap" style={{
+                    <td style={{ padding: '0.75rem' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.25rem 0.5rem',
+                        borderRadius: '9999px',
+                        fontSize: '0.75rem',
+                        fontWeight: '500',
                         backgroundColor: getStatusColor(req.status),
                         color: getStatusTextColor(req.status)
                       }}>
                         {getStatusLabel(req.status)}
                       </span>
                     </td>
-                    <td className="p-3">
-                      <span className="inline-block px-2 py-0.5 rounded text-xs whitespace-nowrap" style={{
+                    <td style={{ padding: '0.75rem' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
                         backgroundColor: getUrgencyColor(req.urgency),
                         color: req.urgency === 'critical' ? '#991b1b' : req.urgency === 'high' ? '#9a3412' : req.urgency === 'medium' ? '#1e40af' : '#374151'
                       }}>
                         {getUrgencyLabel(req.urgency)}
                       </span>
                     </td>
-                    <td className="p-3 text-gray-500 text-sm">{safeFormatDate(req.created_at)}</td>
-                    <td className="p-3">
-                      <div className="flex gap-2">
+                    <td style={{ padding: '0.75rem', color: '#6b7280', fontSize: '0.875rem' }}>{formatSimpleDate(req.created_at)}</td>
+                    <td style={{ padding: '0.75rem' }}>
+                      <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                         <button
                           onClick={() => navigate(`/dashboard/admin/service-requests/${req.id}`)}
-                          className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                          style={{ color: '#2563eb', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
                           title="مشاهده جزئیات"
                         >
-                          <FiEye className="w-4 h-4" />
+                          👁 جزئیات
                         </button>
                         <select
                           value={req.status}
                           onChange={(e) => updateStatusMutation.mutate({ id: req.id, status: e.target.value })}
-                          className="text-xs border border-gray-300 rounded px-2 py-1 bg-white"
+                          style={{ fontSize: '0.75rem', border: '1px solid #d1d5db', borderRadius: '0.25rem', padding: '0.125rem 0.25rem' }}
                           disabled={updateStatusMutation.isPending}
                         >
                           {statusOptions.filter((o) => o.value !== 'all').map((opt) => (
@@ -327,10 +328,10 @@ export default function AdminServiceRequestsPage() {
                         </select>
                         <button
                           onClick={() => setDeleteId(req.id)}
-                          className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition"
+                          style={{ color: '#dc2626', fontSize: '0.875rem', background: 'none', border: 'none', cursor: 'pointer' }}
                           title="حذف"
                         >
-                          <FiTrash2 className="w-4 h-4" />
+                          🗑 حذف
                         </button>
                       </div>
                     </td>
@@ -344,14 +345,10 @@ export default function AdminServiceRequestsPage() {
 
       {/* Pagination */}
       {data?.count > filtered.length && (
-        <div className="flex justify-center gap-2 mt-6">
-          <button className="px-3 py-1 border border-gray-300 rounded-lg bg-white text-sm disabled:opacity-50" disabled>
-            قبلی
-          </button>
-          <span className="px-3 py-1 text-sm">صفحه 1 از {Math.ceil(data.count / 10)}</span>
-          <button className="px-3 py-1 border border-gray-300 rounded-lg bg-white text-sm disabled:opacity-50" disabled>
-            بعدی
-          </button>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem', marginTop: '1.5rem' }}>
+          <button style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.25rem', background: 'white', cursor: 'pointer' }}>قبلی</button>
+          <span style={{ padding: '0.25rem 0.75rem' }}>صفحه 1 از {Math.ceil(data.count / 10)}</span>
+          <button style={{ padding: '0.25rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.25rem', background: 'white', cursor: 'pointer' }}>بعدی</button>
         </div>
       )}
     </div>

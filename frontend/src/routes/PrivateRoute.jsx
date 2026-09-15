@@ -4,12 +4,14 @@ import { Spinner } from '@components/ui'
 
 /**
  * PrivateRoute - محافظت از مسیرهای خصوصی
- * @param {Array} allowedRoles - آرایه‌ای از نقش‌های مجاز
+ * چک می‌کند کاربر احراز هویت شده باشد و نقش مجاز داشته باشد.
+ *
+ * @param {Array} allowedRoles - آرایه‌ای از نقش‌های مجاز (مثلاً ['buyer']). اگر خالی باشد، هر کاربر لاگین‌شده مجاز است.
  */
 export const PrivateRoute = ({ allowedRoles = [] }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore()
 
-  // ✅ صبر کن تا isLoading تمام شود
+  // اگر در حال بارگذاری اولیه هستیم (بررسی توکن ذخیره شده)
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-secondary-50 dark:bg-secondary-900">
@@ -28,7 +30,7 @@ export const PrivateRoute = ({ allowedRoles = [] }) => {
 
   // اگر نقش‌های مجاز تعیین شده باشد و نقش کاربر در آن‌ها نباشد
   if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
-    return <Navigate to="/dashboard" replace />
+    return <Navigate to="/" replace />
   }
 
   return <Outlet />

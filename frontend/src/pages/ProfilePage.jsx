@@ -27,6 +27,7 @@ const profileSchema = z.object({
   first_name: z.string().min(1, 'نام الزامی است'),
   last_name: z.string().min(1, 'نام خانوادگی الزامی است'),
   phone_number: z.string().min(10, 'شماره موبایل الزامی است'),
+  email: z.string().email('ایمیل نامعتبر است').optional().or(z.literal('')),
   bio: z.string().optional(),
   years_of_experience: z.coerce.number().optional(),
   specializations: z.string().optional(),
@@ -128,6 +129,7 @@ export default function ProfilePage() {
       first_name: user.first_name || '',
       last_name: user.last_name || '',
       phone_number: user.phone_number || '',
+      email: user.email || '',
       bio: p.bio || '',
       years_of_experience: p.years_of_experience || 0,
       specializations: p.specializations || '',
@@ -224,7 +226,7 @@ export default function ProfilePage() {
           {/* Header Card */}
           <div className="relative overflow-hidden rounded-2xl mb-8 bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white shadow-xl">
             <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:60px_60px]" />
-            
+
             <div className="relative z-10 p-6 md:p-8">
               <div className="flex flex-col md:flex-row items-center gap-6">
                 <div className="relative">
@@ -236,15 +238,15 @@ export default function ProfilePage() {
                       {user.first_name?.[0]}{user.last_name?.[0]}
                     </div>
                   )}
-                  <button 
-                    onClick={() => fr.current?.click()} 
+                  <button
+                    onClick={() => fr.current?.click()}
                     disabled={isUploadingAvatar}
                     className="absolute bottom-0 right-0 p-2 bg-white rounded-full shadow-lg text-blue-600 hover:bg-blue-50 transition disabled:opacity-50"
                   >
                     {isUploadingAvatar ? <Spinner size="sm" /> : <FiCamera className="h-4 w-4" />}
                   </button>
                 </div>
-                
+
                 <div className="text-center md:text-right flex-1">
                   <h1 className="text-2xl md:text-3xl font-bold">{user.full_name}</h1>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-white/10 rounded-full text-sm mt-2">
@@ -253,7 +255,7 @@ export default function ProfilePage() {
                   </div>
                   {p.bio && <p className="text-sm text-slate-300 mt-3 max-w-md">{p.bio}</p>}
                 </div>
-                
+
                 {isProvider && (
                   <div className="flex gap-6 bg-white/10 rounded-2xl px-6 py-3">
                     <div className="text-center">
@@ -314,13 +316,31 @@ export default function ProfilePage() {
 
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">ایمیل</label>
-                      <input 
-                        type="email" 
-                        value={user.email || ''} 
-                        disabled
-                        className="w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-slate-500 cursor-not-allowed"
+                      <label className="block text-sm font-medium text-slate-700 mb-1">
+                        ایمیل
+                        {user.email?.includes('@induservice.local') && (
+                          <span className="text-amber-600 text-xs mr-2">⚠️ پیش‌فرض</span>
+                        )}
+                      </label>
+                      <input
+                        type="email"
+                        {...register('email')}  // ✅ اینجا register اضافه شد
+                        className={`w-full rounded-xl border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition ${
+                          user.email?.includes('@induservice.local')
+                            ? 'border-amber-300 bg-amber-50 dark:bg-amber-900/10'
+                            : 'border-slate-200 bg-white dark:bg-slate-800'
+                        }`}
+                        placeholder="ایمیل خود را وارد کنید"
                       />
+                      {user.email?.includes('@induservice.local') ? (
+                        <p className="text-xs text-amber-600 mt-1">
+                          این ایمیل به‌صورت خودکار ساخته شده است. لطفاً ایمیل واقعی خود را وارد کنید.
+                        </p>
+                      ) : (
+                        <p className="text-xs text-slate-400 mt-1">
+                          ایمیل خود را وارد کنید تا اطلاعیه‌ها را دریافت کنید.
+                        </p>
+                      )}
                     </div>
                     <FormInput label="شماره موبایل *" name="phone_number" register={register} error={errors.phone_number} />
                   </div>
@@ -335,8 +355,8 @@ export default function ProfilePage() {
                         <label
                           key={opt.value}
                           className={`flex-1 p-3 text-center rounded-xl border-2 cursor-pointer transition ${
-                            wpt === opt.value 
-                              ? 'border-blue-600 bg-blue-50 text-blue-700' 
+                            wpt === opt.value
+                              ? 'border-blue-600 bg-blue-50 text-blue-700'
                               : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300'
                           }`}
                         >
@@ -365,21 +385,21 @@ export default function ProfilePage() {
 
                   {isProvider && (
                     <>
-                      <FormSelect 
-                        label="نوع خدمات‌دهنده" 
-                        name="provider_sub_role" 
+                      <FormSelect
+                        label="نوع خدمات‌دهنده"
+                        name="provider_sub_role"
                         register={register}
                         options={[
                           { value: 'engineer', label: 'مهندس مشاور' },
                           { value: 'repairman', label: 'تعمیرکار' },
                           { value: 'technician', label: 'تکنسین فنی' },
                           { value: 'other', label: 'سایر' },
-                        ]} 
+                        ]}
                       />
                       <div className="grid md:grid-cols-2 gap-4">
-                        <FormSelect 
-                          label="مدرک تحصیلی" 
-                          name="education_level" 
+                        <FormSelect
+                          label="مدرک تحصیلی"
+                          name="education_level"
                           register={register}
                           options={[
                             { value: 'diploma', label: 'دیپلم' },
@@ -387,7 +407,7 @@ export default function ProfilePage() {
                             { value: 'bachelor', label: 'لیسانس' },
                             { value: 'master', label: 'فوق لیسانس' },
                             { value: 'phd', label: 'دکتری' },
-                          ]} 
+                          ]}
                         />
                         <FormInput label="رشته تحصیلی" name="education_field" register={register} />
                       </div>
@@ -395,31 +415,31 @@ export default function ProfilePage() {
                   )}
 
                   <FormTextarea label="درباره من" name="bio" register={register} rows={3} />
-                  
+
                   <div className="grid md:grid-cols-2 gap-4">
                     <FormInput label="سال تجربه" name="years_of_experience" type="number" register={register} />
                     <FormInput label="تخصص‌ها" name="specializations" register={register} placeholder="با کاما جدا کنید" />
                   </div>
-                  
+
                   <div className="grid md:grid-cols-3 gap-4">
                     <FormInput label="وبسایت" name="website" register={register} placeholder="https://" />
                     <FormInput label="لینکدین" name="linkedin" register={register} />
                     <FormInput label="اینستاگرام" name="instagram" register={register} />
                   </div>
-                  
+
                   <div className="grid md:grid-cols-3 gap-4">
                     <FormInput label="شهر" name="city" register={register} />
                     <FormInput label="استان" name="province" register={register} />
                     <FormInput label="کد پستی" name="postal_code" register={register} />
                   </div>
-                  
+
                   <FormTextarea label="آدرس" name="address" register={register} rows={2} />
 
                   <div className="flex justify-end pt-4 border-t border-slate-200">
-                    <Button 
-                      type="submit" 
-                      variant="primary" 
-                      isLoading={isUpdatingProfile} 
+                    <Button
+                      type="submit"
+                      variant="primary"
+                      isLoading={isUpdatingProfile}
                       loadingText="در حال ذخیره..."
                       className="bg-blue-600 hover:bg-blue-700 rounded-xl px-8 py-3"
                     >
@@ -494,15 +514,15 @@ export default function ProfilePage() {
                     <h4 className="font-medium text-slate-800 mb-3">محدوده و ظرفیت</h4>
                     <div className="grid sm:grid-cols-2 gap-4">
                       <FormInput label="حداکثر فاصله (کیلومتر)" name="max_distance_km" type="number" register={register} />
-                      <FormSelect 
-                        label="زمان پاسخ" 
-                        name="response_time" 
+                      <FormSelect
+                        label="زمان پاسخ"
+                        name="response_time"
                         register={register}
                         options={[
                           { value: '24/7', label: '۲۴ ساعته' },
                           { value: 'office_hours', label: 'ساعات اداری' },
                           { value: 'business_days', label: 'روزهای کاری' },
-                        ]} 
+                        ]}
                       />
                       <FormInput label="حداکثر درخواست همزمان" name="max_concurrent_requests" type="number" register={register} />
                       <label className="flex items-center gap-2 p-2">

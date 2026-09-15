@@ -24,7 +24,7 @@ export const useCartStore = create(
         } else {
           // seller را از آبجکت product بگیر
           const sellerId = typeof product.seller === 'object' ? product.seller?.id : product.seller
-          
+
           const newItem = {
             id: product.id,
             slug: product.slug,

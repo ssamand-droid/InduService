@@ -2,7 +2,7 @@ import React from 'react'
 import { cn } from '@lib/utils'
 import { ArrowUp, ArrowDown } from 'lucide-react'
 
-const StatsCard = ({ 
+const StatsCard = ({
   icon: Icon,
   title,
   value,

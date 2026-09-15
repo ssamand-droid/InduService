@@ -35,7 +35,7 @@ class ServiceScenario(models.TextChoices):
     ENGINEERING_CONSULTING = 'engineering_consult', _('مشاوره مهندسی')
     AUTOMATION = 'automation', _('برنامه‌نویسی PLC و اتوماسیون')
     ELECTRONICS_REPAIR = 'electronics_repair', _('تعمیرات بردهای الکترونیک صنعتی')
-    
+
     # گروه ۵: تامین
     CRITICAL_SPARE = 'critical_spare', _('تامین قطعه یدکی بحرانی')
     SURPLUS_SALE = 'surplus', _('فروش تجهیزات مازاد')
@@ -192,7 +192,7 @@ class ServiceRequest(TimeStampedModel):
         ('mechanical', 'مکانیکی'),
         ('electrical', 'الکتریکی'),
         ('hydraulic', 'هیدرولیک/پنوماتیک'),
-    ], null=True, blank=True)    
+    ], null=True, blank=True)
     related_asset = models.ForeignKey(
         'assets.Asset',
         on_delete=models.SET_NULL,
@@ -208,7 +208,7 @@ class ServiceRequest(TimeStampedModel):
     # فیلد اتصال به دارایی هوشمند
     machine_id = models.CharField(_('شناسه دستگاه'), max_length=100, blank=True, help_text='اتصال به اپ دارایی هوشمند')
     machine_name = models.CharField(_('نام دستگاه'), max_length=200, blank=True)
-    
+
     class Meta:
         verbose_name = _('درخواست خدمت')
         verbose_name_plural = _('درخواست‌های خدمت')
@@ -248,7 +248,7 @@ class ServiceRequestAttachment(TimeStampedModel):
     class Meta:
         verbose_name = _('پیوست درخواست')
         verbose_name_plural = _('پیوست‌های درخواست')
-        
+
 class ServiceCompletionImage(TimeStampedModel):
     """تصاویر تکمیل خدمت"""
     service_request = models.ForeignKey(
@@ -284,12 +284,12 @@ class ServiceRequestQuote(TimeStampedModel):
     advance_payment_required = models.BooleanField(_('پیش‌پرداخت الزامی'), default=False)
     advance_payment_amount = models.DecimalField(_('مبلغ پیش‌پرداخت'), max_digits=14, decimal_places=0, null=True, blank=True)
     is_selected = models.BooleanField(_('انتخاب شده توسط خریدار'), default=False)
-    
+
     class Meta:
         verbose_name = _('پیشنهاد قیمت')
         verbose_name_plural = _('پیشنهادهای قیمت')
         ordering = ['-created_at']
         unique_together = ['service_request', 'provider']  # هر ارائه‌دهنده فقط یک پیشنهاد
-    
+
     def __str__(self):
-        return f"پیشنهاد {self.provider.full_name} برای درخواست #{self.service_request.id}"        
+        return f"پیشنهاد {self.provider.full_name} برای درخواست #{self.service_request.id}"

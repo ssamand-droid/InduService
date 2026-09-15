@@ -12,7 +12,7 @@ def create_mro_steps_for_service_order(sender, instance, created, **kwargs):
     if created and hasattr(instance, 'service_request') and instance.service_request:
         scenario = instance.service_request.service.service_scenario
         instance.generate_default_mro_steps(scenario)
-        
+
 @receiver(post_save, sender=Order)
 def order_status_changed_notification(sender, instance, created, **kwargs):
     """

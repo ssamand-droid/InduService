@@ -69,7 +69,7 @@ class Command(BaseCommand):
                     try:
                         user = User.objects.get(phone_number=phone)
                         profile, _ = Profile.objects.get_or_create(user=user)
-                        
+
                         update_fields = ['company_name', 'city', 'bio', 'years_of_experience',
                                          'specializations', 'website', 'linkedin', 'instagram',
                                          'company_registration_number', 'tax_id', 'address', 'postal_code']

@@ -66,7 +66,7 @@ export default function CartPage() {
                   {item.category_name && (
                     <Badge variant="secondary" size="sm" className="mt-1">{item.category_name}</Badge>
                   )}
-                  
+
                   <div className="flex items-center justify-between mt-4">
                     <div className="flex items-center border border-secondary-300 dark:border-secondary-600 rounded-lg">
                       <button onClick={() => updateQuantity(item.id, item.quantity - 1)}

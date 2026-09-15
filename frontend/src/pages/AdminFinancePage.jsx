@@ -150,34 +150,34 @@ export default function AdminFinancePage() {
   // ========================
   // Status Configs
   // ========================
-  const invoiceLabels = { 
-    draft: 'پیش‌نویس', 
-    issued: 'صادر شده', 
-    paid: 'پرداخت شده', 
-    partially_paid: 'پرداخت جزئی', 
-    cancelled: 'باطل شده' 
-  }
-  
-  const invoiceColors = { 
-    draft: 'secondary', 
-    issued: 'warning', 
-    paid: 'success', 
-    partially_paid: 'info', 
-    cancelled: 'danger' 
+  const invoiceLabels = {
+    draft: 'پیش‌نویس',
+    issued: 'صادر شده',
+    paid: 'پرداخت شده',
+    partially_paid: 'پرداخت جزئی',
+    cancelled: 'باطل شده'
   }
 
-  const statusLabels = { 
-    pending: 'در انتظار', 
-    approved: 'تایید شده', 
-    paid: 'پرداخت شده', 
-    rejected: 'رد شده' 
+  const invoiceColors = {
+    draft: 'secondary',
+    issued: 'warning',
+    paid: 'success',
+    partially_paid: 'info',
+    cancelled: 'danger'
   }
-  
-  const statusColors = { 
-    pending: 'warning', 
-    approved: 'info', 
-    paid: 'success', 
-    rejected: 'danger' 
+
+  const statusLabels = {
+    pending: 'در انتظار',
+    approved: 'تایید شده',
+    paid: 'پرداخت شده',
+    rejected: 'رد شده'
+  }
+
+  const statusColors = {
+    pending: 'warning',
+    approved: 'info',
+    paid: 'success',
+    rejected: 'danger'
   }
 
   return (
@@ -195,11 +195,11 @@ export default function AdminFinancePage() {
       {/* Search */}
       <Card>
         <div className="p-4">
-          <Input 
-            placeholder="جستجو بر اساس شماره فاکتور، خریدار، فروشنده، کاربر، بانک..." 
-            value={search} 
-            onChange={(e) => setSearch(e.target.value)} 
-            icon={<FiSearch />} 
+          <Input
+            placeholder="جستجو بر اساس شماره فاکتور، خریدار، فروشنده، کاربر، بانک..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            icon={<FiSearch />}
           />
         </div>
       </Card>
@@ -244,10 +244,10 @@ export default function AdminFinancePage() {
                               <FiEye className="h-4 w-4" />
                             </Button>
                             {inv.status === 'issued' && inv.payment_receipt && !inv.payment_verified && (
-                              <Button 
-                                variant="ghost" 
-                                size="xs" 
-                                onClick={() => verifyPayment.mutate(inv.id)} 
+                              <Button
+                                variant="ghost"
+                                size="xs"
+                                onClick={() => verifyPayment.mutate(inv.id)}
                                 isLoading={verifyPayment.isPending}
                                 title="تایید پرداخت"
                               >

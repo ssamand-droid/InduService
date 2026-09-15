@@ -90,7 +90,7 @@ const features = [
 
 const categories = [
   { name: 'PLC و اتوماسیون', icon: FiCpu, count: '۴۵۰+', color: 'from-cyan-700 to-blue-700' },
-  { name: 'ابزار دقیق', icon: FiBarChart2, count: '۹۳۰+', color: 'from-slate-600 to-blue-600' },  
+  { name: 'ابزار دقیق', icon: FiBarChart2, count: '۹۳۰+', color: 'from-slate-600 to-blue-600' },
   { name: 'الکتروموتور', icon: FiZap, count: '۱,۲۴۰+', color: 'from-blue-600 to-cyan-700' },
   { name: 'پمپ صنعتی', icon: FiDroplet, count: '۸۵۰+', color: 'from-slate-600 to-blue-700' },
   { name: 'گیربکس', icon: FiSettings, count: '۶۲۰+', color: 'from-slate-700 to-gray-700' },
@@ -146,9 +146,9 @@ const HeroSection = ({ slides }) => {
 
           <div className="flex flex-col sm:flex-row gap-4">
             <Link to={slides[current].cta1.link}>
-              <Button 
-                variant="primary" 
-                size="lg" 
+              <Button
+                variant="primary"
+                size="lg"
                 className="bg-blue-600 hover:bg-blue-500 text-white text-lg px-10 py-7 rounded-2xl font-semibold shadow-xl shadow-blue-900/60 transition-all"
               >
                 {slides[current].cta1.label}
@@ -156,9 +156,9 @@ const HeroSection = ({ slides }) => {
               </Button>
             </Link>
             <Link to={slides[current].cta2.link}>
-              <Button 
-                variant="outline" 
-                size="lg" 
+              <Button
+                variant="outline"
+                size="lg"
                 className="border-blue-400 text-white hover:bg-blue-900/50 text-lg px-8 py-7 rounded-2xl"
               >
                 {slides[current].cta2.label}
@@ -202,9 +202,9 @@ const SearchBar = () => (
             className="w-full rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-6 pr-14 py-5 text-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none transition"
           />
         </div>
-        <Button 
-          variant="primary" 
-          size="lg" 
+        <Button
+          variant="primary"
+          size="lg"
           className="rounded-2xl px-12 text-lg font-semibold bg-blue-600 hover:bg-blue-500"
         >
           جستجو
@@ -284,7 +284,7 @@ const CategoriesSection = () => (
       <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-3">دسته‌بندی محصولات و تجهیزات</h2>
       <p className="text-slate-600 dark:text-slate-400">محصولات صنعتی را بر اساس نیاز خود پیدا کنید</p>
     </div>
-    
+
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
       {categories.map((cat) => {
         const Icon = cat.icon;
@@ -295,11 +295,11 @@ const CategoriesSection = () => (
             className="group relative p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 hover:border-blue-500 hover:shadow-xl transition-all hover:-translate-y-1 text-center"
           >
             <div className={`absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r ${cat.color} rounded-t-3xl`} />
-            
+
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-100 dark:bg-slate-800 mb-6 group-hover:bg-blue-50 dark:group-hover:bg-slate-700 transition-colors">
               <Icon className="h-12 w-12 text-slate-700 dark:text-slate-300 group-hover:text-blue-600 transition-colors" />
             </div>
-            
+
             <h3 className="font-semibold text-xl text-slate-900 dark:text-white mb-2">{cat.name}</h3>
             <p className="text-sm text-slate-500 dark:text-slate-400">{cat.count} محصول</p>
           </Link>
@@ -315,7 +315,7 @@ const FeaturesSection = () => (
       <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-3">چرا InduService؟</h2>
       <p className="text-slate-600 dark:text-slate-400">پلتفرم جامع با تمرکز بر مهندسی و دقت صنعتی</p>
     </div>
-    
+
     <div className="grid md:grid-cols-3 gap-8">
       {features.map((feature, index) => {
         const Icon = feature.icon;
@@ -339,7 +339,7 @@ const TestimonialsSection = () => (
       <div className="text-center mb-12">
         <h2 className="text-4xl font-bold mb-3">اعتماد بزرگترین برندهای صنعتی</h2>
       </div>
-      
+
       <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
         {testimonials.map((t, index) => (
           <div key={index} className="p-8 rounded-3xl bg-slate-800 border border-slate-700">
@@ -364,7 +364,7 @@ const CTASection = () => (
       <p className="text-xl text-blue-100 max-w-2xl mx-auto mb-10">
         مدیریت دستگاه، نگهداری پیشگیرانه و دسترسی به شبکه متخصصان صنعتی در یک پلتفرم واحد
       </p>
-      
+
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Link to="/register">
           <Button variant="primary" size="lg" className="bg-white text-blue-700 hover:bg-blue-50 text-lg px-10 py-7 rounded-2xl font-semibold">

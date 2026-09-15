@@ -99,7 +99,7 @@ class Order(TimeStampedModel, UUIDModel):
         self.subtotal = subtotal
         self.total = subtotal + self.shipping_cost + self.tax - self.discount
         self.save(update_fields=['subtotal', 'total'])
-        
+
         payment_receipt = models.ImageField(
         _('رسید پرداخت'),
         upload_to='payment_receipts/',
@@ -115,7 +115,7 @@ class Order(TimeStampedModel, UUIDModel):
         help_text='تصویر فیش واریزی'
     )
     payment_verified = models.BooleanField(_('پرداخت تایید شده'), default=False)
-    
+
     # به انتهای کلاس Order اضافه شود
     def generate_default_mro_steps(self, scenario):
         """
@@ -217,7 +217,7 @@ class Order(TimeStampedModel, UUIDModel):
                 order_index=index,
                 status='pending'
             )
-    
+
 class OrderItem(TimeStampedModel):
     """
     آیتم‌های سفارش (محصولات)
@@ -235,7 +235,7 @@ class OrderItem(TimeStampedModel):
         related_name='order_items',
         verbose_name=_('قطعه دارایی')
     )
-    
+
     class Meta:
         verbose_name = _('آیتم سفارش')
         verbose_name_plural = _('آیتم‌های سفارش')

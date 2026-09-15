@@ -1,90 +1,118 @@
-# =========================================================
-# InduService - Git Ignore
-# =========================================================
+# =========================
+# Python / Django
+# =========================
 
-# -------------------------
-# Python
-# -------------------------
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
+
+*.so
+
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
 
 # Virtual environments
 venv/
 .venv/
 env/
+.venv/
 ENV/
+env.bak/
+venv.bak/
+
+# Windows backup virtual environment
+venv_windows_backup/
+backend/venv_windows_backup/
 
 # Django
 *.log
 db.sqlite3
 db.sqlite3-journal
 
-# Django generated files
-staticfiles/
-media/
-
-# Environment / secrets
+# Environment variables
 .env
 .env.*
 !.env.example
 
-# -------------------------
+# Django media/static generated files
+backend/media/
+backend/staticfiles/
+
+# =========================
 # Node / React / Vite
-# -------------------------
+# =========================
+
 node_modules/
+frontend/node_modules/
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
 dist/
+frontend/dist/
+
 .vite/
 
-# Environment
-frontend/.env
-frontend/.env.*
-!frontend/.env.example
-
-# -------------------------
-# Testing / Coverage
-# -------------------------
-.coverage
-.coverage.*
-htmlcov/
-.pytest_cache/
-.mypy_cache/
-
-# -------------------------
+# =========================
 # IDE
-# -------------------------
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
+# =========================
 
+.vscode/
 .idea/
-*.iml
 
-# -------------------------
-# OS
-# -------------------------
-.DS_Store
-Thumbs.db
-Desktop.ini
-
-# -------------------------
-# Temporary files
-# -------------------------
-*.tmp
-*.temp
 *.swp
 *.swo
-*~
+.DS_Store
+Thumbs.db
 
-# -------------------------
-# Build / cache
-# -------------------------
-.cache/
-.parcel-cache/
+# =========================
+# OS
+# =========================
 
-# -------------------------
-# Local backups
-# -------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# =========================
+# Temporary / backup
+# =========================
+
+*.tmp
+*.temp
 *.bak
 *.backup
+*~
+# Server database files
+backend/db.sqlite3
+backend/db.sqlite3.*
+
+# Local SQLite database backups / legacy databases
+backend/*.sqlite3
+backend/*.sqlite3.*
+backend/db.sqlite3*
+
+# Local Python runtime / system packages accidentally created inside backend
+backend/lib/
+backend/usr/
+
+# Temporary Excel lock files
+backend/data/~$*.xlsx
+backend/data/~$*.xls

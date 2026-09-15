@@ -7,7 +7,7 @@ export const useProfileDocuments = () => {
   const queryClient = useQueryClient();
 
   // ==================== Portfolio ====================
-  
+
   const { data: portfolio, isLoading: portfolioLoading, refetch: refetchPortfolio } = useQuery({
     queryKey: ['portfolio'],
     queryFn: documentApi.getPortfolio,
@@ -38,7 +38,7 @@ export const useProfileDocuments = () => {
   });
 
   // ==================== Certificates ====================
-  
+
   const { data: certificates, isLoading: certificatesLoading, refetch: refetchCertificates } = useQuery({
     queryKey: ['certificates'],
     queryFn: documentApi.getCertificates,

@@ -48,7 +48,7 @@ export default function OnboardingGuide() {
 
   useEffect(() => {
     const hasSeenGuide = localStorage.getItem('induservice_onboarding_seen');
-    const isNewUser = user?.date_joined && 
+    const isNewUser = user?.date_joined &&
       (new Date() - new Date(user.date_joined)) < 24 * 60 * 60 * 1000;
 
     // اگر کاربر جدید است یا پروفایل کامل نیست، راهنما را نمایش بده
@@ -116,7 +116,7 @@ export default function OnboardingGuide() {
 
   return (
     <>
-      <div 
+      <div
         className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4"
         onClick={(e) => e.target === e.currentTarget && handleClose()}
       >
@@ -126,7 +126,7 @@ export default function OnboardingGuide() {
               <Rocket className="text-blue-600" size={20} />
               <h2 className="font-bold text-slate-800">🚀 شروع سریع</h2>
             </div>
-            <button 
+            <button
               onClick={handleClose}
               className="p-1.5 hover:bg-slate-100 rounded-lg transition text-slate-400 hover:text-slate-600"
             >
@@ -142,7 +142,7 @@ export default function OnboardingGuide() {
                 <span>{Math.round(progress)}%</span>
               </div>
               <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                <div 
+                <div
                   className={`h-full rounded-full transition-all duration-700 ${colors.button}`}
                   style={{ width: `${progress}%` }}
                 />
@@ -196,7 +196,7 @@ export default function OnboardingGuide() {
                   key={index}
                   onClick={() => setCurrentStep(index)}
                   className={`h-2 rounded-full transition-all ${
-                    index === currentStep 
+                    index === currentStep
                       ? `w-6 ${colors.button}`
                       : 'w-2 bg-slate-200 hover:bg-slate-300'
                   }`}

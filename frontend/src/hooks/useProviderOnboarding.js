@@ -12,8 +12,8 @@ export const useProviderOnboarding = () => {
     base_hourly_rate: !!profile?.base_hourly_rate,
   };
 
-  const isProfileComplete = requiredFields.service_types_offered && 
-                           requiredFields.max_distance_km && 
+  const isProfileComplete = requiredFields.service_types_offered &&
+                           requiredFields.max_distance_km &&
                            requiredFields.base_hourly_rate;
 
   const missingFields = Object.entries(requiredFields)

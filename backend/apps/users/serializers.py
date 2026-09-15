@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
-from .models import User, Profile, PortfolioItem, Certification 
+from .models import User, Profile, PortfolioItem, Certification
 from core.utils import to_jalali_datetime
 
 
@@ -145,6 +145,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'rating', 'rating_count', 'completed_orders', 'total_revenue', 'avg_response_time_hours']
 
+# apps/users/serializers.py - اضافه کردن RegisterStep1Serializer و RegisterStep2Serializer
 
 # apps/users/serializers.py - چک کن RegisterStep1Serializer وجود دارد
 
@@ -154,11 +155,7 @@ class RegisterStep1Serializer(serializers.ModelSerializer):
         ('buyer', 'دریافت‌کننده خدمات'),
         ('provider', 'خدمات‌دهنده'),
     ])
-    password = serializers.CharField(
-        write_only=True, 
-        required=True, 
-        validators=[validate_password],  # ✅ اینجا هم باید تغییر کند
-    )
+    password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
     password_confirm = serializers.CharField(write_only=True, required=True)
 
     class Meta:
@@ -180,14 +177,14 @@ class RegisterStep1Serializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data.pop('password_confirm')
         phone_number = validated_data.pop('phone_number')
-        
+
         # 🆕 تبدیل role موقت به role واقعی
         if validated_data.get('role') == 'provider':
             validated_data['role'] = 'service_provider'  # پیش‌فرض حقیقی
-        
+
         if not validated_data.get('email'):
             validated_data['email'] = f"{phone_number}@induservice.local"
-        
+
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
         return user
 
@@ -225,17 +222,17 @@ class RegisterStep2Serializer(serializers.Serializer):
         user = instance
         user.first_name = validated_data.get('first_name', user.first_name)
         user.last_name = validated_data.get('last_name', user.last_name)
-        
+
         # 🆕 اصلاح role بر اساس person_type برای خدمات‌دهندگان
         person_type = validated_data.get('person_type', 'individual')
         if user.role == 'service_provider' and person_type == 'legal':
             user.role = 'company_provider'
-        
+
         user.save()
 
         # 🆕 تضمین وجود پروفایل
         profile, _ = Profile.objects.get_or_create(user=user)
-        
+
         # به‌روزرسانی پروفایل
         profile.person_type = person_type
         profile.national_id = validated_data.get('national_id', profile.national_id)

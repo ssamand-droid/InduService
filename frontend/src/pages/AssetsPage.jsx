@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { 
-  Plus, Package, Search, MapPin, AlertTriangle, 
+import {
+  Plus, Package, Search, MapPin, AlertTriangle,
   Download, Upload, Activity, TrendingUp
 } from 'lucide-react'
 import assetService from '@services/assetService'
@@ -168,11 +168,11 @@ const AssetsPage = () => {
           {/* در بخش کارت‌های آماری، کارت چهارم رو با این جایگزین کن: */}
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <p className="text-sm text-gray-500">مصرف دارایی</p>
-            <UsageLimitBar 
-              used={dashboard.asset_limit?.current || 0} 
-              limit={dashboard.asset_limit?.max || 5} 
+            <UsageLimitBar
+              used={dashboard.asset_limit?.current || 0}
+              limit={dashboard.asset_limit?.max || 5}
             />
-          </div>          
+          </div>
           {/* <StatsCard
             icon={TrendingUp}
             title="ظرفیت باقی‌مانده"
@@ -233,7 +233,7 @@ const AssetsPage = () => {
                       <Package className="text-gray-300 dark:text-gray-600" size={48} />
                     </div>
                   )}
-                  
+
                   {/* نوار سلامت */}
                   <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20">
                     <div

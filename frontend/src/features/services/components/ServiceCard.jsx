@@ -36,10 +36,10 @@ export const ServiceCard = ({ service }) => {
       <Link to={`/services/${slug}`} className="block">
         <div className="relative aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-blue-100 to-blue-50">
           {primary_image ? (
-            <img 
-              src={primary_image} 
-              alt={title} 
-              className="h-full w-full object-cover" 
+            <img
+              src={primary_image}
+              alt={title}
+              className="h-full w-full object-cover"
               loading="lazy"
               onError={(e) => {
                 e.target.onerror = null;

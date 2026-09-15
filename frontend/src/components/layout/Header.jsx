@@ -111,14 +111,15 @@ export const Header = () => {
                 {theme === 'dark' ? <FiSun className="h-5 w-5" /> : <FiMoon className="h-5 w-5" />}
               </button>
 
-              <button onClick={openCart} className="relative p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
-                <FiShoppingCart className="h-5 w-5" />
-                {totalItems > 0 && (
+              {/* فقط اگر سبد خرید خالی نیست نشان بده */}
+              {totalItems > 0 && (
+                <button onClick={openCart} className="relative p-2 rounded-lg text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
+                  <FiShoppingCart className="h-5 w-5" />
                   <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600 text-[10px] text-white">
                     {totalItems > 9 ? '9+' : totalItems}
                   </span>
-                )}
-              </button>
+                </button>
+              )}
 
               {/* User Menu */}
               {isAuthenticated ? (
@@ -134,7 +135,7 @@ export const Header = () => {
                           ? user.company_name
                           : `${user?.first_name || ''} ${user?.last_name || ''}`}
                       </p>
-                    </div>               
+                    </div>
                     <div className="p-2">
                       <Link to="/dashboard" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md">
                         داشبورد

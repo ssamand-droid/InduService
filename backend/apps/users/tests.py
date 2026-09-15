@@ -14,7 +14,7 @@ class UserAPITestCase(TestCase):
 
     def setUp(self):
         self.client = APIClient()
-        
+
         # ایجاد کاربر تست
         self.user = User.objects.create_user(
             phone_number='09120000001',
@@ -23,7 +23,7 @@ class UserAPITestCase(TestCase):
             last_name='محمدی',
             role='buyer'
         )
-        
+
         # لاگین
         response = self.client.post('/api/token/', {
             'phone_number': '09120000001',
@@ -33,7 +33,7 @@ class UserAPITestCase(TestCase):
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.token}')
 
     # ============ ثبت نام ============
-    
+
     def test_register_user(self):
         """تست ثبت نام کاربر جدید"""
         response = self.client.post('/api/users/register/', {
@@ -62,7 +62,7 @@ class UserAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
     # ============ لاگین ============
-    
+
     def test_login_success(self):
         """تست لاگین موفق"""
         response = self.client.post('/api/token/', {
@@ -90,7 +90,7 @@ class UserAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     # ============ پروفایل ============
-    
+
     def test_get_profile(self):
         """تست دریافت پروفایل"""
         response = self.client.get('/api/users/profile/')
@@ -105,7 +105,7 @@ class UserAPITestCase(TestCase):
         self.assertIn(response.status_code, [status.HTTP_200_OK, status.HTTP_201_CREATED])
 
     # ============ دسترسی‌ها ============
-    
+
     def test_unauthenticated_access(self):
         """تست دسترسی بدون توکن"""
         client = APIClient()
@@ -119,7 +119,7 @@ class UserAPITestCase(TestCase):
             'password': 'testpass123'
         })
         refresh = login_res.data['refresh']
-        
+
         response = self.client.post('/api/token/refresh/', {
             'refresh': refresh
         })

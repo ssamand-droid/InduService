@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { 
+import {
   Activity, MapPin, Calendar, Settings, AlertTriangle,
   Package, FileText, Wrench, Plus, Upload, ShoppingBag
 } from 'lucide-react'
@@ -10,7 +10,7 @@ import { Badge } from '@components/ui/Badge'
 
 const AssetDetailPage = () => {
   const { id } = useParams()
-  
+
   // همه useState ها اینجا - قبل از هر شرطی
   const [asset, setAsset] = useState(null)
   const [activeTab, setActiveTab] = useState('overview')
@@ -18,16 +18,16 @@ const AssetDetailPage = () => {
   const [documents, setDocuments] = useState([])
   const [maintenance, setMaintenance] = useState([])
   const [loading, setLoading] = useState(true)
-  
+
   // state های فرم‌ها
   const [showAddPart, setShowAddPart] = useState(false)
   const [showAddMaintenance, setShowAddMaintenance] = useState(false)
   const [uploadingDoc, setUploadingDoc] = useState(false)
-  
+
   const [newPart, setNewPart] = useState({
     name: '', part_number: '', stock_quantity: 0, criticality: 'standard'
   })
-  
+
   const [newMaintenance, setNewMaintenance] = useState({
     maintenance_type: 'preventive',
     title: '',
@@ -38,7 +38,7 @@ const AssetDetailPage = () => {
     technician: '',
     started_at: new Date().toISOString().split('T')[0],
   })
-  
+
   const fileInputRef = useRef(null)
 
   // همه useEffect ها
@@ -104,7 +104,7 @@ const AssetDetailPage = () => {
       const validDate = isNaN(startedDate.getTime()) ? new Date() : startedDate
       // تنظیم ساعت به ظهر (برای جلوگیری از مشکلات timezone)
       validDate.setHours(12, 0, 0, 0)
-      
+
       const payload = {
         maintenance_type: newMaintenance.maintenance_type,
         title: newMaintenance.title,
@@ -116,9 +116,9 @@ const AssetDetailPage = () => {
         started_at: validDate.toISOString(),
         completed_at: validDate.toISOString(), // همون تاریخ برای سادگی
       }
-      
+
       console.log('📤 Sending maintenance:', payload)
-      
+
       await assetService.addMaintenanceLog(id, payload)
       setShowAddMaintenance(false)
       setNewMaintenance({
@@ -214,7 +214,7 @@ const AssetDetailPage = () => {
             >
               <Activity size={18} />
               تحلیل پیش‌بینی
-            </button>            
+            </button>
           </div>
         </div>
 

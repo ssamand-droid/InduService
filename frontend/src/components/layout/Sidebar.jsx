@@ -55,9 +55,9 @@ export const Sidebar = () => {
     { to: '/invoices', icon: FiFileText, label: 'فاکتورها' },
     { to: '/dashboard/support', icon: FiMessageSquare, label: 'پشتیبانی' },
     // ========== اضافه شده ==========
-    { 
-      to: '#', 
-      icon: FiBookOpen, 
+    {
+      to: '#',
+      icon: FiBookOpen,
       label: 'راهنمای پلتفرم',
       onClick: () => setHelpOpen(true),
       isHelp: true,
@@ -76,9 +76,9 @@ export const Sidebar = () => {
     { to: '/invoices', icon: FiFileText, label: 'فاکتورها' },
     { to: '/dashboard/support', icon: FiMessageSquare, label: 'پشتیبانی' },
     // ========== اضافه شده ==========
-    { 
-      to: '#', 
-      icon: FiBookOpen, 
+    {
+      to: '#',
+      icon: FiBookOpen,
       label: 'راهنمای پلتفرم',
       onClick: () => setHelpOpen(true),
       isHelp: true,
@@ -100,9 +100,9 @@ export const Sidebar = () => {
     { to: '/dashboard/admin/commission', icon: FiPercent, label: 'کمیسیون و پیش‌پرداخت' },
     { to: '/dashboard/admin/support', icon: FiMessageSquare, label: 'مدیریت پشتیبانی' },
     // ========== اضافه شده ==========
-    { 
-      to: '#', 
-      icon: FiBookOpen, 
+    {
+      to: '#',
+      icon: FiBookOpen,
       label: ' راهنمای پلتفرم',
       onClick: () => setHelpOpen(true),
       isHelp: true,
@@ -201,7 +201,7 @@ export const Sidebar = () => {
           <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
             {links.map((link) => {
               const Icon = link.icon
-              
+
               // اگر لینک راهنما است
               if (link.isHelp) {
                 return (
@@ -215,7 +215,7 @@ export const Sidebar = () => {
                   </button>
                 );
               }
-              
+
               return (
                 <NavLink
                   key={link.to}
@@ -256,9 +256,9 @@ export const Sidebar = () => {
       </aside>
 
       {/* ========== راهنمای جامع ========== */}
-      <HelpCenter 
-        isOpen={helpOpen} 
-        onClose={() => setHelpOpen(false)} 
+      <HelpCenter
+        isOpen={helpOpen}
+        onClose={() => setHelpOpen(false)}
       />
       {/* ================================= */}
     </>

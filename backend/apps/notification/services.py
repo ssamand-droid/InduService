@@ -137,7 +137,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
     - نام دستگاه از دارایی‌ها (asset_name)
     """
     from services.models import Service
-    
+
     # ترکیب همه متن‌ها
     search_text_parts = [title, description]
     if equipment_details:
@@ -150,16 +150,16 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
         search_text_parts.append(industry)
     if asset_name:
         search_text_parts.append(asset_name)
-    
+
     search_text = ' '.join(search_text_parts).lower()
     print(f"🔍 Searching for service matching: {search_text[:200]}...")
-    
+
     # کلمات کلیدی مرتبط با صنعت نوشابه‌سازی
     beverage_industry_keywords = ['نوشابه', 'نوشابه‌سازی', 'آب معدنی', 'beverage', 'drink']
-    
+
     # کلمات کلیدی مرتبط با دستگاه کراس مافای
     krauss_keywords = ['کراس مافای', 'krauss', 'maffei', 'krauss maffei', 'دستگاه تزریق']
-    
+
     # لیست کلمات کلیدی برای تطابق
     keywords = {
         'emergency_repair': [
@@ -176,7 +176,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
         'commissioning': ['نصب', 'راه اندازی', 'راه‌اندازی', 'commissioning'],
         'inspection': ['بازرسی', 'تست', 'inspection', 'ndt', 'تست غیرمخرب'],
     }
-    
+
     # ============================================================
     # روش 1: جستجو بر اساس نام دستگاه (اولویت بالا)
     # ============================================================
@@ -184,7 +184,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
         for kw in krauss_keywords:
             if kw in asset_name.lower() or kw in search_text:
                 krauss_services = Service.objects.filter(
-                    Q(title__icontains='تزریق') | 
+                    Q(title__icontains='تزریق') |
                     Q(title__icontains='دستگاه') |
                     Q(description__icontains='تزریق'),
                     is_active=True,
@@ -196,7 +196,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
                         if 'تزریق' in svc.title:
                             print(f"✅ Asset-based match (Krauss Maffei): {svc.title}")
                             return svc
-    
+
     # ============================================================
     # روش 2: جستجو بر اساس صنعت (اولویت دوم)
     # ============================================================
@@ -205,7 +205,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
         for kw in beverage_industry_keywords:
             if kw in industry_lower or kw in search_text:
                 beverage_services = Service.objects.filter(
-                    Q(title__icontains='نوشابه') | 
+                    Q(title__icontains='نوشابه') |
                     Q(title__icontains='بسته‌بندی') |
                     Q(description__icontains='خوراکی'),
                     is_active=True,
@@ -214,22 +214,22 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
                 if beverage_services.exists():
                     print(f"✅ Industry-based match: {beverage_services.first().title}")
                     return beverage_services.first()
-    
+
     # ============================================================
     # روش 3: جستجوی مستقیم در سرویس‌ها
     # ============================================================
     matching_services = Service.objects.filter(
-        Q(title__icontains=search_text) | 
+        Q(title__icontains=search_text) |
         Q(description__icontains=search_text),
         is_active=True,
         is_deleted=False
     )
-    
+
     if matching_services.exists():
         best_match = matching_services.first()
         print(f"✅ Direct match found: {best_match.title}")
         return best_match
-    
+
     # ============================================================
     # روش 4: جستجو بر اساس کلمات کلیدی
     # ============================================================
@@ -249,7 +249,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
                     best_match = scenario_services.first()
                     print(f"✅ Scenario match: {best_match.title} (scenario: {scenario})")
                     return best_match
-    
+
     # ============================================================
     # روش 5: جستجو بر اساس کلمه "دستگاه تزریق"
     # ============================================================
@@ -263,7 +263,7 @@ def find_matching_service(title, description, equipment_details='', extra_data=N
             best_match = injection_services.first()
             print(f"✅ Injection device match: {best_match.title}")
             return best_match
-    
+
     print("⚠️ No matching service found")
     return None
 
@@ -272,12 +272,12 @@ def notify_matching_providers(service_request):
     اعلان به خدمات‌دهندگان مرتبط با درخواست
     """
     from services.models import Service
-    
+
     settings = get_matching_settings()
     print(f"🔍 Matching Settings for request #{service_request.id}: {settings}")
-    
+
     matched_providers = set()
-    
+
     # ============================================================
     # گزینه 1: ارائه‌دهنده مستقیم
     # ============================================================
@@ -285,7 +285,7 @@ def notify_matching_providers(service_request):
         if service_request.service.provider != service_request.buyer:
             matched_providers.add(service_request.service.provider.id)
             print(f"  ➕ Direct provider: {service_request.service.provider.phone_number}")
-    
+
     # ============================================================
     # گزینه 2: ارائه‌دهندگان سناریو مرتبط
     # ============================================================
@@ -296,12 +296,12 @@ def notify_matching_providers(service_request):
             is_active=True,
             is_deleted=False
         ).exclude(provider=service_request.buyer).select_related('provider').distinct()
-        
+
         for svc in scenario_providers:
             if svc.provider:
                 matched_providers.add(svc.provider.id)
                 print(f"  ➕ Scenario provider: {svc.provider.phone_number} ({scenario})")
-    
+
     # ============================================================
     # گزینه 3: Matching Engine پیشرفته (3 نفر برتر)
     # ============================================================
@@ -309,7 +309,7 @@ def notify_matching_providers(service_request):
         try:
             from services.matching_engine import MatchingEngine
             top_providers = MatchingEngine.find_best_providers(service_request)
-            
+
             for provider_data in top_providers:
                 provider_id = provider_data.get('user_id')
                 if provider_id and provider_id not in matched_providers:
@@ -317,10 +317,10 @@ def notify_matching_providers(service_request):
                     print(f"  ➕ Advanced Engine: {provider_data.get('name')} (score: {provider_data.get('score')})")
         except Exception as e:
             print(f"⚠️ Advanced Matching Engine error: {e}")
-    
+
     # محدودیت به حداکثر 5 نفر
     matched_providers = list(matched_providers)[:5]
-    
+
     # ============================================================
     # ارسال اعلان
     # ============================================================
@@ -344,6 +344,6 @@ def notify_matching_providers(service_request):
             print(f"✅ Notification sent to provider: {provider.phone_number}")
         except User.DoesNotExist:
             continue
-    
+
     print(f"📨 Total notifications sent for request #{service_request.id}: {count}")
     return count

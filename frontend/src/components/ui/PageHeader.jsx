@@ -3,11 +3,11 @@ import React from 'react'
 import { cn } from '@lib/utils'
 
 // ✅ named export اضافه شد
-export const PageHeader = ({ 
-  title, 
-  description, 
+export const PageHeader = ({
+  title,
+  description,
   actions,
-  className 
+  className
 }) => {
   return (
     <div className={cn(

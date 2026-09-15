@@ -47,7 +47,7 @@ class InvoiceSerializer(serializers.ModelSerializer):
 
     def get_commission_rule(self, obj):
         return f'{obj.platform_commission_rate}%' if obj.platform_commission_rate else None
-    
+
 class SettlementSerializer(serializers.ModelSerializer):
     user_name = serializers.CharField(source='user.full_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)

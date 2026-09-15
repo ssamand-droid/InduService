@@ -1,7 +1,6 @@
-// src/pages/OrderDetailPage.jsx - نسخه کامل اصلاح شده
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { FiArrowRight, FiPackage, FiMapPin, FiUser, FiCheck, FiTruck, FiClock } from 'react-icons/fi'
+import { FiArrowRight, FiPackage, FiMapPin, FiPhone, FiUser, FiCheck, FiTruck, FiClock, } from 'react-icons/fi'
 import { useOrder, useDeliverOrder, useConfirmOrder, useShipOrder } from '@features/orders/hooks/useOrders'
 import { orderApi } from '@features/orders/services/orderApi'
 import { useAuthStore } from '@stores/authStore'
@@ -9,27 +8,8 @@ import { OrderTimeline } from '@features/orders/components/OrderTimeline'
 import { MROWorkflowSteps } from '@features/orders/components/MROWorkflowSteps'
 import { ReceiptUploader } from '@features/orders/components/ReceiptUploader'
 import { Spinner, Alert, Button, Card, CardHeader, CardTitle, CardContent, Badge, ConfirmModal } from '@components/ui'
-import { formatPrice } from '@lib/utils'
-import { ORDER_STATUS, ORDER_STATUS_LABELS } from '@lib/constants'  // ← این خط را اضافه کنید
-
-// ============================================================
-// تابع تاریخ ساده - جایگزین formatDate
-// ============================================================
-const formatDateSafe = (dateString) => {
-  if (!dateString) return '-'
-  try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return '-'
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    return `${year}/${month}/${day} ${hours}:${minutes}`
-  } catch (e) {
-    return '-'
-  }
-}
+import { formatPrice, formatDate } from '@lib/utils'
+import { ORDER_STATUS, ORDER_STATUS_LABELS } from '@lib/constants'
 
 export default function OrderDetailPage() {
   const { id } = useParams()
@@ -92,7 +72,7 @@ export default function OrderDetailPage() {
             order.status === 'completed' ? 'success' :
             order.status === 'cancelled' ? 'danger' : 'warning'
           }>
-            {ORDER_STATUS_LABELS[order.status] || order.status}
+            {ORDER_STATUS_LABELS[order.status]}
           </Badge>
           <Badge variant={
             order.payment_status === 'paid' ? 'success' :
@@ -311,24 +291,24 @@ export default function OrderDetailPage() {
             <CardContent className="space-y-3 text-sm">
               <div className="flex justify-between">
                 <span className="text-secondary-500">تاریخ ثبت:</span>
-                <span>{formatDateSafe(order.created_at)}</span>
+                <span>{formatDate(order.created_at)}</span>
               </div>
               {order.confirmed_at && (
                 <div className="flex justify-between">
                   <span className="text-secondary-500">تاریخ تایید:</span>
-                  <span>{formatDateSafe(order.confirmed_at)}</span>
+                  <span>{formatDate(order.confirmed_at)}</span>
                 </div>
               )}
               {order.shipped_at && (
                 <div className="flex justify-between">
                   <span className="text-secondary-500">تاریخ ارسال:</span>
-                  <span>{formatDateSafe(order.shipped_at)}</span>
+                  <span>{formatDate(order.shipped_at)}</span>
                 </div>
               )}
               {order.delivered_at && (
                 <div className="flex justify-between">
                   <span className="text-secondary-500">تاریخ تحویل:</span>
-                  <span>{formatDateSafe(order.delivered_at)}</span>
+                  <span>{formatDate(order.delivered_at)}</span>
                 </div>
               )}
             </CardContent>

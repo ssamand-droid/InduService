@@ -65,7 +65,7 @@ export default function MyServiceRequests() {
   const user = useAuthStore((state) => state.user)
   const navigate = useNavigate()
   const fileRef = useRef(null)
-  
+
   const isBuyer = BUYER_ROLES.includes(user?.role)
   const isProvider = PROVIDER_ROLES.includes(user?.role)
 
@@ -212,7 +212,7 @@ export default function MyServiceRequests() {
                 {/* محتوای اصلی */}
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <h3 
+                    <h3
                       className="font-semibold text-base sm:text-lg truncate cursor-pointer text-blue-600 hover:underline"
                       onClick={() => handleViewDetails(req.id)}
                     >
@@ -230,9 +230,9 @@ export default function MyServiceRequests() {
                       </span>
                     )}
                   </div>
-                  
+
                   <p className="text-gray-600 text-sm mb-2">خدمت: {req.service_title || 'بدون سرویس'}</p>
-                  
+
                   {/* اطلاعات قیمت و تاریخ - اصلاح شده با توابع امن */}
                   <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
                     <span>📅 {safeFormatDate(req.created_at)}</span>
@@ -248,19 +248,19 @@ export default function MyServiceRequests() {
                       </span>
                     )}
                   </div>
-                  
+
                   {req.provider_notes && (
                     <div className="mt-2 p-2 bg-gray-50 rounded-lg text-xs sm:text-sm">
                       <span className="font-medium">یادداشت:</span> {req.provider_notes}
                     </div>
                   )}
-                  
+
                   {req.completion_notes && (
                     <div className="mt-2 p-2 bg-green-50 rounded-lg text-xs sm:text-sm">
                       <span className="font-medium">✅ یادداشت تکمیل:</span> {req.completion_notes}
                     </div>
                   )}
-                  
+
                   {req.completion_images?.length > 0 && (
                     <div className="mt-2 flex gap-2 overflow-x-auto">
                       {req.completion_images.slice(0, 3).map((img) => (
@@ -277,7 +277,7 @@ export default function MyServiceRequests() {
 
                 {/* دکمه‌های عملیات - ریسپانسیو با flex-wrap */}
                 <div className="flex flex-row flex-wrap gap-2 border-t pt-3">
-                  <button 
+                  <button
                     onClick={() => handleViewDetails(req.id)}
                     className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 flex items-center justify-center gap-1 transition whitespace-nowrap"
                   >
@@ -286,7 +286,7 @@ export default function MyServiceRequests() {
 
                   {/* Buyer: پذیرش قیمت */}
                   {isBuyer && req.status === SERVICE_REQUEST_STATUS.QUOTED && (
-                    <button 
+                    <button
                       onClick={() => setConfirmModal({ isOpen: true, requestId: req.id })}
                       className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -296,7 +296,7 @@ export default function MyServiceRequests() {
 
                   {/* Buyer: پرداخت پیش‌پرداخت */}
                   {isBuyer && req.advance_payment_required && !req.advance_payment_paid && req.status === SERVICE_REQUEST_STATUS.ACCEPTED && (
-                    <button 
+                    <button
                       onClick={() => setPaymentModal({ isOpen: true, request: req, type: 'advance' })}
                       className="px-3 py-1.5 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -306,7 +306,7 @@ export default function MyServiceRequests() {
 
                   {/* Buyer: پرداخت نهایی */}
                   {isBuyer && req.status === SERVICE_REQUEST_STATUS.COMPLETED && (
-                    <button 
+                    <button
                       onClick={() => setPaymentModal({ isOpen: true, request: req, type: 'final' })}
                       className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -316,7 +316,7 @@ export default function MyServiceRequests() {
 
                   {/* Buyer: ویرایش */}
                   {isBuyer && req.status === SERVICE_REQUEST_STATUS.PENDING && (
-                    <button 
+                    <button
                       onClick={() => setEditModal({ isOpen: true, request: req })}
                       className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -326,7 +326,7 @@ export default function MyServiceRequests() {
 
                   {/* Buyer: امتیازدهی */}
                   {isBuyer && req.status === SERVICE_REQUEST_STATUS.COMPLETED && !req.buyer_rating && (
-                    <button 
+                    <button
                       onClick={() => { setReviewModal({ isOpen: true, request: req }); setReviewRating(5); }}
                       className="px-3 py-1.5 bg-yellow-600 text-white rounded-lg text-sm hover:bg-yellow-700 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -336,7 +336,7 @@ export default function MyServiceRequests() {
 
                   {/* Provider: اعلام قیمت */}
                   {isProvider && (req.status === SERVICE_REQUEST_STATUS.PENDING || req.status === SERVICE_REQUEST_STATUS.REVIEWED) && (
-                    <button 
+                    <button
                       onClick={() => setQuoteModal({ isOpen: true, request: req })}
                       className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -346,8 +346,8 @@ export default function MyServiceRequests() {
 
                   {/* Provider: شروع کار */}
                   {isProvider && req.status === SERVICE_REQUEST_STATUS.ACCEPTED && (
-                    <button 
-                      onClick={() => startWork(req.id)} 
+                    <button
+                      onClick={() => startWork(req.id)}
                       disabled={isStarting}
                       className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 disabled:bg-gray-400 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -357,7 +357,7 @@ export default function MyServiceRequests() {
 
                   {/* Provider: فورس ماژور */}
                   {isProvider && (req.status === SERVICE_REQUEST_STATUS.ACCEPTED || req.status === SERVICE_REQUEST_STATUS.IN_PROGRESS) && (
-                    <button 
+                    <button
                       onClick={() => setForceMajeureModal({ isOpen: true, request: req })}
                       className="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 flex items-center justify-center gap-1 transition whitespace-nowrap"
                     >
@@ -367,7 +367,7 @@ export default function MyServiceRequests() {
 
                   {/* Provider: تکمیل خدمت */}
                   {isProvider && req.status === SERVICE_REQUEST_STATUS.IN_PROGRESS && (
-                    <button 
+                    <button
                       onClick={() => setCompletionModal({ isOpen: true, request: req })}
                       disabled={isCompleting}
                       className="px-3 py-1.5 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700 disabled:bg-gray-400 flex items-center justify-center gap-1 transition whitespace-nowrap"

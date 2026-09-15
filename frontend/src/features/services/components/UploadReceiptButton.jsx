@@ -27,7 +27,7 @@ export const UploadReceiptButton = ({ requestId, paymentType = 'final', onSucces
     <div className="space-y-3">
       <input type="file" ref={fileRef} className="hidden" accept="image/*,.pdf"
         onChange={(e) => setFile(e.target.files[0])} />
-      
+
       {file ? (
         <div className="flex items-center gap-2 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
           <FiCheck className="text-green-500" />

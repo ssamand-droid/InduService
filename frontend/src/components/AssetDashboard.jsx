@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BarChart3, AlertTriangle, Clock, Wrench, 
-  Activity, Plus, ChevronRight, Zap, Package 
+import {
+  BarChart3, AlertTriangle, Clock, Wrench,
+  Activity, Plus, ChevronRight, Zap, Package
 } from 'lucide-react';
 import assetService from '../services/assetService';
 import AssetCard from './AssetCard';
@@ -70,26 +70,26 @@ const AssetDashboard = () => {
 
       {/* کارت‌های آماری */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <StatCard 
+        <StatCard
           icon={<Activity className="text-blue-500" />}
           title="کل دارایی‌ها"
           value={dashboardData.total_assets}
           bgColor="bg-blue-50"
         />
-        <StatCard 
+        <StatCard
           icon={<AlertTriangle className="text-red-500" />}
           title="هشدارهای بحرانی"
           value={dashboardData.critical_alerts}
           bgColor="bg-red-50"
           pulse={dashboardData.critical_alerts > 0}
         />
-        <StatCard 
+        <StatCard
           icon={<Clock className="text-yellow-500" />}
           title="نگهداری پیش رو (۷ روز)"
           value={dashboardData.upcoming_maintenance}
           bgColor="bg-yellow-50"
         />
-        <StatCard 
+        <StatCard
           icon={<Zap className="text-green-500" />}
           title="در حال کار"
           value={dashboardData.assets_by_status?.operational || 0}
@@ -101,20 +101,20 @@ const AssetDashboard = () => {
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
         <h2 className="text-xl font-bold text-gray-800 mb-4">وضعیت دارایی‌ها</h2>
         <div className="flex gap-4">
-          <StatusBadge 
-            label="عملیاتی" 
-            count={dashboardData.assets_by_status?.operational} 
-            color="bg-green-100 text-green-800" 
+          <StatusBadge
+            label="عملیاتی"
+            count={dashboardData.assets_by_status?.operational}
+            color="bg-green-100 text-green-800"
           />
-          <StatusBadge 
-            label="کاهش عملکرد" 
-            count={dashboardData.assets_by_status?.degraded} 
-            color="bg-yellow-100 text-yellow-800" 
+          <StatusBadge
+            label="کاهش عملکرد"
+            count={dashboardData.assets_by_status?.degraded}
+            color="bg-yellow-100 text-yellow-800"
           />
-          <StatusBadge 
-            label="در دست تعمیر" 
-            count={dashboardData.assets_by_status?.maintenance} 
-            color="bg-red-100 text-red-800" 
+          <StatusBadge
+            label="در دست تعمیر"
+            count={dashboardData.assets_by_status?.maintenance}
+            color="bg-red-100 text-red-800"
           />
         </div>
       </div>
@@ -136,7 +136,7 @@ const AssetDashboard = () => {
 
       {/* مودال ایجاد دارایی */}
       {showCreateModal && (
-        <CreateAssetModal 
+        <CreateAssetModal
           onClose={() => setShowCreateModal(false)}
           onSuccess={() => {
             setShowCreateModal(false);

@@ -4,23 +4,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView, SpectacularRedocView
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
-from django.contrib.sitemaps.views import sitemap
-from .sitemap import StaticViewSitemap, ProductSitemap, ServiceSitemap, BlogSitemap
-
-sitemaps = {
-    'static': StaticViewSitemap,
-    'products': ProductSitemap,
-    'services': ServiceSitemap,
-    'blog': BlogSitemap,
-}
-
-# ===== اضافه کردن BlogSitemap در صورت وجود =====
-try:
-    from .sitemap import BlogSitemap
-    HAS_BLOG_SITEMAP = True
-except ImportError:
-    HAS_BLOG_SITEMAP = False
-
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -43,9 +26,8 @@ urlpatterns = [
     path('api/blog/', include('blog.urls')),
     path('api/assets/', include('assets.urls')),
     path('api/subscription/', include('subscription.urls')),
-    path('api/settings/', include('system_setting.urls')), 
+    path('api/settings/', include('system_setting.urls')),
     path('api/support/', include('support.urls')),
-    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),        
 
     # API Documentation
     path('api/schema/', SpectacularAPIView.as_view(), name='schema'),

@@ -59,9 +59,9 @@ export const ServiceList = () => {
 
       {/* دکمه فیلتر موبایل */}
       <div className="md:hidden mb-4">
-        <Button 
-          variant="outline" 
-          fullWidth 
+        <Button
+          variant="outline"
+          fullWidth
           onClick={() => setShowMobileFilters(true)}
           className="flex items-center justify-center gap-2"
         >
@@ -78,28 +78,28 @@ export const ServiceList = () => {
       {/* مدال فیلتر موبایل */}
       {showMobileFilters && (
         <div className="fixed inset-0 z-50 bg-black/50 flex items-end md:hidden" onClick={() => setShowMobileFilters(false)}>
-          <div 
+          <div
             className="bg-white rounded-t-xl w-full max-h-[85vh] overflow-auto"
             onClick={(e) => e.stopPropagation()}
             style={{ animation: 'slideUp 0.3s ease-out' }}
           >
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
               <h3 className="font-bold text-lg">فیلترها</h3>
-              <button 
-                onClick={() => setShowMobileFilters(false)} 
+              <button
+                onClick={() => setShowMobileFilters(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition"
               >
                 <FiX className="w-5 h-5" />
               </button>
             </div>
             <div className="p-4">
-              <ServiceFilters 
-                filters={filters} 
-                onChange={handleFilterChange} 
+              <ServiceFilters
+                filters={filters}
+                onChange={handleFilterChange}
                 onClear={() => {
                   handleClearFilters()
                   setShowMobileFilters(false)
-                }} 
+                }}
               />
             </div>
           </div>
@@ -110,10 +110,10 @@ export const ServiceList = () => {
       <div className="flex flex-col md:flex-row gap-6">
         {/* فیلترهای دسکتاپ */}
         <div className="hidden md:block md:w-64 lg:w-72 flex-shrink-0">
-          <ServiceFilters 
-            filters={filters} 
-            onChange={handleFilterChange} 
-            onClear={handleClearFilters} 
+          <ServiceFilters
+            filters={filters}
+            onChange={handleFilterChange}
+            onClear={handleClearFilters}
           />
         </div>
 
@@ -124,8 +124,8 @@ export const ServiceList = () => {
               <p className="text-gray-500">
                 خدمتی با این مشخصات یافت نشد.
               </p>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="mt-4"
                 onClick={handleClearFilters}
               >
@@ -137,13 +137,13 @@ export const ServiceList = () => {
               <div className="text-sm text-gray-500 mb-4 md:hidden">
                 {safeFormatNumber(services.length)} نتیجه از {safeFormatNumber(totalCount)}
               </div>
-              
+
               <div className="grid grid-cols-1 gap-4 sm:gap-6">
                 {services.map((service) => (
                   <ServiceCard key={service.id} service={service} />
                 ))}
               </div>
-              
+
               {data?.next && (
                 <div className="mt-8 flex justify-center">
                   <Button variant="outline">

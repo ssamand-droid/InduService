@@ -18,19 +18,19 @@ export default function CertificateManager() {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     const ext = file.name.split('.').pop().toLowerCase();
     const allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'pdf', 'doc', 'docx', 'xls', 'xlsx'];
     if (!allowedExts.includes(ext)) {
       toast.error('فرمت فایل مجاز نیست. فرمت‌های مجاز: تصاویر، PDF، Word، Excel');
       return;
     }
-    
+
     if (file.size > MAX_FILE_SIZE) {
       toast.error('حداکثر حجم ۱۰ مگابایت');
       return;
     }
-    
+
     setSelectedFile(file);
   };
 
@@ -44,8 +44,8 @@ export default function CertificateManager() {
       return;
     }
 
-    await uploadCertificate({ 
-      title, 
+    await uploadCertificate({
+      title,
       file: selectedFile,
       issued_by: issuedBy  // ← اضافه شد
     });
@@ -93,7 +93,7 @@ export default function CertificateManager() {
       {/* بخش آپلود */}
       <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
         <h4 className="font-medium text-slate-800 mb-3">📤 آپلود مدرک جدید</h4>
-        
+
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">

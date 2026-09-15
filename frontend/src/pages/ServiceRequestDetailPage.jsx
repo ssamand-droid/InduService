@@ -200,13 +200,13 @@ export default function ServiceRequestDetailPage() {
   const isSelectedProvider = selectedProviderId === user?.id
 
   // تشخیص اینکه آیا ارائه‌دهنده فعلی می‌تواند شروع کند
-  const canStartWork = isProvider && 
-    isSelectedProvider && 
+  const canStartWork = isProvider &&
+    isSelectedProvider &&
     request.status === 'accepted'
 
   // تشخیص اینکه آیا ارائه‌دهنده فعلی می‌تواند تکمیل کند
-  const canCompleteWork = isProvider && 
-    isSelectedProvider && 
+  const canCompleteWork = isProvider &&
+    isSelectedProvider &&
     request.status === 'in_progress'
 
   // ============================================================
@@ -264,17 +264,17 @@ export default function ServiceRequestDetailPage() {
                       const fileUrl = att.file_url || att.file || att.url || ''
                       const isImage = isImageFile(att)
                       return (
-                        <a 
-                          key={att.id} 
-                          href={fileUrl} 
-                          target="_blank" 
+                        <a
+                          key={att.id}
+                          href={fileUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="relative aspect-square rounded-lg overflow-hidden border border-gray-200 hover:border-blue-500 transition group"
                         >
                           {isImage ? (
-                            <img 
-                              src={fileUrl} 
-                              alt={att.description || att.name || 'تصویر'} 
+                            <img
+                              src={fileUrl}
+                              alt={att.description || att.name || 'تصویر'}
                               className="h-full w-full object-cover"
                               onError={(e) => {
                                 // اگر تصویر لود نشد، fallback نشان بده
@@ -311,17 +311,17 @@ export default function ServiceRequestDetailPage() {
                       const imgUrl = img.image_url || img.image || img.file_url || img.file || img.url || ''
                       const isImage = isImageFile(img)
                       return (
-                        <a 
-                          key={img.id || index} 
-                          href={imgUrl} 
-                          target="_blank" 
+                        <a
+                          key={img.id || index}
+                          href={imgUrl}
+                          target="_blank"
                           rel="noopener noreferrer"
                           className="relative aspect-square rounded-lg overflow-hidden border border-green-200 hover:border-green-500 transition group"
                         >
                           {isImage ? (
-                            <img 
-                              src={imgUrl} 
-                              alt={img.description || img.name || 'تصویر تکمیل'} 
+                            <img
+                              src={imgUrl}
+                              alt={img.description || img.name || 'تصویر تکمیل'}
                               className="h-full w-full object-cover"
                               onError={(e) => {
                                 e.target.style.display = 'none'
@@ -368,9 +368,9 @@ export default function ServiceRequestDetailPage() {
                 <div className="p-4 bg-yellow-50 rounded-lg">
                   <div className="flex items-center gap-1 mb-2 flex-wrap">
                     {[1, 2, 3, 4, 5].map((star) => (
-                      <FiStar 
-                        key={star} 
-                        className={`h-4 w-4 sm:h-5 sm:w-5 ${star <= request.buyer_rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+                      <FiStar
+                        key={star}
+                        className={`h-4 w-4 sm:h-5 sm:w-5 ${star <= request.buyer_rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`}
                       />
                     ))}
                     <span className="text-sm font-medium mr-2">{request.buyer_rating}/۵</span>
@@ -470,8 +470,8 @@ export default function ServiceRequestDetailPage() {
                     request.urgency === 'medium' ? 'bg-blue-100 text-blue-800' :
                     'bg-gray-100 text-gray-800'
                   }`}>
-                    {request.urgency === 'critical' ? 'بحرانی' : 
-                     request.urgency === 'high' ? 'زیاد' : 
+                    {request.urgency === 'critical' ? 'بحرانی' :
+                     request.urgency === 'high' ? 'زیاد' :
                      request.urgency === 'medium' ? 'متوسط' : 'کم'}
                   </span>
                 </div>
@@ -493,7 +493,7 @@ export default function ServiceRequestDetailPage() {
             {isProvider && (
               <div className="bg-white rounded-xl border p-4">
                 <h3 className="font-semibold mb-3 text-gray-700 border-b pb-2">⚙️ اقدامات</h3>
-                
+
                 {/* دکمه اعلام قیمت */}
                 {(request.status === 'pending' || request.status === 'reviewed') && !hasUserQuoted && (
                   <button

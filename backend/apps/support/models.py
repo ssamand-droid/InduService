@@ -112,12 +112,12 @@ class DisputeResolution(models.TextChoices):
 class Dispute(models.Model):
     id          = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     order       = models.OneToOneField(
-        "orders.Order", 
+        "orders.Order",
         on_delete=models.PROTECT,
-        related_name="dispute", 
+        related_name="dispute",
         verbose_name="سفارش",
         null=True,
-        blank=True  
+        blank=True
     )
     raised_by   = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE,
                                     verbose_name="ثبت‌کننده اختلاف")

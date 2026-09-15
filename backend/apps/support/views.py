@@ -122,7 +122,7 @@ def ticket_detail(request, pk):
     s = TicketUpdateSerializer(ticket, data=request.data, partial=True)
     s.is_valid(raise_exception=True)
     s.save()
-    
+
     # ✅ بعد از ویرایش هم TicketDetailSerializer برگردان
     serializer = TicketDetailSerializer(ticket)
     return Response({

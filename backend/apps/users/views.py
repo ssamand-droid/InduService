@@ -123,7 +123,7 @@ class UserViewSet(viewsets.ModelViewSet):
             }
         },
     )
-    
+
     @extend_schema(
         description='مرحله دوم ثبت‌نام: تکمیل پروفایل',
         request={
@@ -215,11 +215,11 @@ class UserViewSet(viewsets.ModelViewSet):
     def impersonate(self, request, pk=None):
         """ادمین: جعل هویت کاربر"""
         target_user = self.get_object()
-        
+
         from rest_framework_simplejwt.tokens import RefreshToken
-        
+
         refresh = RefreshToken.for_user(target_user)
-        
+
         return Response({
             'success': True,
             'message': f'وارد حساب {target_user.full_name} شدید',
@@ -229,10 +229,10 @@ class UserViewSet(viewsets.ModelViewSet):
             'impersonated': True,
             'admin_id': request.user.id,
         })
-        
+
     # ========================
     # POST /api/users/upload_avatar/
-    # ========================            
+    # ========================
     @action(detail=False, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def upload_avatar(self, request):
         profile = request.user.profile
@@ -253,7 +253,7 @@ class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Profile.objects.select_related('user').all()
     serializer_class = ProfileSerializer
     permission_classes = [permissions.AllowAny]
-    
+
 class PortfolioItemViewSet(viewsets.ModelViewSet):
     """نمونه کارهای کاربر"""
     serializer_class = PortfolioItemSerializer

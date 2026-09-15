@@ -232,13 +232,13 @@ export default function ServiceWizard({ initialServiceType = null, initialAssetI
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-slate-900">درخواست خدمت جدید</h1>
-        <p className="text-sm text-slate-500 mt-1">ابتدا نوع خدمت را انتخاب کنید</p>
+        <p className="text-sm text-slate-500 mt-1">ابتدا صنعت خود را انتخاب کنید، سپس نوع خدمت</p>
       </div>
 
-      {/* <div className="mb-6">
+      <div className="mb-6">
         <label className="block text-sm font-medium text-slate-600 mb-2">صنعت (اختیاری)</label>
         <IndustrySelector value={industry} onChange={setIndustry} />
-      </div> */}
+      </div>
 
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">نوع خدمت</p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

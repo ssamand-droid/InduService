@@ -62,7 +62,7 @@ const assetService = {
 
   // ============ د ============ پیش‌بینی
   runPrediction: (assetId) => api.post(`/api/assets/assets/${assetId}/run_prediction/`),
-  getPredictions: (assetId) => api.get(`/api/assets/assets/${assetId}/predictions/`), 
+  getPredictions: (assetId) => api.get(`/api/assets/assets/${assetId}/predictions/`),
 }
 
 export default assetService

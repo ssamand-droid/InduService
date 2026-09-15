@@ -52,12 +52,12 @@ class OrderListSerializer(serializers.ModelSerializer):
             'shipping_address', 'shipping_city',
             'receiver_name', 'receiver_phone',
             'created_at', 'confirmed_at', 'shipped_at', 'delivered_at', 'completed_at',
-            'created_at_jalali', 'total_formatted', 
+            'created_at_jalali', 'total_formatted',
         ]
 
     def get_items_count(self, obj):
         return obj.items.count()
-    
+
     def get_buyer_name(self, obj):
         request = self.context.get('request')
         user = request.user if request else None
@@ -77,7 +77,7 @@ class OrderListSerializer(serializers.ModelSerializer):
                 return obj.seller.full_name
             return "🔒 فروشنده"
         return obj.seller.full_name
-    
+
     def get_created_at_jalali(self, obj):
         return to_jalali_datetime(obj.created_at)
 

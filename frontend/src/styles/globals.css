@@ -1,4 +1,5 @@
 /* src/styles/globals.css */
+
 @import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@100..900&display=swap');
 
 @tailwind base;
@@ -128,7 +129,7 @@
   .animate-fade-in-up {
     animation: fadeInUp 0.6s ease-out;
   }
-  
+
   /* Slide In Right (مناسب برای RTL) */
   @keyframes slideInRight {
     from { opacity: 0; transform: translateX(-20px); }
@@ -256,7 +257,7 @@
   .no-print {
     display: none !important;
   }
-  
+
   body {
     background: white !important;
     color: black !important;
@@ -267,6 +268,7 @@
     border: 1px solid #e2e8f0 !important;
   }
 }
+
 
 /* ==================== 🆕 TIPTAP EDITOR STYLES ==================== */
 
@@ -763,15 +765,95 @@ body {
   -webkit-font-feature-settings: "ss01", "ss02", "ss03";
 }
 
-/* بهبود نمایش در موبایل */
-@media (max-width: 640px) {
-  .container-custom {
-    padding-left: 1rem;
-    padding-right: 1rem;
+/* Mobile Dashboard Fixes */
+@media (max-width: 1024px) {
+  main {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
   }
-  
-  /* جلوگیری از زوم ناخواسته روی input ها */
-  input, select, textarea {
-    font-size: 16px !important;
+
+  /* وقتی sidebar باز است */
+  .lg\:translate-x-0 ~ main,
+  main:has(+ .fixed) { /* fallback */
+    margin-right: 0 !important;
+  }
+}
+
+/* بهبود جدول */
+.table-responsive {
+  @apply w-full overflow-x-auto -mx-3 px-3 py-1 border border-gray-200 dark:border-gray-700 rounded-xl;
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af #f3f4f6;
+}
+
+.table-responsive table {
+  min-width: 100% !important; /* خیلی مهم */
+  width: 100%;
+}
+
+/* مخفی کردن ستون‌های غیرضروری در موبایل */
+@media (max-width: 768px) {
+  .table-responsive th:nth-child(n+5),
+  .table-responsive td:nth-child(n+5) {
+    display: none;
+  }
+
+  /* فشرده‌تر کردن سلول‌ها */
+  .table-responsive td, .table-responsive th {
+    padding: 0.65rem 0.4rem !important;
+    font-size: 0.875rem;
+  }
+
+/* ==================== RESPONSIVE TABLE - STRONG FIX ==================== */
+.table-responsive {
+  @apply w-full overflow-x-auto -mx-3 px-3 py-3 border border-gray-200 dark:border-gray-700 rounded-2xl bg-white dark:bg-gray-800;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #64748b #f1f5f9;
+}
+
+.table-responsive table {
+  min-width: 100% !important;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table-responsive th,
+.table-responsive td {
+  white-space: nowrap;
+  vertical-align: middle;
+  padding: 12px 10px;
+}
+
+/* Sticky Header */
+.table-responsive thead th {
+  position: sticky;
+  top: 0;
+  background: #f8fafc;
+  z-index: 10;
+}
+
+/* موبایل - فشرده + اسکرول قوی */
+@media (max-width: 768px) {
+  .table-responsive {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+  }
+
+  .table-responsive th,
+  .table-responsive td {
+    padding: 10px 6px;
+    font-size: 0.85rem;
+  }
+
+  /* عملیات همیشه دیده شود */
+  .table-responsive td:last-child,
+  .table-responsive th:last-child {
+    position: sticky;
+    right: 0;
+    background: white;
+    z-index: 5;
+    box-shadow: -4px 0 6px -2px rgba(0, 0, 0, 0.1);
+  }
   }
 }

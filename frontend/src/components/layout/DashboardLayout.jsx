@@ -5,12 +5,17 @@ import { Sidebar } from './Sidebar'
 
 export const DashboardLayout = () => {
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      <div style={{ flex: 1, display: 'flex' }}>
+
+      <div className="flex flex-1 overflow-hidden relative"> {/* مهم */}
         <Sidebar />
-        <main style={{ flex: 1, backgroundColor: '#f8fafc' }} className="dark:bg-secondary-900/50 p-6">
-          <Outlet />
+
+        {/* Main Content - با مدیریت فضای sidebar در موبایل */}
+        <main className="flex-1 overflow-auto p-3 sm:p-4 md:p-6 lg:pr-6 transition-all duration-300">
+          <div className="max-w-full"> {/* جلوگیری از بیرون زدن */}
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

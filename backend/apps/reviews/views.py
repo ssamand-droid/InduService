@@ -16,14 +16,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
         product_id = self.request.query_params.get('product')
         service_id = self.request.query_params.get('service')
         service_request_id = self.request.query_params.get('service_request')
-        
+
         if product_id:
             qs = qs.filter(product_id=product_id)
         if service_id:
             qs = qs.filter(service_id=service_id)
         if service_request_id:
             qs = qs.filter(service_request_id=service_request_id)
-        
+
         return qs
 
     def perform_create(self, serializer):

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { 
+import {
   Camera, Upload, X, CheckCircle, AlertCircle,
   Info, ChevronRight
 } from 'lucide-react'
@@ -20,7 +20,7 @@ const AddAssetPage = () => {
   const [categories, setCategories] = useState([])
   const [previewImage, setPreviewImage] = useState(null)
   const fileInputRef = useRef(null)
-  
+
   const [formData, setFormData] = useState({
     name: '',
     tag_number: '',
@@ -75,14 +75,14 @@ const AddAssetPage = () => {
 
   const validateForm = () => {
     const newErrors = {}
-    
+
     if (!formData.name.trim()) {
       newErrors.name = 'نام دستگاه الزامی است'
     }
     if (!formData.tag_number.trim()) {
       newErrors.tag_number = 'شماره پلاک الزامی است'
     }
-    
+
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
@@ -97,7 +97,7 @@ const AddAssetPage = () => {
 
     try {
       const submitData = new FormData()
-      
+
       // اضافه کردن فیلدهای متنی
       Object.keys(formData).forEach(key => {
         if (key === 'main_image') {
@@ -117,7 +117,7 @@ const AddAssetPage = () => {
       }
 
       const response = await assetService.createAsset(submitData)
-      
+
       setSuccess(true)
       setTimeout(() => {
         navigate(`/dashboard/assets/${response.data.id}`)
@@ -125,10 +125,10 @@ const AddAssetPage = () => {
 
     } catch (error) {
       console.error('Create asset error:', error)
-      
+
       if (error.response?.data) {
         const data = error.response.data
-        
+
         // خطاهای فیلدها
         if (typeof data === 'object') {
           const fieldErrors = {}
@@ -137,11 +137,11 @@ const AddAssetPage = () => {
           })
           setErrors(fieldErrors)
         }
-        
+
         // خطای محدودیت اشتراک
         if (data?.upgrade_required) {
           setApiError({
-            title: 'محدودیت دستگاه رایگان',
+            title: 'محدودیت دارایی رایگان',
             message: data.message,
             action: 'ارتقاء اشتراک'
           })
@@ -167,7 +167,7 @@ const AddAssetPage = () => {
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center animate-bounce-in">
         <CheckCircle className="mx-auto text-green-500 mb-4" size={64} />
-        <h2 className="text-2xl font-bold text-green-700 mb-2">دستگاه با موفقیت ثبت شد!</h2>
+        <h2 className="text-2xl font-bold text-green-700 mb-2">دارایی با موفقیت ثبت شد!</h2>
       </div>
     </div>
   )}
@@ -215,7 +215,7 @@ const AddAssetPage = () => {
             <Info size={20} className="text-indigo-500" />
             اطلاعات پایه
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* نام دستگاه */}
             <div className="md:col-span-2">
@@ -229,8 +229,8 @@ const AddAssetPage = () => {
                 onChange={handleChange}
                 placeholder="مثال: پمپ سیرکولاسیون خط A"
                 className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 transition ${
-                  errors.name 
-                    ? 'border-red-300 focus:ring-red-500' 
+                  errors.name
+                    ? 'border-red-300 focus:ring-red-500'
                     : 'border-gray-300 focus:ring-indigo-500'
                 }`}
               />
@@ -251,8 +251,8 @@ const AddAssetPage = () => {
                 onChange={handleChange}
                 placeholder="مثال: PMP-001"
                 className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:ring-2 transition ${
-                  errors.tag_number 
-                    ? 'border-red-300 focus:ring-red-500' 
+                  errors.tag_number
+                    ? 'border-red-300 focus:ring-red-500'
                     : 'border-gray-300 focus:ring-indigo-500'
                 }`}
               />

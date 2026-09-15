@@ -27,11 +27,11 @@ export const ReceiptUploader = ({ orderId, onSuccess }) => {
     try {
       const formData = new FormData()
       formData.append('receipt', file)
-      
+
       await api.post(`/api/orders/orders/${orderId}/upload_receipt/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      
+
       toast.success('رسید پرداخت با موفقیت ثبت شد')
       onSuccess?.()
     } catch (error) {
@@ -46,7 +46,7 @@ export const ReceiptUploader = ({ orderId, onSuccess }) => {
       <div className="p-6 border-2 border-dashed border-secondary-300 dark:border-secondary-600 rounded-xl hover:border-primary-500 transition cursor-pointer"
         onClick={() => fileRef.current?.click()}>
         <input type="file" ref={fileRef} className="hidden" accept="image/*" onChange={handleFileSelect} />
-        
+
         {preview ? (
           <img src={preview} alt="پیش‌نمایش" className="max-h-40 mx-auto rounded-lg mb-3" />
         ) : (

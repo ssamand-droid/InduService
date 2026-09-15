@@ -11,7 +11,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
     images = ReviewImageSerializer(many=True, read_only=True)
     user_name = serializers.CharField(source='user.full_name', read_only=True)
-    
+
     class Meta:
         model = Review
         fields = [

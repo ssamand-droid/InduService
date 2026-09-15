@@ -27,7 +27,7 @@ class UserAdmin(BaseUserAdmin):
         }),
         (_('تاریخ‌های مهم'), {'fields': ('last_login', 'date_joined')}),
     )
-    
+
     # ========================
     # فرم ایجاد کاربر جدید
     # ========================
@@ -37,7 +37,7 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('phone_number', 'email', 'password1', 'password2', 'first_name', 'last_name', 'role', 'person_type', 'subrole'),
         }),
     )
-    
+
     # ========================
     # تنظیمات
     # ========================
@@ -54,13 +54,13 @@ class UserAdmin(BaseUserAdmin):
         role_label = obj.get_role_display()
         person_label = dict(User.PersonType.choices).get(obj.person_type, '')
         subrole_label = dict(User.SubRole.choices).get(obj.subrole, '')
-        
+
         parts = [role_label]
         if person_label:
             parts.append(f"({person_label})")
         if subrole_label:
             parts.append(f"- {subrole_label}")
-        
+
         return ' '.join(parts)
     role_display_with_type.short_description = 'نقش و سمت'
 

@@ -45,8 +45,8 @@ export default function AdminProductsPage() {
   }
 
   const results = products?.results || products || []
-  const filtered = results.filter(p => 
-    p.name?.includes(search) || 
+  const filtered = results.filter(p =>
+    p.name?.includes(search) ||
     p.sku?.includes(search)
   )
 

@@ -142,7 +142,7 @@ class Product(TimeStampedModel, SoftDeleteModel):
 
     def __str__(self):
         company = self.seller.profile.company_name if hasattr(self.seller, 'profile') and self.seller.profile.company_name else ''
-        return f"{self.name} - {company or self.seller.email}" 
+        return f"{self.name} - {company or self.seller.email}"
 
     @property
     def final_price(self):

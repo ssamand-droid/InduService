@@ -25,22 +25,22 @@ class OrderViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        
+
         if not user.is_authenticated:
             return Order.objects.none()
-        
+
         # ادمین همه سفارشات را می‌بیند
         if user.role == 'admin' or user.is_staff:
             return Order.objects.select_related('buyer', 'seller').prefetch_related('items').all()
-        
+
         # خریدار: سفارشات خودش
         if user.role == 'buyer':
             return Order.objects.filter(buyer=user).select_related('seller').prefetch_related('items')
-        
+
         # فروشنده: سفارشاتی که برای او ثبت شده
         if user.role in ['seller', 'service_provider']:
             return Order.objects.filter(seller=user).select_related('buyer').prefetch_related('items')
-        
+
         return Order.objects.none()
 
     def perform_create(self, serializer):
@@ -120,34 +120,34 @@ class OrderViewSet(viewsets.ModelViewSet):
             serializer.validated_data['started_at'] = timezone.now()
         serializer.save()
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['post'], permission_classes=[IsBuyer])
     def upload_receipt(self, request, pk=None):
         """آپلود رسید پرداخت توسط خریدار"""
         order = self.get_object()
         if order.buyer != request.user:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-    
+
         if 'receipt' not in request.FILES:
             return Response({'error': 'فایلی آپلود نشده'}, status=400)
-    
+
         order.payment_receipt = request.FILES['receipt']
         order.save(update_fields=['payment_receipt'])
         return Response({'message': 'رسید پرداخت با موفقیت ثبت شد'})
-    
+
     @action(detail=True, methods=['post'], permission_classes=[IsBuyer])
     def create_invoice(self, request, pk=None):
         order = self.get_object()
         if order.buyer != request.user:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if hasattr(order, 'invoice'):
             return Response({'error': 'فاکتور قبلاً ایجاد شده'}, status=400)
-        
+
         service_request = getattr(order, 'service_request', None)
         commission_rate = Invoice.get_commission_rate(service_request)
         commission_amount = (order.total * commission_rate) / 100
-        
+
         invoice = Invoice.objects.create(
             order=order,
             buyer=order.buyer,
@@ -159,9 +159,9 @@ class OrderViewSet(viewsets.ModelViewSet):
             status=Invoice.InvoiceStatus.ISSUED,
             issued_at=timezone.now(),
         )
-        
+
         return Response(InvoiceSerializer(invoice).data)
-    
+
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def verify_payment(self, request, pk=None):
         """ادمین: تایید پرداخت سفارش"""

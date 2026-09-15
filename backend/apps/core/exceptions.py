@@ -17,7 +17,7 @@ def custom_exception_handler(exc, context):
             message = str(response.data[0]) if response.data else 'خطایی رخ داده است.'
         else:
             message = str(response.data)
-        
+
         custom_response_data = {
             'success': False,
             'error': {

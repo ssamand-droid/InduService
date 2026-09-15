@@ -104,33 +104,33 @@ export default function BuyerDashboard() {
       </div>
       {/* ========== بخش ۱: کارت‌های آمار ========== */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard 
-          title="دستگاه‌ها و تجهیزات" 
-          value={inProgressRequests} 
-          icon={FiTool} 
-          color="bg-purple-500" 
-          link="/dashboard/assets" 
+        <StatCard
+          title="دستگاه‌ها و تجهیزات"
+          value={inProgressRequests}
+          icon={FiTool}
+          color="bg-purple-500"
+          link="/dashboard/assets"
         />
-        <StatCard 
-          title="خرید محصول" 
-          value={activeOrders} 
-          icon={FiShoppingBag} 
-          color="bg-blue-500" 
-          link="/dashboard/orders" 
+        <StatCard
+          title="خرید محصول"
+          value={activeOrders}
+          icon={FiShoppingBag}
+          color="bg-blue-500"
+          link="/dashboard/orders"
         />
-        <StatCard 
-          title="درخواست‌های در انتظار" 
-          value={pendingRequests} 
-          icon={FiClock} 
-          color="bg-yellow-500" 
-          link="/dashboard/service-requests" 
+        <StatCard
+          title="درخواست‌های در انتظار"
+          value={pendingRequests}
+          icon={FiClock}
+          color="bg-yellow-500"
+          link="/dashboard/service-requests"
         />
-        <StatCard 
-          title="کل درخواست‌های خدمت" 
-          value={requests.length} 
-          icon={FiClipboard} 
-          color="bg-indigo-500" 
-          link="/dashboard/service-requests" 
+        <StatCard
+          title="کل درخواست‌های خدمت"
+          value={requests.length}
+          icon={FiClipboard}
+          color="bg-indigo-500"
+          link="/dashboard/service-requests"
         />
       </div>
 

@@ -14,7 +14,7 @@ import io
 from .models import (
     AssetCategory, Asset, AssetPart, AssetDocument,
     AssetHealthLog, AssetMaintenanceLog, AssetAlert,
-    DigitalTwinHotspot, AssetImportBatch, 
+    DigitalTwinHotspot, AssetImportBatch,
     Sensor, SensorReading, Hotspot, MaintenanceSchedule, FailurePrediction
 )
 from .serializers import (
@@ -22,7 +22,7 @@ from .serializers import (
     AssetCreateSerializer, AssetPartSerializer, AssetDocumentSerializer,
     AssetHealthLogSerializer, AssetMaintenanceLogSerializer,
     AssetAlertSerializer, DigitalTwinHotspotSerializer,
-    AssetImportBatchSerializer, 
+    AssetImportBatchSerializer,
     SensorSerializer, SensorReadingSerializer, HotspotSerializer,
     MaintenanceScheduleSerializer, FailurePredictionSerializer
 )
@@ -53,7 +53,7 @@ class SubscriptionLimitMixin:
     def check_asset_limit(self, user, new_count=1):
         current_count = Asset.objects.filter(owner=user, is_active=True).count()
         max_limit = self.get_asset_limit(user)
-        
+
         if current_count + new_count > max_limit:
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied(
@@ -83,7 +83,7 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        
+
         # دریافت company_name از پروفایل (اگر کاربر حقوقی است)
         try:
             profile = user.profile
@@ -95,7 +95,7 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
                 ).distinct()
         except Profile.DoesNotExist:
             pass
-        
+
         # کاربران حقیقی فقط دارایی‌های خودشان
         return Asset.objects.filter(owner=user, is_active=True)
 
@@ -113,19 +113,19 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
             serializer = self.get_serializer(data=request.data)
         else:
             serializer = self.get_serializer(data=request.data)
-        
+
         serializer.is_valid(raise_exception=True)
         self.check_asset_limit(request.user)
         self.perform_create(serializer)
-        
+
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
-    
+
     def perform_create(self, serializer):
         """ایجاد دارایی با محدودیت اشتراک"""
         self.check_asset_limit(self.request.user)
         asset = serializer.save()
-        
+
         # ثبت گزارش سلامت اولیه
         AssetHealthLog.objects.create(
             asset=asset,
@@ -219,7 +219,7 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
     def bulk_import_excel(self, request):
         """واردات انبوه از فایل Excel"""
         import pandas as pd  # ← اینجا import شود
-        
+
         file = request.FILES.get('file')
         if not file:
             return Response({'error': 'فایل الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
@@ -236,7 +236,7 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
         try:
             self.check_asset_limit(request.user, len(df))
         except Exception as e:
-            return Response(e.detail if hasattr(e, 'detail') else str(e), 
+            return Response(e.detail if hasattr(e, 'detail') else str(e),
                           status=status.HTTP_403_FORBIDDEN)
 
         batch = AssetImportBatch.objects.create(
@@ -283,14 +283,14 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
         """دانلود فایل نمونه CSV سازگار با Excel"""
         output = io.StringIO()
         writer = csv.writer(output)
-        
+
         # هدرها
         writer.writerow([
             'name', 'tag_number', 'brand', 'model_number',
             'serial_number', 'location', 'production_line',
             'criticality', 'purchase_price'
         ])
-        
+
         # داده‌های نمونه
         writer.writerow([
             'پمپ سیرکولاسیون', 'PMP-001', 'KSB', 'Etanorm 100-250',
@@ -300,64 +300,64 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
             'الکتروموتور', 'EM-002', 'Siemens', '1LE1003-1AA42',
             'SN67890', 'خط تولید ۱', '', 'critical', '800000000'
         ])
-        
+
         output.seek(0)
-        
+
         response = HttpResponse(
             '\ufeff' + output.getvalue(),  # BOM برای Excel فارسی
             content_type='text/csv; charset=utf-8'
         )
         response['Content-Disposition'] = 'attachment; filename="asset_import_template.csv"'
         return response
-    
+
     @action(detail=True, methods=['post'])
     def run_prediction(self, request, pk=None):
         """اجرای پیش‌بینی ساده برای یک دارایی"""
         asset = self.get_object()
-        
+
         predictions_created = 0
-        
+
         # بررسی همه سنسورهای فعال
         for sensor in asset.sensors.filter(is_active=True):
             readings = sensor.readings.filter(
                 recorded_at__gte=timezone.now() - timedelta(days=30)
             ).order_by('-recorded_at')
-            
+
             if len(readings) < 5:
                 continue
-            
+
             values = [r.value for r in readings[:20]]
-            
+
             # بررسی روند ساده (بدون numpy)
             if len(values) >= 2:
                 first_half = sum(values[:len(values)//2]) / (len(values)//2)
                 second_half = sum(values[len(values)//2:]) / (len(values) - len(values)//2)
                 trend = 'up' if second_half > first_half * 1.05 else 'down' if second_half < first_half * 0.95 else 'stable'
-                
+
                 # اگر روند صعودی و آستانه بحرانی داره
                 if trend == 'up' and sensor.critical_threshold_high:
                     # محاسبه ساده سرعت افزایش
                     if len(values) >= 3:
                         diffs = [values[i+1] - values[i] for i in range(len(values)-1)]
                         avg_increase = sum(diffs) / len(diffs) if diffs else 0
-                        
+
                         if avg_increase > 0 and sensor.critical_threshold_high > values[0]:
                             steps_needed = (sensor.critical_threshold_high - values[0]) / avg_increase
                             days_to_failure = steps_needed / (len(readings) / 30)  # تقریبی
-                            
+
                             if 0 < days_to_failure < 60:  # حداکثر ۶۰ روز
                                 predicted_date = timezone.now() + timedelta(days=days_to_failure)
-                                
+
                                 # محاسبه اطمینان ساده
                                 confidence = min(50 + (len(values) * 2), 90)
-                                
+
                                 # جلوگیری از تکراری
                                 existing = FailurePrediction.objects.filter(
                                     asset=asset,
                                     sensor=sensor,
                                     status='active'
                                 ).exists()
-                                
+
                                 if not existing:
                                     FailurePrediction.objects.create(
                                         asset=asset,
@@ -373,16 +373,16 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
                                         recommended_action=f'بررسی و سرویس {sensor.name}'
                                     )
                                     predictions_created += 1
-        
+
         # به‌روزرسانی سلامت
         asset.health_index = asset.calculate_health_index()
         asset.save()
-        
+
         return Response({
             'message': f'تحلیل انجام شد. {predictions_created} پیش‌بینی جدید ایجاد شد.',
             'predictions_created': predictions_created,
             'new_health_index': asset.health_index
-        })    
+        })
 
 
 class AssetPartViewSet(viewsets.ModelViewSet):
@@ -468,33 +468,33 @@ class DigitalTwinHotspotViewSet(viewsets.ModelViewSet):
         asset_pk = self.kwargs.get('asset_pk')
         asset = Asset.objects.get(id=asset_pk, owner=self.request.user)
         serializer.save(asset=asset)
-        
-        
+
+
 class SensorViewSet(viewsets.ModelViewSet):
     """مدیریت سنسورهای متصل به دارایی"""
     serializer_class = SensorSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         asset_pk = self.kwargs.get('asset_pk')
         return Sensor.objects.filter(
             asset__owner=self.request.user,
             asset_id=asset_pk
         )
-    
+
     def perform_create(self, serializer):
         asset = Asset.objects.get(id=self.kwargs['asset_pk'], owner=self.request.user)
         serializer.save(asset=asset)
-    
+
     @action(detail=True, methods=['post'])
     def record_reading(self, request, asset_pk=None, pk=None):
         """ثبت قرائت جدید برای سنسور"""
         sensor = self.get_object()
-        
+
         value = request.data.get('value')
         if value is None:
             return Response({'error': 'مقدار value الزامی است'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         # تعیین وضعیت
         reading_status = 'normal'
         if sensor.critical_threshold_high and float(value) >= sensor.critical_threshold_high:
@@ -505,7 +505,7 @@ class SensorViewSet(viewsets.ModelViewSet):
             reading_status = 'warning'
         elif sensor.warning_threshold_low and float(value) <= sensor.warning_threshold_low:
             reading_status = 'warning'
-        
+
         reading = SensorReading.objects.create(
             sensor=sensor,
             value=value,
@@ -513,12 +513,12 @@ class SensorViewSet(viewsets.ModelViewSet):
             status=reading_status,
             recorded_at=request.data.get('recorded_at', timezone.now())
         )
-        
+
         # به‌روزرسانی آخرین قرائت سنسور
         sensor.last_reading = value
         sensor.last_reading_at = reading.recorded_at
         sensor.save()
-        
+
         # اگر بحرانی بود، هشدار ایجاد کن
         if reading_status == 'critical':
             AssetAlert.objects.create(
@@ -529,18 +529,18 @@ class SensorViewSet(viewsets.ModelViewSet):
                 message=f'مقدار {value} {sensor.unit} از آستانه بحرانی عبور کرد',
                 recommended_action=f'بررسی فوری {sensor.asset.name}'
             )
-        
+
         return Response(SensorReadingSerializer(reading).data, status=status.HTTP_201_CREATED)
-    
+
     @action(detail=True, methods=['get'])
     def readings(self, request, asset_pk=None, pk=None):
         """دریافت تاریخچه قرائت‌های سنسور"""
         sensor = self.get_object()
         hours = int(request.query_params.get('hours', 24))
         since = timezone.now() - timedelta(hours=hours)
-        
+
         readings = sensor.readings.filter(recorded_at__gte=since)
-        
+
         # آماده‌سازی برای نمودار
         chart_data = [
             {
@@ -550,7 +550,7 @@ class SensorViewSet(viewsets.ModelViewSet):
             }
             for r in readings
         ]
-        
+
         return Response({
             'sensor': SensorSerializer(sensor).data,
             'readings_count': readings.count(),
@@ -567,14 +567,14 @@ class HotspotViewSet(viewsets.ModelViewSet):
     """مدیریت نقاط حساس"""
     serializer_class = HotspotSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         asset_pk = self.kwargs.get('asset_pk')
         return Hotspot.objects.filter(
             asset__owner=self.request.user,
             asset_id=asset_pk
         )
-    
+
     def perform_create(self, serializer):
         asset = Asset.objects.get(id=self.kwargs['asset_pk'], owner=self.request.user)
         serializer.save(asset=asset)
@@ -584,20 +584,20 @@ class MaintenanceScheduleViewSet(viewsets.ModelViewSet):
     """مدیریت برنامه‌های نگهداری"""
     serializer_class = MaintenanceScheduleSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         asset_pk = self.kwargs.get('asset_pk')
         return MaintenanceSchedule.objects.filter(
             asset__owner=self.request.user,
             asset_id=asset_pk
         )
-    
+
     def perform_create(self, serializer):
         asset = Asset.objects.get(id=self.kwargs['asset_pk'], owner=self.request.user)
         schedule = serializer.save(asset=asset)
         schedule.next_due_at = schedule.calculate_next_due()
         schedule.save()
-    
+
     @action(detail=True, methods=['post'])
     def mark_completed(self, request, asset_pk=None, pk=None):
         """علامت‌گذاری به عنوان انجام شده"""
@@ -612,14 +612,14 @@ class FailurePredictionViewSet(viewsets.ModelViewSet):
     """مشاهده و مدیریت پیش‌بینی‌های خرابی"""
     serializer_class = FailurePredictionSerializer
     permission_classes = [permissions.IsAuthenticated]
-    
+
     def get_queryset(self):
         asset_pk = self.kwargs.get('asset_pk')
         return FailurePrediction.objects.filter(
             asset__owner=self.request.user,
             asset_id=asset_pk
         )
-    
+
     @action(detail=True, methods=['post'])
     def resolve(self, request, asset_pk=None, pk=None):
         """رفع پیش‌بینی"""

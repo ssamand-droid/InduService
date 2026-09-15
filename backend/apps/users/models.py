@@ -13,10 +13,10 @@ class UserManager(BaseUserManager):
     def _create_user(self, phone_number, password, **extra_fields):
         if not phone_number:
             raise ValueError(_('شماره موبایل الزامی است'))
-        
+
         if 'email' not in extra_fields or not extra_fields.get('email'):
             extra_fields['email'] = f"{phone_number}@induservice.local"
-        
+
         user = self.model(phone_number=phone_number, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -45,13 +45,13 @@ class User(AbstractUser, TimeStampedModel):
         TECHNICIAN = 'technician', _('تکنسین فنی')
         MAINTENANCE_MANAGER = 'maintenance_manager', _('مدیر نت')
         PROCUREMENT = 'procurement', _('بازرگانی/تدارکات')
-        
+
         # خدمات‌دهندگان (Provider side)
         SELLER = 'seller', _('فروشنده (حقیقی)')
         SERVICE_PROVIDER = 'service_provider', _('خدمات‌دهنده (حقیقی)')
         COMPANY_SELLER = 'company_seller', _('شرکت فروشنده (حقوقی)')
         COMPANY_PROVIDER = 'company_provider', _('شرکت خدمات‌دهنده (حقوقی)')
-        
+
         ADMIN = 'admin', _('مدیر سیستم')
 
     class PersonType(models.TextChoices):
@@ -78,7 +78,7 @@ class User(AbstractUser, TimeStampedModel):
     email = models.EmailField(_('ایمیل'), blank=True, null=True, default=None)
     role = models.CharField(_('نقش کاربر'), max_length=20, choices=Role.choices, default=Role.BUYER, db_index=True)
     is_verified = models.BooleanField(_('تایید شده'), default=False)
-    
+
     # فیلدهای جدید
     person_type = models.CharField(_('نوع شخصیت'), max_length=15, choices=PersonType.choices, null=True, blank=True)
     subrole = models.CharField(_('زیرنقش'), max_length=30, choices=SubRole.choices, null=True, blank=True)
@@ -108,7 +108,7 @@ def certificate_upload_path(instance, filename):
     return f'certificates/{instance.user.id}/{filename}'
 
 
-# apps/users/models.py - Profile 
+# apps/users/models.py - Profile
 class Profile(models.Model):
     """
     پروفایل جامع کاربر - همه نقش‌ها

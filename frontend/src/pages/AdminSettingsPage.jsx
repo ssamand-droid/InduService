@@ -1,4 +1,4 @@
-// frontend/src/pages/AdminSettingsPage.jsx - نسخه کامل با ToggleSwitch
+// src/pages/AdminSettingsPage.jsx - نسخه اصلاح شده
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
@@ -12,23 +12,23 @@ import toast from 'react-hot-toast'
 // ============================================================
 const ToggleSwitch = ({ settingKey, defaultValue = true }) => {
   const queryClient = useQueryClient()
-  
+
   const { data: settings } = useQuery({
     queryKey: ['platform-settings'],
     queryFn: () => api.get('/api/settings/').then(res => res.data),
   })
-  
+
   const setting = settings?.results?.find(s => s.key === settingKey)
   const isEnabled = setting ? setting.value === 'true' : defaultValue
-  
+
   const updateMutation = useMutation({
-    mutationFn: () => api.patch(`/api/settings/${setting.id}/`, { value: isEnabled ? 'false' : 'true' }),
+    mutationFn: () => api.patch(`/api/settings/${setting?.id}/`, { value: isEnabled ? 'false' : 'true' }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['platform-settings'] })
       toast.success('تنظیمات ذخیره شد')
     },
   })
-  
+
   if (!setting) {
     return (
       <div className="text-sm text-gray-400">
@@ -36,13 +36,13 @@ const ToggleSwitch = ({ settingKey, defaultValue = true }) => {
       </div>
     )
   }
-  
+
   return (
     <button
       onClick={() => updateMutation.mutate()}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-lg font-medium transition-all ${
-        isEnabled 
-          ? 'bg-green-100 text-green-700 hover:bg-green-200' 
+        isEnabled
+          ? 'bg-green-100 text-green-700 hover:bg-green-200'
           : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
       }`}
       disabled={updateMutation.isPending}
@@ -99,8 +99,32 @@ export default function AdminSettingsPage() {
 
   if (isLoading) return <Spinner />
 
-  const typeLabels = { general: '⚙️ عمومی', commission: '💰 کمیسیون', payment: '💳 پرداخت', seo: '🔍 SEO', notification: '🔔 اعلان‌ها' }
-  const typeColors = { general: 'secondary', commission: 'warning', payment: 'info', seo: 'primary', notification: 'success' }
+  const typeLabels = {
+    general: '⚙️ عمومی',
+    commission: '💰 کمیسیون',
+    payment: '💳 پرداخت',
+    seo: '🔍 SEO',
+    notification: '🔔 اعلان‌ها'
+  }
+  const typeColors = {
+    general: 'secondary',
+    commission: 'warning',
+    payment: 'info',
+    seo: 'primary',
+    notification: 'success'
+  }
+
+  // ✅ لیست تنظیمات Matching (برای نمایش در بخش اول)
+  const matchingKeys = ['MATCHING_DIRECT_PROVIDER', 'MATCHING_SCENARIO_PROVIDERS', 'MATCHING_ENGINE_ADVANCED']
+
+  // ✅ همه تنظیمات
+  const allSettings = settings?.results || []
+
+  // ✅ تنظیمات Matching
+  const matchingSettings = allSettings.filter(s => matchingKeys.includes(s.key))
+
+  // ✅ سایر تنظیمات (همه تنظیمات به جز Matching)
+  const otherSettings = allSettings.filter(s => !matchingKeys.includes(s.key))
 
   return (
     <div className="p-4 md:p-6 space-y-6">
@@ -128,7 +152,7 @@ export default function AdminSettingsPage() {
               </div>
               <ToggleSwitch settingKey="MATCHING_DIRECT_PROVIDER" defaultValue={true} />
             </div>
-            
+
             {/* گزینه 2: ارائه‌دهندگان سناریو مرتبط */}
             <div className="flex items-center justify-between flex-wrap gap-4 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
               <div>
@@ -137,7 +161,7 @@ export default function AdminSettingsPage() {
               </div>
               <ToggleSwitch settingKey="MATCHING_SCENARIO_PROVIDERS" defaultValue={true} />
             </div>
-            
+
             {/* گزینه 3: Matching Engine پیشرفته */}
             <div className="flex items-center justify-between flex-wrap gap-4 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
               <div>
@@ -151,26 +175,22 @@ export default function AdminSettingsPage() {
       </Card>
 
       {/* ============================================================
-          سایر تنظیمات
+          سایر تنظیمات - نمایش تمام تنظیمات به جز Matching
       ============================================================ */}
       <Card>
         <div className="p-4 md:p-6">
           <h3 className="font-semibold mb-4">سایر تنظیمات</h3>
-          {!settings?.results || settings.results.filter(s => 
-            !['MATCHING_DIRECT_PROVIDER', 'MATCHING_SCENARIO_PROVIDERS', 'MATCHING_ENGINE_ADVANCED'].includes(s.key)
-          ).length === 0 ? (
+          {otherSettings.length === 0 ? (
             <p className="text-secondary-500 text-center py-8">تنظیمی یافت نشد</p>
           ) : (
             <div className="space-y-2">
-              {settings.results.filter(s => 
-                !['MATCHING_DIRECT_PROVIDER', 'MATCHING_SCENARIO_PROVIDERS', 'MATCHING_ENGINE_ADVANCED'].includes(s.key)
-              ).map((item) => (
+              {otherSettings.map((item) => (
                 <div key={item.id} className="flex flex-col sm:flex-row items-start sm:items-center gap-3 p-3 bg-secondary-50 dark:bg-secondary-800 rounded-lg">
                   <Badge variant={typeColors[item.setting_type] || 'secondary'} size="sm">
                     {typeLabels[item.setting_type] || item.setting_type}
                   </Badge>
-                  <span className="font-medium flex-1 text-sm">{item.title}</span>
-                  
+                  <span className="font-medium flex-1 text-sm">{item.title || item.key}</span>
+
                   {editingKey === item.id ? (
                     <div className="flex items-center gap-2 w-full sm:w-auto">
                       <input

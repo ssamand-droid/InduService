@@ -120,7 +120,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ProductImage.DoesNotExist:
             return Response({'error': 'تصویر یافت نشد'}, status=status.HTTP_404_NOT_FOUND)
-        
+
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def toggle_active(self, request, slug=None):
         """ادمین: فعال/غیرفعال کردن محصول"""
@@ -161,4 +161,4 @@ class ProductViewSet(viewsets.ModelViewSet):
                     title='📝 محصول بروزرسانی شد',
                     message=f'{self.request.user.full_name} محصول "{product.name}" را ویرایش کرد.',
                     link=f'/dashboard/admin/products'
-                )    
+                )

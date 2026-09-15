@@ -17,7 +17,7 @@ function usePathname() {
     };
 
     window.addEventListener('popstate', handlePopState);
-    
+
     // همچنین تغییرات pushState و replaceState را رصد کنید
     const originalPushState = window.history.pushState;
     const originalReplaceState = window.history.replaceState;
@@ -284,7 +284,7 @@ export default function TourGuide() {
   // ========== استفاده از هوک سفارشی به جای useLocation ==========
   const pathname = usePathname();
   // ================================================================
-  
+
   const user = useAuthStore((state) => state.user);
   const [run, setRun] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
@@ -310,7 +310,7 @@ export default function TourGuide() {
 
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('induservice_tour_seen');
-    const isNewUser = user?.date_joined && 
+    const isNewUser = user?.date_joined &&
       (new Date() - new Date(user.date_joined)) < 48 * 60 * 60 * 1000;
 
     if (isNewUser && !hasSeenTour && !isBuyer) {
@@ -372,7 +372,7 @@ export default function TourGuide() {
 
     setRun(false);
     setStepIndex(0);
-    
+
     if (!isBuyer) {
       setSelectedPath(null);
       setShowPathSelector(true);

@@ -26,7 +26,7 @@ export const ServiceCompletionForm = ({ isOpen, onClose, request, onSuccess }) =
       const formData = new FormData()
       formData.append('completion_notes', notes)
       images.forEach((img) => formData.append('images', img))
-      
+
       await serviceApi.completeWithImages(request.id, formData)
       toast.success('خدمت با موفقیت تکمیل شد')
       onSuccess?.()

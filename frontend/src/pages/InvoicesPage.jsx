@@ -35,20 +35,20 @@ export default function InvoicesPage() {
 
   const invoices = data?.results || []
 
-  const statusLabels = { 
-    draft: 'پیش‌نویس', 
-    issued: 'صادر شده', 
-    paid: 'پرداخت شده', 
-    partially_paid: 'پرداخت جزئی', 
-    cancelled: 'باطل شده' 
+  const statusLabels = {
+    draft: 'پیش‌نویس',
+    issued: 'صادر شده',
+    paid: 'پرداخت شده',
+    partially_paid: 'پرداخت جزئی',
+    cancelled: 'باطل شده'
   }
-  
-  const statusColors = { 
-    draft: 'secondary', 
-    issued: 'warning', 
-    paid: 'success', 
-    partially_paid: 'info', 
-    cancelled: 'danger' 
+
+  const statusColors = {
+    draft: 'secondary',
+    issued: 'warning',
+    paid: 'success',
+    partially_paid: 'info',
+    cancelled: 'danger'
   }
 
   if (invoices.length === 0) {
@@ -125,7 +125,7 @@ export default function InvoicesPage() {
 // ========================
 const InvoiceDetailButton = ({ invoice, statusLabels, statusColors }) => {
   const [isOpen, setIsOpen] = useState(false)
-  
+
   // محاسبات امن
   const total = Number(invoice.total) || 0
   const commissionAmount = Number(invoice.platform_commission_amount) || 0
@@ -180,7 +180,7 @@ const InvoiceDetailButton = ({ invoice, statusLabels, statusColors }) => {
         <div class="footer"><p>این فاکتور توسط سامانه InduService صادر شده است.</p><div class="stamp">🔒 این فاکتور فاقد امضای فیزیکی بوده و کد پیگیری آن معتبر می‌باشد.</div></div>
         <script>window.print();</script>
       </body></html>`
-      
+
       const w = window.open('', '_blank', 'width=800,height=600')
       if (w) {
         w.document.write(html)

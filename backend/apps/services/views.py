@@ -6,7 +6,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import models as db_models
-from .models import ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote, ServiceImage
+from .models import ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
 from .serializers import (
     ServiceCategorySerializer, ServiceListSerializer, ServiceDetailSerializer,
     ServiceCreateUpdateSerializer, ServiceRequestSerializer, ServiceRequestUpdateSerializer,
@@ -66,24 +66,7 @@ class ServiceViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         title = self.request.data.get('title', '')
         unique_slug = f"{slugify(title, allow_unicode=True)}-{uuid.uuid4().hex[:6]}"
-        service = serializer.save(provider=self.request.user, slug=unique_slug)
-        
-        # پردازش تصاویر آپلود شده
-        images = self.request.FILES.getlist('images')
-        for image in images:
-            ServiceImage.objects.create(service=service, image=image)
-        
-        return service
-
-    def perform_update(self, serializer):
-        service = serializer.save()
-        
-        # پردازش تصاویر جدید آپلود شده
-        images = self.request.FILES.getlist('images')
-        for image in images:
-            ServiceImage.objects.create(service=service, image=image)
-        
-        return service
+        serializer.save(provider=self.request.user, slug=unique_slug)
 
     @action(detail=False, methods=['get'])
     def my_services(self, request):
@@ -99,22 +82,22 @@ class ServiceViewSet(viewsets.ModelViewSet):
 class ServiceMatchView(APIView):
     """پیدا کردن سرویس مرتبط با درخواست بر اساس کلمات کلیدی"""
     permission_classes = [IsAuthenticated]
-    
+
     def post(self, request):
         title = request.data.get('title', '')
         description = request.data.get('description', '')
         equipment_details = request.data.get('equipment_details', '')
-        
+
         search_text = f"{title} {description} {equipment_details}".lower()
-        
+
         # جستجو در سرویس‌های فعال
         matching_services = Service.objects.filter(
-            Q(title__icontains=search_text) | 
+            Q(title__icontains=search_text) |
             Q(description__icontains=search_text),
             is_active=True,
             is_deleted=False
         ).distinct()[:3]
-        
+
         if matching_services:
             best_match = matching_services[0]
             return Response({
@@ -122,7 +105,7 @@ class ServiceMatchView(APIView):
                 'service_title': best_match.title,
                 'confidence': 85
             })
-        
+
         return Response({'service_id': None, 'confidence': 0})
 
 
@@ -202,15 +185,15 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         """
         obj = super().get_object()
         user = self.request.user
-        
+
         # ادمین همیشه دسترسی دارد
         if user.role == 'admin' or user.is_staff:
             return obj
-        
+
         # خریدار: فقط درخواست‌های خودش
         if user.role == 'buyer' and obj.buyer == user:
             return obj
-        
+
         # ============================================================
         # ارائه‌دهنده: دسترسی به درخواست‌های مرتبط
         # ============================================================
@@ -218,7 +201,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             # دسترسی مستقیم (درخواست برای خدمات خودش)
             if obj.service and obj.service.provider == user:
                 return obj
-            
+
             # دسترسی به درخواست‌های دارای سرویس مرتبط با سناریو
             from .models import Service
             user_service_scenarios = Service.objects.filter(
@@ -226,18 +209,18 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 is_active=True,
                 is_deleted=False
             ).values_list('service_scenario', flat=True).distinct()
-            
+
             if obj.service and obj.service.service_scenario in user_service_scenarios:
                 if obj.status in ['pending', 'reviewed', 'quoted']:
                     return obj
-            
+
             # ============================================================
             # درخواست‌های بدون سرویس (service=null) - همه را ببین
             # ============================================================
             if obj.service is None:
                 if obj.status in ['pending', 'reviewed', 'quoted'] and obj.buyer != user:
                     return obj
-            
+
             # ============================================================
             # بررسی اینکه آیا این ارائه‌دهنده قبلاً برای این درخواست نوتیفیکیشن گرفته
             # ============================================================
@@ -247,24 +230,24 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 type='service_request',
                 extra_data__request_id=obj.id
             ).exists()
-            
+
             if has_notification and obj.status in ['pending', 'reviewed', 'quoted']:
                 return obj
-        
+
         from rest_framework.exceptions import PermissionDenied
         raise PermissionDenied("شما دسترسی به این درخواست ندارید")
-    
+
     @action(detail=True, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def match_providers(self, request, pk=None):
         """
         🎯 Matching Engine: یافتن ۳ پیمانکار برتر برای یک درخواست خدمت
         """
         service_request = self.get_object()
-        
+
         # فقط خریدار صاحب درخواست می‌تواند پیمانکاران را ببیند
         if service_request.buyer != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         # چک کردن اینکه Matching Engine فعال باشد
         matching_enabled = service_request.extra_data.get('matching_enabled', True)
         if not matching_enabled and not request.user.is_staff:
@@ -273,10 +256,10 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'message': 'Matching Engine برای این درخواست غیرفعال است',
                 'matching_enabled': False,
             }, status=403)
-        
+
         try:
             from .matching_engine import MatchingEngine
-            
+
             # چک کردن cache: اگر قبلاً اجرا شده، از کش بخوان
             cached = service_request.extra_data.get('matched_providers')
             if cached and not request.query_params.get('refresh'):
@@ -286,7 +269,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 # ذخیره در extra_data برای استفاده بعدی
                 service_request.extra_data['matched_providers'] = results
                 service_request.save(update_fields=['extra_data'])
-            
+
             return Response({
                 'success': True,
                 'request_id': service_request.id,
@@ -298,12 +281,12 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             })
         except Exception as e:
             return Response({'error': str(e)}, status=500)
-    
+
     def perform_create(self, serializer):
         from notification.services import find_matching_service, notify_matching_providers, create_notification
         from users.models import User
         from assets.models import Asset  # اضافه شود
-        
+
         service_id = self.request.data.get('service')
         title = self.request.data.get('title', '')
         description = self.request.data.get('description', '')
@@ -311,7 +294,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         extra_data = self.request.data.get('extra_data', {})
         industry = self.request.data.get('industry', '')  # اضافه شود
         asset_id = self.request.data.get('related_asset', '')  # اضافه شود
-        
+
         # دریافت نام دستگاه از دارایی
         asset_name = ''
         if asset_id:
@@ -321,12 +304,12 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 print(f"📍 Asset found: {asset_name}")
             except Asset.DoesNotExist:
                 pass
-        
+
         # ============================================================
         # تلاش برای پیدا کردن سرویس مرتبط (با اطلاعات کامل)
         # ============================================================
         matched_service = None
-        
+
         # روش 1: اگر خریدار سرویس انتخاب کرده
         if service_id:
             try:
@@ -334,16 +317,16 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 print(f"✅ Service selected by buyer: {matched_service.title}")
             except Service.DoesNotExist:
                 pass
-        
+
         # روش 2: جستجوی خودکار (با صنعت و نام دستگاه)
         if not matched_service:
             matched_service = find_matching_service(
-                title, description, equipment_details, extra_data, 
+                title, description, equipment_details, extra_data,
                 industry=industry, asset_name=asset_name  # اضافه شد
             )
             if matched_service:
                 print(f"🔍 Auto-matched service: {matched_service.title} (ID: {matched_service.id})")
-        
+
         # ============================================================
         # ذخیره درخواست
         # ============================================================
@@ -351,17 +334,17 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             buyer=self.request.user,
             service=matched_service
         )
-        
+
         # ============================================================
         # اگر سرویس پیدا نشد - ارسال اعلان به ادمین
         # ============================================================
         if not matched_service:
             print(f"⚠️ No service matched for request #{service_request.id}")
-            
+
             # ذخیره در session برای نمایش پیغام به خریدار
             self.request.session['unmatched_request'] = True
             self.request.session['unmatched_request_id'] = service_request.id
-            
+
             # اعلان به ادمین
             admins = User.objects.filter(role='admin')
             for admin in admins:
@@ -377,7 +360,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                     }
                 )
                 print(f"📧 Admin notification sent for unmatched request #{service_request.id}")
-        
+
         # ============================================================
         # اگر سرویس پیدا شد - ارسال نوتیفیکیشن به ارائه‌دهندگان
         # ============================================================
@@ -387,7 +370,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 print(f"🔔 Notified {count} matching providers for request #{service_request.id}")
             except Exception as e:
                 print(f"⚠️ Notification error: {e}")
-        
+
         return service_request
 
     # ============================================================
@@ -528,29 +511,29 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def pay_advance(self, request, pk=None):
         """خریدار یا ادمین: ثبت رسید پیش‌پرداخت"""
         service_request = self.get_object()
-        
+
         # اجازه به خریدار و ادمین
         if service_request.buyer != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if not service_request.advance_payment_required:
             return Response({'error': 'این خدمت نیاز به پیش‌پرداخت ندارد'}, status=400)
-        
+
         if 'receipt' not in request.FILES:
             return Response({'error': 'رسید پرداخت الزامی است'}, status=400)
-        
+
         # ذخیره رسید
         if hasattr(service_request, 'invoice'):
             invoice = service_request.invoice
             invoice.payment_receipt = request.FILES['receipt']
             invoice.status = 'partially_paid'
             invoice.save()
-        
+
         service_request.advance_payment_paid = True
         service_request.status = ServiceRequest.Status.ACCEPTED
         service_request.final_price = service_request.quoted_price
         service_request.save()
-        
+
         # اعلان به ارائه‌دهنده
         create_notification(
             user=service_request.service.provider,
@@ -559,7 +542,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             message=f'پیش‌پرداخت خدمت "{service_request.title}" پرداخت شد. می‌توانید کار را شروع کنید.',
             link=f'/dashboard/service-requests/{service_request.id}'
         )
-        
+
         # اعلان به ادمین
         admins = User.objects.filter(role='admin')
         for admin in admins:
@@ -570,7 +553,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 message=f'رسید پیش‌پرداخت برای درخواست "{service_request.title}" آپلود شد.',
                 link=f'/dashboard/admin/orders'
             )
-        
+
         return Response({'success': True, 'message': 'پیش‌پرداخت ثبت شد. ارائه‌دهنده می‌تواند کار را شروع کند.'})
 
     # ============================================================
@@ -580,17 +563,17 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def start_work(self, request, pk=None):
         """ارائه‌دهنده یا ادمین کار را شروع می‌کند"""
         service_request = self.get_object()
-        
+
         # اجازه به ارائه‌دهنده و ادمین
         if service_request.service.provider != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
-        
+
         if service_request.status != ServiceRequest.Status.ACCEPTED:
             return Response({'error': 'ابتدا باید درخواست پذیرفته شود'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         service_request.status = ServiceRequest.Status.IN_PROGRESS
         service_request.save()
-        
+
         return Response({'message': 'شروع فرآیند ثبت شد.'})
 
     # ============================================================
@@ -600,14 +583,14 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def final_payment(self, request, pk=None):
         """خریدار یا ادمین: پرداخت نهایی و تکمیل"""
         service_request = self.get_object()
-        
+
         # اجازه به خریدار و ادمین
         if service_request.buyer != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if service_request.status != 'completed':
             return Response({'error': 'خدمت هنوز تکمیل نشده'}, status=400)
-        
+
         if 'receipt' not in request.FILES:
             return Response({'error': 'رسید الزامی است'}, status=400)
 
@@ -638,18 +621,18 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def complete(self, request, pk=None):
         """ارائه‌دهنده یا ادمین خدمت را تکمیل می‌کند"""
         service_request = self.get_object()
-        
+
         # اجازه به ارائه‌دهنده و ادمین
         if service_request.service.provider != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if service_request.status != ServiceRequest.Status.IN_PROGRESS:
             return Response({'error': 'وضعیت فعلی قابل تکمیل نیست'}, status=status.HTTP_400_BAD_REQUEST)
-        
+
         service_request.status = ServiceRequest.Status.COMPLETED
         service_request.actual_completion_date = timezone.now()
         service_request.save()
-        
+
         return Response({'message': 'خدمت با موفقیت تکمیل شد.'})
 
     # ============================================================
@@ -657,42 +640,30 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def upload_attachment(self, request, pk=None):
-        """آپلود فایل ضمیمه برای درخواست خدمت (پشتیبانی از چند فایل)"""
+        """آپلود فایل ضمیمه برای درخواست خدمت"""
         service_request = self.get_object()
-        
+
         if service_request.buyer != request.user:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if service_request.status != ServiceRequest.Status.PENDING:
             return Response({'error': 'فقط درخواست‌های در انتظار بررسی قابل ویرایش هستند'}, status=400)
-        
-        # پشتیبانی از چند فایل (attachments) یا یک فایل (file)
-        files = request.FILES.getlist('attachments')
-        if not files:
-            files = [request.FILES.get('file')] if request.FILES.get('file') else []
-        
-        if not files:
-            return Response({'error': 'هیچ فایلی آپلود نشده'}, status=400)
-        
-        attachments = []
-        for file in files:
-            if file:
-                attachment = ServiceRequestAttachment.objects.create(
-                    service_request=service_request,
-                    file=file,
-                    description=request.data.get('description', '')
-                )
-                attachments.append({
-                    'id': attachment.id,
-                    'file_url': request.build_absolute_uri(attachment.file.url),
-                    'description': attachment.description,
-                    'created_at': attachment.created_at,
-                })
-        
+
+        if 'file' not in request.FILES:
+            return Response({'error': 'فایلی آپلود نشده'}, status=400)
+
+        attachment = ServiceRequestAttachment.objects.create(
+            service_request=service_request,
+            file=request.FILES['file'],
+            description=request.data.get('description', '')
+        )
+
         return Response({
-            'success': True,
-            'attachments': attachments,
-            'count': len(attachments)
+            'id': attachment.id,
+            'file': request.build_absolute_uri(attachment.file.url),
+            'file_url': request.build_absolute_uri(attachment.file.url),
+            'description': attachment.description,
+            'created_at': attachment.created_at,
         }, status=201)
 
     # ============================================================
@@ -806,21 +777,21 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def force_majeure(self, request, pk=None):
         """ارائه‌دهنده یا ادمین: اعلام فورس ماژور"""
         service_request = self.get_object()
-        
+
         # اجازه به ارائه‌دهنده و ادمین
         if request.user != service_request.service.provider and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if service_request.status not in ['accepted', 'in_progress']:
             return Response({'error': 'وضعیت قابل تغییر نیست'}, status=400)
-        
+
         serializer = ForceMajeureSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        
+
         service_request.force_majeure_declared = True
         service_request.force_majeure_reason = serializer.validated_data['reason']
         service_request.save()
-        
+
         # اعلان به خریدار
         create_notification(
             user=service_request.buyer,
@@ -829,7 +800,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             message=f'ارائه‌دهنده برای درخواست "{service_request.title}" فورس ماژور اعلام کرد.\nدلیل: {service_request.force_majeure_reason}',
             link=f'/dashboard/service-requests/{service_request.id}'
         )
-        
+
         # اعلان به ادمین
         for admin in User.objects.filter(role='admin'):
             create_notification(
@@ -839,7 +810,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 message=f'فورس ماژور برای درخواست "{service_request.title}" توسط {request.user.full_name}',
                 link=f'/dashboard/admin'
             )
-        
+
         return Response({'success': True, 'message': 'فورس ماژور ثبت شد و به خریدار اطلاع داده شد.'})
 
     # ============================================================
@@ -849,20 +820,20 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def complete_with_images(self, request, pk=None):
         """ارائه‌دهنده یا ادمین: تکمیل خدمت با آپلود عکس"""
         service_request = self.get_object()
-        
+
         # اجازه به ارائه‌دهنده و ادمین
         if request.user != service_request.service.provider and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if service_request.status != 'in_progress':
             return Response({'error': 'خدمت در حال انجام نیست'}, status=400)
-        
+
         # ذخیره یادداشت
         service_request.completion_notes = request.data.get('completion_notes', '')
         service_request.status = 'completed'
         service_request.actual_completion_date = timezone.now()
         service_request.save()
-        
+
         # ذخیره تصاویر
         saved_images = []
         for image in request.FILES.getlist('images'):
@@ -874,13 +845,13 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'id': img.id,
                 'url': request.build_absolute_uri(img.image.url),
             })
-        
+
         # به‌روزرسانی آمار پروفایل
         profile = request.user.profile
         profile.completed_orders += 1
         profile.total_revenue += (service_request.final_price or service_request.quoted_price or 0)
         profile.save()
-        
+
         # اعلان به خریدار
         create_notification(
             user=service_request.buyer,
@@ -890,7 +861,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             link=f'/dashboard/service-requests/{service_request.id}',
             extra_data={'images': saved_images}
         )
-        
+
         return Response({
             'success': True,
             'message': 'خدمت تکمیل شد',
@@ -904,28 +875,28 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def submit_review(self, request, pk=None):
         """خریدار: ثبت امتیاز و نظر"""
         service_request = self.get_object()
-        
+
         if request.user != service_request.buyer:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if service_request.status != 'completed':
             return Response({'error': 'خدمت هنوز تکمیل نشده'}, status=400)
-        
+
         if service_request.buyer_rating:
             return Response({'error': 'قبلاً امتیاز ثبت شده'}, status=400)
-        
+
         try:
             from reviews.models import Review
-            
+
             rating = int(request.data.get('rating', 5))
             review_text = request.data.get('review', '')
-            
+
             # ذخیره در ServiceRequest
             service_request.buyer_rating = rating
             service_request.buyer_review = review_text
             service_request.reviewed_at = timezone.now()
             service_request.save()
-            
+
             # ایجاد Review در جدول نظرات
             Review.objects.create(
                 user=service_request.buyer,
@@ -936,7 +907,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 is_verified_purchase=True,
                 is_approved=True,
             )
-            
+
             # به‌روزرسانی امتیاز ارائه‌دهنده
             provider_profile = service_request.service.provider.profile
             all_ratings = ServiceRequest.objects.filter(
@@ -947,9 +918,9 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 provider_profile.rating = round(sum(all_ratings) / len(all_ratings), 1)
                 provider_profile.rating_count = len(all_ratings)
                 provider_profile.save()
-            
+
             return Response({'success': True, 'message': f'امتیاز {rating} ثبت شد'})
-        
+
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
@@ -960,11 +931,11 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def upload_payment_receipt(self, request, pk=None):
         """خریدار یا ادمین: آپلود رسید پرداخت"""
         service_request = self.get_object()
-        
+
         # اجازه به خریدار و ادمین
         if service_request.buyer != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
-        
+
         if 'receipt' not in request.FILES:
             return Response({'error': 'رسید الزامی است'}, status=400)
 
@@ -973,13 +944,13 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             return Response({'error': 'فاکتوری وجود ندارد'}, status=400)
 
         payment_type = request.data.get('payment_type', 'final')
-        
+
         # ذخیره رسید
         invoice.payment_receipt = request.FILES['receipt']
-        
+
         if payment_type == 'advance':
             service_request.advance_payment_paid = True
-        
+
         # مهم: payment_verified را False بگذار
         invoice.payment_verified = False
         invoice.status = Invoice.InvoiceStatus.ISSUED
@@ -995,19 +966,19 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def admin_update_status(self, request, pk=None):
         """ادمین: تغییر مستقیم وضعیت درخواست"""
         service_request = self.get_object()
-        
+
         new_status = request.data.get('status')
         if not new_status:
             return Response({'error': 'وضعیت جدید مشخص نشده'}, status=400)
-        
+
         valid_statuses = [choice[0] for choice in ServiceRequest.Status.choices]
         if new_status not in valid_statuses:
             return Response({'error': f'وضعیت نامعتبر. وضعیت‌های مجاز: {valid_statuses}'}, status=400)
-        
+
         old_status = service_request.status
         service_request.status = new_status
         service_request.save()
-        
+
         # اعلان به خریدار
         create_notification(
             user=service_request.buyer,
@@ -1016,7 +987,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             message=f'وضعیت درخواست "{service_request.title}" از {old_status} به {new_status} تغییر کرد.',
             link=f'/dashboard/service-requests/{service_request.id}'
         )
-        
+
         # اعلان به ارائه‌دهنده (اگر وجود داشته باشد)
         if service_request.service and service_request.service.provider:
             create_notification(
@@ -1026,7 +997,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 message=f'وضعیت درخواست "{service_request.title}" از {old_status} به {new_status} تغییر کرد.',
                 link=f'/dashboard/service-requests/{service_request.id}'
             )
-        
+
         return Response({
             'success': True,
             'message': f'وضعیت با موفقیت به {new_status} تغییر کرد',

@@ -12,7 +12,7 @@ export const INDUSTRIES = {
       { name: 'temperature', label: 'دمای سیال (°C)', type: 'number', placeholder: 'مثال: ۴' },
     ]
   },
-  
+
   petrochemical: {
     id: 'petrochemical',
     label: 'پتروشیمی / نفت و گاز',
@@ -26,7 +26,7 @@ export const INDUSTRIES = {
       { name: 'pressure_class', label: 'کلاس فشار', type: 'select', options: ['150#', '300#', '600#', '900#', '1500#'] },
     ]
   },
-  
+
   cement: {
     id: 'cement',
     label: 'سیمان / معدن',
@@ -39,7 +39,7 @@ export const INDUSTRIES = {
       { name: 'dust_level', label: 'میزان گرد و غبار', type: 'select', options: ['کم', 'متوسط', 'زیاد'] },
     ]
   },
-  
+
   steel: {
     id: 'steel',
     label: 'فولاد / ذوب آهن',
@@ -52,7 +52,7 @@ export const INDUSTRIES = {
       { name: 'capacity', label: 'ظرفیت (تن)', type: 'number', placeholder: 'مثال: ۵۰' },
     ]
   },
-  
+
   pharmaceutical: {
     id: 'pharmaceutical',
     label: 'داروسازی',
@@ -65,7 +65,7 @@ export const INDUSTRIES = {
       { name: 'material', label: 'متریال', type: 'select', options: ['SS316L', 'SS304', 'Hastelloy', 'Titanium', 'سایر'] },
     ]
   },
-  
+
   power_plant: {
     id: 'power_plant',
     label: 'نیروگاهی',
@@ -78,7 +78,7 @@ export const INDUSTRIES = {
       { name: 'fuel_type', label: 'نوع سوخت', type: 'select', options: ['گاز طبیعی', 'گازوئیل', 'مازوت', 'دوگانه'] },
     ]
   },
-  
+
   general: {
     id: 'general',
     label: 'سایر صنایع',

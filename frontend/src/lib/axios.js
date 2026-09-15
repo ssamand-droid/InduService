@@ -1,10 +1,9 @@
 // frontend/src/lib/axios.js
-
 import axios from 'axios'
 import { useAuthStore } from '@stores/authStore'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://induservice.pro',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -12,76 +11,113 @@ const api = axios.create({
   },
 })
 
+// تابع کمکی برای گرفتن توکن با تاخیر (برای اطمینان از هیدرات شدن store)
+const getToken = () => {
+  // تلاش برای گرفتن مستقیم از store
+  let token = useAuthStore.getState().accessToken
+
+  // اگر در store نبود، از localStorage مستقیم بخوان (چون persist از localStorage استفاده می‌کند)
+  if (!token) {
+    try {
+      const persistedData = localStorage.getItem('induservice-auth-storage')
+      if (persistedData) {
+        const parsed = JSON.parse(persistedData)
+        token = parsed.state?.accessToken || parsed.accessToken
+        console.log('axios - token from localStorage persistence:', token ? 'exists' : 'null')
+      }
+    } catch (e) {
+      console.error('axios - error reading from localStorage:', e)
+    }
+  }
+
+  return token
+}
+
 // Request interceptor - اضافه کردن توکن به هدر
 api.interceptors.request.use(
   (config) => {
-    const { accessToken } = useAuthStore.getState()
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`
+    console.log('axios request:', config.method, config.url)
+
+    const token = getToken()
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+      console.log('axios - Authorization header added for:', config.url)
+    } else {
+      console.log('axios - No token found for:', config.url)
     }
     return config
   },
   (error) => {
+    console.error('axios interceptor error:', error)
     return Promise.reject(error)
   }
 )
 
-// Response interceptor - مدیریت خطاها و رفرش توکن
+// Response interceptor - مدیریت خطای 401
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('axios response success:', response.config.url, response.status)
+    return response
+  },
   async (error) => {
-    const originalRequest = error.config
+    console.error('axios response error:', error.config?.url, error.response?.status)
 
-    // اگر خطای 401 باشد و قبلاً retry نشده باشد و درخواست رفرش نباشد
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes('/token/refresh/')) {
+    const originalRequest = error.config
+    if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
       try {
-        const { refreshToken, setTokens, logout } = useAuthStore.getState()
-        
+        // گرفتن refreshToken
+        let refreshToken = useAuthStore.getState().refreshToken
         if (!refreshToken) {
-          logout()
-          // فقط در مرورگر ریدایرکت کن
-          if (typeof window !== 'undefined') {
-            window.location.href = '/login'
-          }
-          return Promise.reject(error)
+          try {
+            const persistedData = localStorage.getItem('induservice-auth-storage')
+            if (persistedData) {
+              const parsed = JSON.parse(persistedData)
+              refreshToken = parsed.state?.refreshToken || parsed.refreshToken
+            }
+          } catch (e) {}
         }
 
-        // تلاش برای رفرش توکن
+        console.log('Attempting to refresh token...')
+
         const response = await axios.post(
-          `${api.defaults.baseURL}/api/token/refresh/`,
-          { refresh: refreshToken },
-          {
-            headers: {
-              'Content-Type': 'application/json',
-            }
-          }
+          `https://induservice.pro/api/token/refresh/`,
+          { refresh: refreshToken }
         )
 
         const { access } = response.data
-        if (access) {
-          setTokens(access, refreshToken)
-          // تکرار درخواست اصلی با توکن جدید
-          originalRequest.headers.Authorization = `Bearer ${access}`
-          return api(originalRequest)
-        } else {
-          throw new Error('No access token in refresh response')
-        }
+        console.log('Token refreshed successfully')
+
+        // ذخیره توکن جدید در store و localStorage
+        const currentState = useAuthStore.getState()
+        useAuthStore.setState({
+          accessToken: access,
+          refreshToken: currentState.refreshToken,
+          isAuthenticated: true
+        })
+
+        // به‌روزرسانی localStorage مستقیم
+        try {
+          const persistedData = localStorage.getItem('induservice-auth-storage')
+          if (persistedData) {
+            const parsed = JSON.parse(persistedData)
+            parsed.state.accessToken = access
+            localStorage.setItem('induservice-auth-storage', JSON.stringify(parsed))
+          }
+        } catch (e) {}
+
+        originalRequest.headers.Authorization = `Bearer ${access}`
+        return api(originalRequest)
       } catch (refreshError) {
-        // اگر رفرش هم خطا داد، کاربر را logout کن
+        console.error('Token refresh failed:', refreshError)
+        // توکن منقضی شده - logout
+        localStorage.removeItem('induservice-auth-storage')
         useAuthStore.getState().logout()
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login'
-        }
+        window.location.href = '/login'
         return Promise.reject(refreshError)
       }
-    }
-
-    // مدیریت خطاهای دیگر
-    if (error.response?.data) {
-      const errorMessage = error.response.data.error?.message || error.response.data.detail || 'خطایی رخ داده است.'
-      error.userMessage = errorMessage
     }
 
     return Promise.reject(error)

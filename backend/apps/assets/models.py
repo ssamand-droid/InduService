@@ -316,7 +316,7 @@ class MaintenanceImportBatch(models.Model):
     class Meta:
         verbose_name = "واردات سوابق تعمیرات"
         verbose_name_plural = "واردات‌های سوابق تعمیرات"
-        
+
 
 # ============ مدل‌های همزاد دیجیتال ============
 
@@ -353,33 +353,33 @@ class Sensor(models.Model):
         verbose_name="شناسه یکتا",
         help_text="MAC Address یا شناسه IoT"
     )
-    
+
     # مشخصات فنی
     manufacturer = models.CharField(max_length=200, blank=True)
     model = models.CharField(max_length=200, blank=True)
     unit = models.CharField(max_length=20, verbose_name="واحد اندازه‌گیری", help_text="مثال: °C, mm/s, bar")
-    
+
     # آستانه‌های هشدار
     warning_threshold_low = models.FloatField(null=True, blank=True, verbose_name="آستانه هشدار پایین")
     warning_threshold_high = models.FloatField(null=True, blank=True, verbose_name="آستانه هشدار بالا")
     critical_threshold_low = models.FloatField(null=True, blank=True, verbose_name="آستانه بحرانی پایین")
     critical_threshold_high = models.FloatField(null=True, blank=True, verbose_name="آستانه بحرانی بالا")
-    
+
     # وضعیت
     is_active = models.BooleanField(default=True)
     last_reading = models.FloatField(null=True, blank=True, verbose_name="آخرین قرائت")
     last_reading_at = models.DateTimeField(null=True, blank=True)
-    
+
     installation_date = models.DateField(null=True, blank=True)
     calibration_due_date = models.DateField(null=True, blank=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         verbose_name = "سنسور"
         verbose_name_plural = "سنسورها"
         ordering = ['sensor_type', 'name']
-    
+
     def __str__(self):
         return f"{self.name} ({self.get_sensor_type_display()})"
 
@@ -393,7 +393,7 @@ class SensorReading(models.Model):
     )
     value = models.FloatField(verbose_name="مقدار")
     unit = models.CharField(max_length=20, blank=True)
-    
+
     # وضعیت قرائت
     status = models.CharField(
         max_length=10,
@@ -404,12 +404,12 @@ class SensorReading(models.Model):
         ],
         default='normal'
     )
-    
+
     # متادیتا
     raw_data = models.JSONField(default=dict, blank=True, verbose_name="داده خام")
     recorded_at = models.DateTimeField(db_index=True, verbose_name="زمان ثبت")
     created_at = models.DateTimeField(auto_now_add=True)
-    
+
     class Meta:
         verbose_name = "قرائت سنسور"
         verbose_name_plural = "قرائت‌های سنسور"
@@ -418,7 +418,7 @@ class SensorReading(models.Model):
             models.Index(fields=['sensor', 'recorded_at']),
             models.Index(fields=['sensor', 'status']),
         ]
-    
+
     def __str__(self):
         return f"{self.sensor.name}: {self.value} {self.unit}"
 
@@ -432,7 +432,7 @@ class Hotspot(models.Model):
     )
     label = models.CharField(max_length=200, verbose_name="برچسب")
     description = models.TextField(blank=True, verbose_name="توضیحات")
-    
+
     # لینک به قطعه (اختیاری)
     part = models.ForeignKey(
         AssetPart,
@@ -441,7 +441,7 @@ class Hotspot(models.Model):
         blank=True,
         related_name='digital_hotspots'  # 🆕 تغییر
     )
-    
+
     # لینک به سنسور (اختیاری)
     sensor = models.ForeignKey(
         Sensor,
@@ -450,7 +450,7 @@ class Hotspot(models.Model):
         blank=True,
         related_name='hotspots'  # 🆕
     )
-    
+
     # موقعیت روی تصویر (درصد)
     x_position = models.FloatField(
         validators=[MinValueValidator(0), MaxValueValidator(100)],
@@ -460,23 +460,23 @@ class Hotspot(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(100)],
         help_text="موقعیت عمودی (٪ ارتفاع تصویر)"
     )
-    
+
     # استایل
     icon = models.CharField(max_length=50, default='FaCircle')
     color = models.CharField(max_length=20, default='#EF4444')
     size = models.PositiveIntegerField(default=24, help_text="اندازه نقطه (px)")
-    
+
     # نمایش داده زنده سنسور
     show_live_data = models.BooleanField(default=False, verbose_name="نمایش داده زنده")
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name = "نقطه حساس"
         verbose_name_plural = "نقاط حساس"
         ordering = ['label']
-    
+
     def __str__(self):
         return f"{self.label} - {self.asset.name}"
 
@@ -493,7 +493,7 @@ class MaintenanceSchedule(models.Model):
         ('runtime', 'بر اساس ساعت کارکرد'),
         ('condition', 'بر اساس شرایط (CBM)'),
     ]
-    
+
     asset = models.ForeignKey(
         Asset,
         on_delete=models.CASCADE,
@@ -501,19 +501,19 @@ class MaintenanceSchedule(models.Model):
     )
     title = models.CharField(max_length=300, verbose_name="عنوان")
     description = models.TextField(blank=True)
-    
+
     # زمان‌بندی
     frequency = models.CharField(max_length=20, choices=FREQUENCY_CHOICES)
     runtime_hours_interval = models.PositiveIntegerField(
         null=True, blank=True,
         help_text="برای نگهداری بر اساس ساعت کارکرد"
     )
-    
+
     # وضعیت
     is_active = models.BooleanField(default=True)
     last_performed_at = models.DateTimeField(null=True, blank=True)
     next_due_at = models.DateTimeField(null=True, blank=True)
-    
+
     # چک‌لیست
     checklist = models.JSONField(
         default=list,
@@ -521,26 +521,26 @@ class MaintenanceSchedule(models.Model):
         verbose_name="چک‌لیست",
         help_text="لیست کارهایی که باید انجام شود"
     )
-    
+
     # مسئول
     assigned_to = models.CharField(max_length=200, blank=True, verbose_name="مسئول")
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     class Meta:
         verbose_name = "برنامه نگهداری"
         verbose_name_plural = "برنامه‌های نگهداری"
         ordering = ['next_due_at']
-    
+
     def __str__(self):
         return f"{self.title} - {self.asset.name}"
-    
+
     def calculate_next_due(self):
         """محاسبه تاریخ بعدی"""
         if not self.last_performed_at:
             return timezone.now()
-        
+
         from datetime import timedelta
         intervals = {
             'daily': timedelta(days=1),
@@ -550,7 +550,7 @@ class MaintenanceSchedule(models.Model):
             'biannual': timedelta(days=180),
             'annual': timedelta(days=365),
         }
-        
+
         if self.frequency in intervals:
             return self.last_performed_at + intervals[self.frequency]
         return self.last_performed_at + timedelta(days=90)
@@ -564,7 +564,7 @@ class FailurePrediction(models.Model):
         ('false_positive', 'هشدار اشتباه'),
         ('expired', 'منقضی شده'),
     ]
-    
+
     asset = models.ForeignKey(
         Asset,
         on_delete=models.CASCADE,
@@ -577,10 +577,10 @@ class FailurePrediction(models.Model):
         blank=True,
         related_name='failure_predictions'
     )
-    
+
     title = models.CharField(max_length=300)
     description = models.TextField(blank=True)
-    
+
     # پیش‌بینی
     predicted_failure_date = models.DateTimeField(verbose_name="تاریخ تخمینی خرابی")
     confidence = models.FloatField(
@@ -588,17 +588,17 @@ class FailurePrediction(models.Model):
         verbose_name="درصد اطمینان",
         help_text="۰ تا ۱۰۰"
     )
-    
+
     # تحلیل
     root_cause = models.TextField(blank=True, verbose_name="علت ریشه‌ای")
     recommended_action = models.TextField(blank=True, verbose_name="اقدام پیشنهادی")
-    
+
     # وضعیت
     status = models.CharField(max_length=15, choices=PREDICTION_STATUS, default='active')
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     resolved_at = models.DateTimeField(null=True, blank=True)
-    
+
     sensor = models.ForeignKey(
         Sensor,
         on_delete=models.SET_NULL,
@@ -607,11 +607,11 @@ class FailurePrediction(models.Model):
         related_name='failure_predictions',
         verbose_name='سنسور مرتبط'
     )
-    
+
     class Meta:
         verbose_name = "پیش‌بینی خرابی"
         verbose_name_plural = "پیش‌بینی‌های خرابی"
         ordering = ['-created_at']
-    
+
     def __str__(self):
         return f"{self.title} - اطمینان {self.confidence}%"

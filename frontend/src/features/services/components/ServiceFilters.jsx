@@ -20,13 +20,13 @@ const FilterSection = ({ title, children, defaultOpen = true }) => {
 export const ServiceFilters = ({ filters, onChange, onClear }) => {
   const { data: categoriesData } = useServiceCategories()
   const categories = categoriesData?.results || []
-  
+
   // تبدیل filters به state محلی برای چک‌باکس‌ها
   const [selectedCategories, setSelectedCategories] = useState(filters?.categories || [])
   const [selectedScenario, setSelectedScenario] = useState(filters?.service_scenario || '')
 
   const handleCategoryChange = (categoryId, checked) => {
-    const newSelected = checked 
+    const newSelected = checked
       ? [...selectedCategories, categoryId]
       : selectedCategories.filter(id => id !== categoryId)
     setSelectedCategories(newSelected)
@@ -59,8 +59,8 @@ export const ServiceFilters = ({ filters, onChange, onClear }) => {
         ) : (
           categories.map((cat) => (
             <label key={cat.id} className="flex items-center gap-2 cursor-pointer">
-              <input 
-                type="checkbox" 
+              <input
+                type="checkbox"
                 checked={selectedCategories.includes(cat.id)}
                 onChange={(e) => handleCategoryChange(cat.id, e.target.checked)}
                 className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
@@ -72,7 +72,7 @@ export const ServiceFilters = ({ filters, onChange, onClear }) => {
       </FilterSection>
 
       <FilterSection title="سناریوی خدمت">
-        <select 
+        <select
           value={selectedScenario}
           onChange={(e) => handleScenarioChange(e.target.value)}
           className="w-full rounded-lg border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"

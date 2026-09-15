@@ -24,30 +24,30 @@ export const ProviderQuoteForm = ({ isOpen, onClose, request, onSuccess }) => {
 
   const handleSubmit = async () => {
       if (!price) { toast.error('قیمت را وارد کنید'); return }
-      
+
       if (advanceRequired && !advanceAmount) {
           toast.error('مبلغ پیش‌پرداخت را وارد کنید')
           return
       }
-      
+
       setIsSubmitting(true)
       try {
           const date = new Date()
           date.setDate(date.getDate() + parseInt(estimatedDays || 7))
-          
+
           const payload = {
               quoted_price: parseInt(price),
               provider_notes: notes,
               estimated_completion_date: date.toISOString().split('T')[0],
               advance_payment_required: advanceRequired,
           }
-          
+
           if (advanceRequired && advanceAmount) {
               payload.advance_payment_amount = parseInt(advanceAmount)
           }
-          
+
           await serviceApi.providerQuote(request.id, payload)
-          
+
           toast.success('قیمت با موفقیت اعلام شد')
           onSuccess?.()
           onClose()
@@ -59,8 +59,8 @@ export const ProviderQuoteForm = ({ isOpen, onClose, request, onSuccess }) => {
   }
 
   // محاسبه درصد پیش‌پرداخت
-  const advancePercentage = price && advanceAmount 
-    ? Math.round((parseInt(advanceAmount) / parseInt(price)) * 100) 
+  const advancePercentage = price && advanceAmount
+    ? Math.round((parseInt(advanceAmount) / parseInt(price)) * 100)
     : 0
 
   return (
@@ -79,12 +79,12 @@ export const ProviderQuoteForm = ({ isOpen, onClose, request, onSuccess }) => {
           <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
             <FiDollarSign className="text-green-500" /> قیمت پیشنهادی (ریال) *
           </label>
-          <input 
-            type="number" 
-            value={price} 
+          <input
+            type="number"
+            value={price}
             onChange={(e) => setPrice(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-            placeholder="مثلاً 50000000" 
+            className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            placeholder="مثلاً 50000000"
           />
           {price && (
             <p className="text-xs text-gray-500 mt-1">
@@ -98,35 +98,35 @@ export const ProviderQuoteForm = ({ isOpen, onClose, request, onSuccess }) => {
           <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
             <FiCalendar className="text-blue-500" /> مدت زمان تخمینی (روز)
           </label>
-          <input 
-            type="number" 
-            value={estimatedDays} 
+          <input
+            type="number"
+            value={estimatedDays}
             onChange={(e) => setEstimatedDays(e.target.value)}
-            className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-            placeholder="مثلاً ۷" 
+            className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            placeholder="مثلاً ۷"
           />
         </div>
 
         {/* یادداشت */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">یادداشت برای مشتری</label>
-          <textarea 
-            value={notes} 
-            onChange={(e) => setNotes(e.target.value)} 
+          <textarea
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
             rows={3}
-            className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none" 
-            placeholder="توضیحات..." 
+            className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 resize-none"
+            placeholder="توضیحات..."
           />
         </div>
 
         {/* پیش‌پرداخت */}
         <div className="border border-gray-200 rounded-lg p-3">
           <label className="flex items-center gap-2 cursor-pointer">
-            <input 
-              type="checkbox" 
-              checked={advanceRequired} 
+            <input
+              type="checkbox"
+              checked={advanceRequired}
               onChange={(e) => setAdvanceRequired(e.target.checked)}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500" 
+              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
             />
             <span className="text-sm font-medium flex items-center gap-1 text-gray-700">
               <FiAlertTriangle className="text-yellow-500" /> نیاز به پیش‌پرداخت
@@ -134,12 +134,12 @@ export const ProviderQuoteForm = ({ isOpen, onClose, request, onSuccess }) => {
           </label>
           {advanceRequired && (
             <div className="mt-3">
-              <input 
-                type="number" 
-                value={advanceAmount} 
+              <input
+                type="number"
+                value={advanceAmount}
                 onChange={(e) => setAdvanceAmount(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" 
-                placeholder="مبلغ پیش‌پرداخت" 
+                className="w-full rounded-lg border border-gray-300 p-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                placeholder="مبلغ پیش‌پرداخت"
               />
               {advanceAmount && (
                 <p className="text-xs text-gray-500 mt-1">

@@ -23,7 +23,7 @@ class BlogPostAdmin(admin.ModelAdmin):
     raw_id_fields = ('author',)
     filter_horizontal = ('tags',)
     date_hierarchy = 'published_at'
-    
+
     fieldsets = (
         (_('اطلاعات اصلی'), {
             'fields': ('title', 'slug', 'author', 'category', 'tags', 'status', 'is_featured')
@@ -41,25 +41,25 @@ class BlogPostAdmin(admin.ModelAdmin):
         }),
     )
     readonly_fields = ('created_at', 'updated_at')
-    
+
     actions = ['make_published', 'make_draft', 'make_featured', 'unmake_featured']
-    
+
     def make_published(self, request, queryset):
         from django.utils import timezone
         queryset.update(status='published', published_at=timezone.now())
         self.message_user(request, f'{queryset.count()} مقاله منتشر شد.')
     make_published.short_description = _('انتشار مقالات انتخاب شده')
-    
+
     def make_draft(self, request, queryset):
         queryset.update(status='draft')
         self.message_user(request, f'{queryset.count()} مقاله به پیش‌نویس تغییر یافت.')
     make_draft.short_description = _('پیش‌نویس کردن مقالات انتخاب شده')
-    
+
     def make_featured(self, request, queryset):
         queryset.update(is_featured=True)
         self.message_user(request, f'{queryset.count()} مقاله ویژه شد.')
     make_featured.short_description = _('ویژه کردن')
-    
+
     def unmake_featured(self, request, queryset):
         queryset.update(is_featured=False)
         self.message_user(request, f'{queryset.count()} مقاله از ویژه خارج شد.')

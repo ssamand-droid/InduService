@@ -85,13 +85,13 @@ export function formatDateSafe(dateString) {
 function gregorianToJalali(gy, gm, gd) {
   const gDaysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
   const jDaysInMonth = [31, 31, 31, 31, 31, 31, 30, 29, 29, 29, 29, 29]
-  
+
   let gy2 = (gm > 2) ? (gy + 1) : gy
   let days = 355666 + (365 * gy) + Math.floor((gy2 + 3) / 4) - Math.floor((gy2 + 99) / 100) + Math.floor((gy2 + 399) / 400) + gd
-  
+
   for (let i = 0; i < gm - 1; i++) days += gDaysInMonth[i]
   if (gm > 2 && ((gy % 4 === 0 && gy % 100 !== 0) || (gy % 400 === 0))) days++
-  
+
   days -= 492246
   let jy = 1
   while (days > (jy < 30 ? jDaysInMonth[jy - 1] : 29 + (jy % 4 === 3 ? 1 : 0))) {
@@ -118,10 +118,10 @@ export function formatDate(dateString) {
 
   const j = gregorianToJalali(date.getFullYear(), date.getMonth() + 1, date.getDate())
   const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
-  
+
   const hours = date.getHours().toString().padStart(2, '0')
   const minutes = date.getMinutes().toString().padStart(2, '0')
-  
+
   return `${j.jd} ${monthNames[j.jm - 1]} ${j.jy} ساعت ${hours}:${minutes}`
 }
 
@@ -135,7 +135,7 @@ export function formatDateOnly(dateString) {
 
   const j = gregorianToJalali(date.getFullYear(), date.getMonth() + 1, date.getDate())
   const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند']
-  
+
   return `${j.jd} ${monthNames[j.jm - 1]} ${j.jy}`
 }
 

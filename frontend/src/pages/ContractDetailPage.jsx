@@ -44,7 +44,7 @@ export default function ContractDetailPage() {
           <Card>
             <h3 className="font-bold mb-4">{contract.title}</h3>
             <p className="text-secondary-600 mb-4">{contract.description}</p>
-            
+
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div><span className="text-secondary-500">نوع قرارداد:</span> {contract.contract_type_display}</div>
               <div><span className="text-secondary-500">ارزش:</span> {formatPrice(contract.contract_value)}</div>

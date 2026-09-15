@@ -10,7 +10,7 @@ router.register(r'alerts', views.AssetAlertViewSet, basename='alert')
 urlpatterns = [
     # Main asset endpoints
     path('', include(router.urls)),
-    
+
     # Nested endpoints for asset parts (without drf-nested-routers)
     path('assets/<uuid:asset_pk>/parts/', views.AssetPartViewSet.as_view({
         'get': 'list',
@@ -22,7 +22,7 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='asset-parts-detail'),
-    
+
     # Nested endpoints for asset documents
     path('assets/<uuid:asset_pk>/documents/', views.AssetDocumentViewSet.as_view({
         'get': 'list',
@@ -34,7 +34,7 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='asset-documents-detail'),
-    
+
     # Nested endpoints for maintenance logs
     path('assets/<uuid:asset_pk>/maintenance/', views.AssetMaintenanceLogViewSet.as_view({
         'get': 'list',
@@ -46,7 +46,7 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='asset-maintenance-detail'),
-    
+
     # Nested endpoints for hotspots
     path('assets/<uuid:asset_pk>/hotspots/', views.DigitalTwinHotspotViewSet.as_view({
         'get': 'list',
@@ -58,7 +58,7 @@ urlpatterns = [
         'patch': 'partial_update',
         'delete': 'destroy'
     }), name='asset-hotspots-detail'),
-    
+
     # Asset custom actions
     path('assets/<uuid:pk>/update_health/', views.AssetViewSet.as_view({
         'post': 'update_health'

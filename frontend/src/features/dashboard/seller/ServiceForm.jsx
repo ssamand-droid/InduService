@@ -36,7 +36,7 @@ export default function ServiceForm() {
 
   const { data: existingService, isLoading: loadingService } = useService(slug, { enabled: isEditMode })
   const { data: categoriesData, isLoading: loadingCategories } = useServiceCategories()
-  
+
   // State for images
   const [images, setImages] = useState([])
   const [existingImages, setExistingImages] = useState([])
@@ -87,7 +87,7 @@ export default function ServiceForm() {
         is_onsite: existingService.is_onsite,
         is_active: existingService.is_active,
       })
-      
+
       // Load existing images
       if (existingService.images && existingService.images.length > 0) {
         setExistingImages(existingService.images)
@@ -99,18 +99,18 @@ export default function ServiceForm() {
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files)
     const validImages = files.filter(file => file.type.startsWith('image/'))
-    
+
     if (validImages.length === 0) {
       toast.error('لطفاً فقط فایل تصویری انتخاب کنید')
       return
     }
-    
+
     const totalImages = existingImages.length + images.length + validImages.length
     if (totalImages > 10) {
       toast.error('حداکثر ۱۰ تصویر می‌توانید آپلود کنید')
       return
     }
-    
+
     setImages(prev => [...prev, ...validImages])
   }
 
@@ -120,7 +120,7 @@ export default function ServiceForm() {
 
   const removeExistingImage = async (imageId) => {
     if (!window.confirm('آیا از حذف این تصویر اطمینان دارید؟')) return
-    
+
     setDeletingImageId(imageId)
     try {
       // ارسال درخواست حذف به سرور
@@ -142,10 +142,10 @@ export default function ServiceForm() {
     }
 
     setUploading(true)
-    
+
     try {
       const formData = new FormData()
-      
+
       // اضافه کردن فیلدهای متنی
       formData.append('title', data.title)
       formData.append('category', parseInt(data.category))
@@ -153,23 +153,23 @@ export default function ServiceForm() {
       formData.append('service_scenario', data.service_scenario)
       formData.append('pricing_model', data.pricing_model)
       formData.append('description', data.description)
-      
+
       if (data.base_price) formData.append('base_price', data.base_price)
       if (data.hourly_rate) formData.append('hourly_rate', data.hourly_rate)
       if (data.requirements) formData.append('requirements', data.requirements)
       if (data.estimated_duration_days) formData.append('estimated_duration_days', data.estimated_duration_days)
       if (data.warranty_months) formData.append('warranty_months', data.warranty_months)
       if (data.service_area) formData.append('service_area', data.service_area)
-      
+
       formData.append('is_remote', data.is_remote)
       formData.append('is_onsite', data.is_onsite)
       formData.append('is_active', data.is_active)
-      
+
       // اضافه کردن تصاویر جدید
       images.forEach((image) => {
         formData.append('images', image)
       })
-      
+
       // ارسال به سرور
       let response
       if (isEditMode) {
@@ -181,7 +181,7 @@ export default function ServiceForm() {
           headers: { 'Content-Type': 'multipart/form-data' }
         })
       }
-      
+
       if (response.data) {
         toast.success(isEditMode ? 'خدمت با موفقیت بروزرسانی شد' : 'خدمت با موفقیت ایجاد شد')
         navigate('/dashboard/services')
@@ -203,7 +203,7 @@ export default function ServiceForm() {
   }
 
   // Prepare category options
-  const categoryOptions = categories.length > 0 
+  const categoryOptions = categories.length > 0
     ? categories.map(c => ({ value: c.id.toString(), label: c.name }))
     : [{ value: '', label: 'دسته‌بندی موجود نیست' }]
 
@@ -309,7 +309,7 @@ export default function ServiceForm() {
                 placeholder="مثلاً 500000"
               />
             )}
-            
+
             <FormInput
               label="مدت زمان تخمینی (روز)"
               name="estimated_duration_days"
@@ -378,7 +378,7 @@ export default function ServiceForm() {
               <FiImage className="text-primary-500" />
               تصاویر خدمت (حداکثر ۱۰ تصویر) <span className="text-red-500">*</span>
             </label>
-            
+
             {/* تصاویر موجود (در حالت ویرایش) */}
             {existingImages.length > 0 && (
               <div className="mb-4">
@@ -387,9 +387,9 @@ export default function ServiceForm() {
                   {existingImages.map((img, idx) => (
                     <div key={img.id || idx} className="relative group">
                       <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-secondary-200 dark:border-secondary-700 bg-secondary-50">
-                        <img 
-                          src={img.image} 
-                          alt={img.alt_text || 'خدمت'} 
+                        <img
+                          src={img.image}
+                          alt={img.alt_text || 'خدمت'}
                           className="w-full h-full object-cover"
                         />
                         <button
@@ -412,7 +412,7 @@ export default function ServiceForm() {
             )}
 
             {/* آپلود تصاویر جدید */}
-            <div 
+            <div
               className="border-2 border-dashed border-secondary-300 dark:border-secondary-600 rounded-lg p-6 text-center hover:border-primary-500 transition cursor-pointer bg-secondary-50 dark:bg-secondary-800/50"
               onClick={() => document.getElementById('image-upload')?.click()}
               onDragOver={(e) => e.preventDefault()}
@@ -428,13 +428,13 @@ export default function ServiceForm() {
                 setImages(prev => [...prev, ...validImages])
               }}
             >
-              <input 
-                id="image-upload" 
-                type="file" 
-                multiple 
-                accept="image/*" 
-                className="hidden" 
-                onChange={handleImageChange} 
+              <input
+                id="image-upload"
+                type="file"
+                multiple
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
               />
               <FiUpload className="h-10 w-10 mx-auto text-secondary-400 mb-2" />
               <p className="text-sm text-secondary-500">کلیک کنید یا تصاویر را اینجا رها کنید</p>
@@ -450,9 +450,9 @@ export default function ServiceForm() {
                   {images.map((img, idx) => (
                     <div key={idx} className="relative group">
                       <div className="relative w-full aspect-square rounded-lg overflow-hidden border-2 border-primary-300 bg-secondary-50">
-                        <img 
-                          src={URL.createObjectURL(img)} 
-                          alt="پیش‌نمایش" 
+                        <img
+                          src={URL.createObjectURL(img)}
+                          alt="پیش‌نمایش"
                           className="w-full h-full object-cover"
                         />
                         <button

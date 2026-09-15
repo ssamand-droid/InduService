@@ -20,7 +20,7 @@ class Command(BaseCommand):
             'date_joined', 'last_login'
         )
         df_users = pd.DataFrame(list(users))
-        
+
         # تبدیل تاریخ‌ها
         if 'date_joined' in df_users.columns:
             df_users['date_joined'] = pd.to_datetime(df_users['date_joined']).dt.tz_localize(None)

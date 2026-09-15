@@ -3,7 +3,7 @@ import api from '@lib/axios';
 
 export const documentApi = {
   // ==================== Portfolio (نمونه کارها) ====================
-  
+
   /** دریافت لیست نمونه کارهای کاربر */
   getPortfolio: async () => {
     const response = await api.get('/api/portfolio/');  // ← اصلاح مسیر
@@ -16,7 +16,7 @@ export const documentApi = {
     formData.append('title', data.title);
     if (data.description) formData.append('description', data.description);
     formData.append('image', data.image);
-    
+
     const response = await api.post('/api/portfolio/', formData, {  // ← اصلاح مسیر
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -30,7 +30,7 @@ export const documentApi = {
   },
 
   // ==================== Certificates (مدارک) ====================
-  
+
   /** دریافت لیست مدارک کاربر */
   getCertificates: async () => {
     const response = await api.get('/api/certifications/');  // ← اصلاح مسیر
@@ -42,7 +42,7 @@ export const documentApi = {
     const formData = new FormData();
     formData.append('title', data.title);
     formData.append('file', data.file);
-    
+
     const response = await api.post('/api/certifications/', formData, {  // ← اصلاح مسیر
       headers: { 'Content-Type': 'multipart/form-data' },
     });
@@ -56,7 +56,7 @@ export const documentApi = {
   },
 
   // ==================== Admin (برای ادمین) ====================
-  
+
   /** دریافت تمام مدارک (ادمین) */
   getAllCertificates: async () => {
     const response = await api.get('/api/admin/certifications/');

@@ -2,18 +2,18 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
-import { 
-  FiCalendar, FiUser, FiClock, FiTag, FiArrowRight, 
+import {
+  FiCalendar, FiUser, FiClock, FiTag, FiArrowRight,
   FiEye, FiShare2, FiBookOpen, FiChevronLeft,
   FiMessageCircle, FiHeart, FiPrinter, FiArrowUp,
   FiCopy, FiCheck, FiMail, FiTwitter,
   FiLink, FiArrowLeft, FiHome
 } from 'react-icons/fi';
 // ✅ استفاده از lucide-react برای آیکون‌های مشکل‌دار
-import { 
-  FaTelegramPlane, 
-  FaWhatsapp, 
-  FaLinkedinIn 
+import {
+  FaTelegramPlane,
+  FaWhatsapp,
+  FaLinkedinIn
 } from 'react-icons/fa';
 import { blogApi } from '@features/blog/services/blogApi';
 // ✅ استفاده از SEO
@@ -53,7 +53,7 @@ export default function BlogDetailPage() {
     }
     const hours = Math.floor(minutes / 60);
     const remainingMinutes = minutes % 60;
-    return remainingMinutes > 0 
+    return remainingMinutes > 0
       ? `${hours} ساعت و ${remainingMinutes} دقیقه مطالعه`
       : `${hours} ساعت مطالعه`;
   };
@@ -64,7 +64,7 @@ export default function BlogDetailPage() {
     const title = post?.title || '';
     const text = `📄 ${title}\n\n${post?.excerpt || ''}\n\n${url}`;
     let shareUrl = '';
-    
+
     switch(platform) {
       case 'telegram':
         shareUrl = `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`;
@@ -91,7 +91,7 @@ export default function BlogDetailPage() {
       default:
         return;
     }
-    
+
     if (shareUrl) {
       window.open(shareUrl, '_blank', 'width=600,height=500,menubar=no,toolbar=no');
     }
@@ -177,7 +177,7 @@ export default function BlogDetailPage() {
         {/* Hero Section - برای مقاله */}
         <section className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-slate-950 text-white py-12 md:py-16">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:60px_60px]" />
-          
+
           {/* دکمه برگشت به بالا */}
           <button
             onClick={scrollToTop}
@@ -191,8 +191,8 @@ export default function BlogDetailPage() {
             <div className="max-w-4xl mx-auto">
               {/* مسیر بازگشت و breadcrumbs */}
               <div className="flex items-center justify-between gap-4 mb-6">
-                <Link 
-                  to="/blog" 
+                <Link
+                  to="/blog"
                   className="inline-flex items-center gap-2 text-blue-300 hover:text-blue-200 transition text-sm"
                 >
                   <FiChevronLeft className="h-4 w-4" />
@@ -212,7 +212,7 @@ export default function BlogDetailPage() {
                   </span>
                 </div>
               </div>
-              
+
               {/* دسته‌بندی */}
               {post.category_name && (
                 <div className="mb-4">
@@ -222,12 +222,12 @@ export default function BlogDetailPage() {
                   </span>
                 </div>
               )}
-              
+
               {/* عنوان */}
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight mb-6">
                 {post.title}
               </h1>
-              
+
               {/* متا اطلاعات */}
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-slate-300">
                 <span className="flex items-center gap-1.5">
@@ -306,7 +306,7 @@ export default function BlogDetailPage() {
                     <FiShare2 className="h-4 w-4" />
                     اشتراک‌گذاری:
                   </span>
-                  
+
                   {/* دکمه‌های اشتراک‌گذاری */}
                   <div className="flex gap-2">
                     <button
@@ -348,15 +348,15 @@ export default function BlogDetailPage() {
                   <button
                     onClick={handleLike}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition text-sm font-medium ${
-                      isLiked 
-                        ? 'bg-red-50 text-red-600 border border-red-200' 
+                      isLiked
+                        ? 'bg-red-50 text-red-600 border border-red-200'
                         : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                     }`}
                   >
                     <FiHeart className={`w-4 h-4 ${isLiked ? 'fill-red-600 text-red-600' : ''}`} />
                     {isLiked ? 'لایک شده' : 'لایک'}
                   </button>
-                  
+
                   <button
                     onClick={() => window.print()}
                     className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition text-sm font-medium"
@@ -381,7 +381,7 @@ export default function BlogDetailPage() {
                 </h2>
                 <p className="text-slate-500">مطالب مشابه که ممکن است برای شما مفید باشد</p>
               </div>
-              
+
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {post.related_posts.map((related) => (
                   <Link

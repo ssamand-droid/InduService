@@ -1,9 +1,9 @@
 // src/pages/ContactPage.jsx
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { 
-  FiMail, FiPhone, FiMapPin, FiSend, FiClock, 
-  FiMessageSquare, FiCheckCircle, FiAlertCircle 
+import {
+  FiMail, FiPhone, FiMapPin, FiSend, FiClock,
+  FiMessageSquare, FiCheckCircle, FiAlertCircle
 } from 'react-icons/fi';
 import { Button } from '@components/ui';
 
@@ -47,7 +47,7 @@ export default function ContactPage() {
       <section className="relative min-h-[40vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:80px_80px]" />
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_0.8px,transparent_1px)] bg-[size:40px_40px]" />
-        
+
         <div className="container-custom relative z-10 py-16 md:py-20">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-blue-400/30 bg-blue-950/60 backdrop-blur-md mb-6">

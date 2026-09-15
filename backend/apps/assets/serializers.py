@@ -24,7 +24,7 @@ class AssetPartSerializer(serializers.ModelSerializer):
         model = AssetPart
         fields = '__all__'
         read_only_fields = ['asset']
-    
+
     def get_stock_status(self, obj):
         if obj.stock_quantity == 0:
             return 'out_of_stock'
@@ -41,7 +41,7 @@ class DigitalTwinHotspotSerializer(serializers.ModelSerializer):
 
 class AssetDocumentSerializer(serializers.ModelSerializer):
     asset = serializers.PrimaryKeyRelatedField(read_only=True)
-    uploaded_by = serializers.PrimaryKeyRelatedField(read_only=True) 
+    uploaded_by = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = AssetDocument
@@ -59,7 +59,7 @@ class AssetHealthLogSerializer(serializers.ModelSerializer):
 class AssetMaintenanceLogSerializer(serializers.ModelSerializer):
     total_cost = serializers.DecimalField(max_digits=15, decimal_places=2, read_only=True)
     replaced_parts = serializers.PrimaryKeyRelatedField(
-        many=True, 
+        many=True,
         queryset=AssetPart.objects.all(),
         required=False
     )
@@ -145,12 +145,12 @@ class AssetImportBatchSerializer(serializers.ModelSerializer):
 class SensorSerializer(serializers.ModelSerializer):
     asset = serializers.PrimaryKeyRelatedField(read_only=True)
     last_reading_status = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Sensor
         fields = '__all__'
         read_only_fields = ['asset', 'last_reading', 'last_reading_at', 'created_at']
-    
+
     def get_last_reading_status(self, obj):
         if obj.last_reading is None:
             return 'unknown'
@@ -168,7 +168,7 @@ class SensorSerializer(serializers.ModelSerializer):
 class SensorReadingSerializer(serializers.ModelSerializer):
     sensor_name = serializers.CharField(source='sensor.name', read_only=True)
     sensor_type = serializers.CharField(source='sensor.sensor_type', read_only=True)
-    
+
     class Meta:
         model = SensorReading
         fields = '__all__'
@@ -179,12 +179,12 @@ class HotspotSerializer(serializers.ModelSerializer):
     asset = serializers.PrimaryKeyRelatedField(read_only=True)
     part_name = serializers.CharField(source='part.name', read_only=True)
     sensor_live_value = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = Hotspot
         fields = '__all__'
         read_only_fields = ['asset', 'created_at', 'updated_at']
-    
+
     def get_sensor_live_value(self, obj):
         if obj.sensor and obj.show_live_data:
             return {
@@ -199,12 +199,12 @@ class HotspotSerializer(serializers.ModelSerializer):
 class MaintenanceScheduleSerializer(serializers.ModelSerializer):
     asset = serializers.PrimaryKeyRelatedField(read_only=True)
     is_overdue = serializers.SerializerMethodField()
-    
+
     class Meta:
         model = MaintenanceSchedule
         fields = '__all__'
         read_only_fields = ['asset', 'last_performed_at', 'created_at', 'updated_at']
-    
+
     def get_is_overdue(self, obj):
         if obj.next_due_at:
             return timezone.now() > obj.next_due_at
@@ -214,7 +214,7 @@ class MaintenanceScheduleSerializer(serializers.ModelSerializer):
 class FailurePredictionSerializer(serializers.ModelSerializer):
     asset = serializers.PrimaryKeyRelatedField(read_only=True)
     part_name = serializers.CharField(source='part.name', read_only=True)
-    
+
     class Meta:
         model = FailurePrediction
         fields = '__all__'

@@ -15,7 +15,7 @@ const ProviderMatchCard = ({ provider, rank, onSelect, loading }) => {
     <div className={`relative rounded-2xl border-2 transition-all ${
       rank === 1 ? 'border-yellow-400/50 shadow-xl shadow-yellow-400/10' : 'border-white/10 hover:border-white/20'
     } bg-white/5 backdrop-blur-xl p-6`}>
-      
+
       {/* Rank Badge */}
       <div className={`absolute -top-3 -right-3 w-10 h-10 rounded-full bg-gradient-to-br ${rankColors[rank]} flex items-center justify-center text-xl shadow-lg`}>
         {rankEmojis[rank]}

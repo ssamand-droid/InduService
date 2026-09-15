@@ -3,35 +3,9 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { FiArrowLeft, FiCheck, FiTrash2, FiEye, FiAlertCircle } from 'react-icons/fi'
 import api from '@lib/axios'
+import { formatPrice, formatDate } from '@lib/utils'
 import toast from 'react-hot-toast'
-
-// ========================
-// توابع امن برای فرمت قیمت و تاریخ
-// ========================
-const safeFormatPrice = (price) => {
-  if (!price && price !== 0) return '—'
-  const num = Number(price)
-  if (isNaN(num)) return '—'
-  return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '٬') + ' ریال'
-}
-
-const safeFormatDate = (dateString) => {
-  if (!dateString) return ''
-  try {
-    const date = new Date(dateString)
-    if (isNaN(date.getTime())) return ''
-    const year = date.getFullYear()
-    const month = date.getMonth() + 1
-    const day = date.getDate()
-    const hours = date.getHours().toString().padStart(2, '0')
-    const minutes = date.getMinutes().toString().padStart(2, '0')
-    return `${year}/${month}/${day} ساعت ${hours}:${minutes}`
-  } catch (e) {
-    return ''
-  }
-}
 
 export default function AdminServiceRequestDetailPage() {
   const { id } = useParams()
@@ -63,6 +37,12 @@ export default function AdminServiceRequestDetailPage() {
     },
     onError: (error) => toast.error(error.response?.data?.message || 'خطا در حذف درخواست'),
   })
+
+  const formatSimpleDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    return `${date.getFullYear()}/${date.getMonth() + 1}/${date.getDate()} ساعت ${date.getHours()}:${date.getMinutes()}`
+  }
 
   const statusOptions = [
     { value: 'pending', label: 'در انتظار بررسی' },
@@ -115,16 +95,18 @@ export default function AdminServiceRequestDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center min-h-[60vh]">
-        <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '3px solid #3b82f6', borderTopColor: 'transparent', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+        <p style={{ marginTop: '0.5rem', color: '#6b7280' }}>در حال بارگذاری...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     )
   }
 
   if (error) {
     return (
-      <div className="p-4">
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-center">
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ backgroundColor: '#fee2e2', border: '1px solid #fecaca', borderRadius: '0.5rem', padding: '1rem', color: '#dc2626' }}>
           خطا در دریافت اطلاعات: {error.message}
         </div>
       </div>
@@ -133,8 +115,8 @@ export default function AdminServiceRequestDetailPage() {
 
   if (!request) {
     return (
-      <div className="p-4">
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-yellow-700 text-center">
+      <div style={{ padding: '2rem', textAlign: 'center' }}>
+        <div style={{ backgroundColor: '#fef3c7', border: '1px solid #fde68a', borderRadius: '0.5rem', padding: '1rem', color: '#92400e' }}>
           درخواست یافت نشد
         </div>
       </div>
@@ -142,33 +124,38 @@ export default function AdminServiceRequestDetailPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 bg-gray-50 min-h-screen">
-      <div className="max-w-5xl mx-auto">
+    <div style={{ padding: '1.5rem', backgroundColor: '#f8fafc', minHeight: '100vh' }}>
+      <div style={{ maxWidth: '64rem', margin: '0 auto' }}>
         {/* دکمه بازگشت */}
         <button
           onClick={() => navigate('/dashboard/admin/service-requests')}
-          className="flex items-center gap-2 text-blue-600 mb-6 hover:underline"
+          style={{ color: '#2563eb', marginBottom: '1.5rem', background: 'none', border: 'none', cursor: 'pointer', fontSize: '0.875rem' }}
         >
-          <FiArrowLeft className="w-4 h-4" /> بازگشت به لیست
+          ← بازگشت به لیست
         </button>
 
         {/* کارت اصلی */}
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+        <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           {/* Header */}
-          <div className="p-4 md:p-6 border-b border-gray-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div style={{ padding: '1.5rem', borderBottom: '1px solid #e5e7eb', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
             <div>
-              <h1 className="text-xl md:text-2xl font-bold">جزئیات درخواست #{request.id}</h1>
-              <p className="text-sm text-gray-500 mt-1">{safeFormatDate(request.created_at)}</p>
+              <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>جزئیات درخواست #{request.id}</h1>
+              <p style={{ color: '#6b7280', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+                {formatSimpleDate(request.created_at)}
+              </p>
             </div>
-            <div className="flex gap-2">
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
               <select
                 value={request.status}
                 onChange={(e) => updateStatusMutation.mutate(e.target.value)}
-                className="px-3 py-2 border rounded-lg text-sm font-medium cursor-pointer"
                 style={{
+                  padding: '0.5rem 1rem',
+                  border: '1px solid #d1d5db',
+                  borderRadius: '0.5rem',
                   backgroundColor: getStatusColor(request.status),
                   color: getStatusTextColor(request.status),
-                  borderColor: 'transparent'
+                  fontWeight: '500',
+                  cursor: 'pointer'
                 }}
                 disabled={updateStatusMutation.isPending}
               >
@@ -182,7 +169,14 @@ export default function AdminServiceRequestDetailPage() {
                     deleteMutation.mutate()
                   }
                 }}
-                className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer'
+                }}
                 disabled={deleteMutation.isPending}
               >
                 {deleteMutation.isPending ? 'در حال حذف...' : 'حذف'}
@@ -191,263 +185,294 @@ export default function AdminServiceRequestDetailPage() {
           </div>
 
           {/* Body - دو ستونه */}
-          <div className="p-4 md:p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* ستون راست - اطلاعات درخواست */}
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">📋 اطلاعات درخواست</h3>
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-gray-500 text-sm">عنوان درخواست:</span>
-                    <p className="font-medium text-gray-900 mt-1">{request.title}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">شرح مشکل/نیاز:</span>
-                    <p className="text-gray-700 mt-1 whitespace-pre-line break-words">{request.description || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">مشخصات تجهیز:</span>
-                    <pre className="mt-1 whitespace-pre-line text-sm bg-gray-50 p-3 rounded-lg overflow-x-auto">
-                      {request.equipment_details || '—'}
-                    </pre>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <span className="text-gray-500 text-sm">فوریت:</span>
-                      <p className="mt-1">
-                        <span className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                          request.urgency === 'critical' ? 'bg-red-100 text-red-800' :
-                          request.urgency === 'high' ? 'bg-orange-100 text-orange-800' :
-                          request.urgency === 'medium' ? 'bg-blue-100 text-blue-800' :
-                          'bg-gray-100 text-gray-800'
-                        }`}>
-                          {request.urgency === 'critical' ? 'بحرانی' : 
-                           request.urgency === 'high' ? 'زیاد' : 
-                           request.urgency === 'medium' ? 'متوسط' : 'کم'}
-                        </span>
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-500 text-sm">تاریخ شروع مطلوب:</span>
-                      <p className="mt-1">{request.desired_start_date || '—'}</p>
-                    </div>
-                  </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1.5rem', padding: '1.5rem' }}>
+            {/* ستون راست - اطلاعات درخواست */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>اطلاعات درخواست</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>عنوان درخواست:</span>
+                  <p style={{ fontWeight: '500', marginTop: '0.25rem' }}>{request.title}</p>
                 </div>
-              </div>
-
-              {/* ستون چپ - طرفین */}
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">👥 طرفین</h3>
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-gray-500 text-sm">خریدار:</span>
-                    <p className="font-medium text-gray-900 mt-1">{request.buyer_name}</p>
-                    <p className="text-sm text-gray-500">{request.buyer_phone}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">ارائه‌دهنده:</span>
-                    <p className="mt-1">{request.provider_name || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">خدمت:</span>
-                    <p className="mt-1">
-                      {request.service_title ? (
-                        <span className="text-green-600">✓ {request.service_title}</span>
-                      ) : (
-                        <span className="text-red-600 flex items-center gap-1">
-                          <FiAlertCircle className="w-4 h-4" /> بدون سرویس منطبق
-                        </span>
-                      )}
-                    </p>
-                  </div>
-                  {request.related_asset && (
-                    <div>
-                      <span className="text-gray-500 text-sm">دارایی مرتبط:</span>
-                      <p className="mt-1 font-mono text-sm">{request.related_asset}</p>
-                      {request.related_asset_name && (
-                        <p className="text-sm text-gray-500">{request.related_asset_name}</p>
-                      )}
-                    </div>
-                  )}
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>شرح مشکل/نیاز:</span>
+                  <p style={{ marginTop: '0.25rem', whiteSpace: 'pre-line' }}>{request.description || '—'}</p>
                 </div>
-              </div>
-
-              {/* ردیف دوم - وضعیت و مالی */}
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">💰 وضعیت و مالی</h3>
-                <div className="space-y-4">
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>مشخصات تجهیز:</span>
+                  <pre style={{ marginTop: '0.25rem', whiteSpace: 'pre-line', fontFamily: 'monospace', fontSize: '0.875rem', backgroundColor: '#f9fafb', padding: '0.5rem', borderRadius: '0.5rem' }}>
+                    {request.equipment_details || '—'}
+                  </pre>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
                   <div>
-                    <span className="text-gray-500 text-sm">وضعیت:</span>
-                    <p className="mt-1">
-                      <span className="inline-block px-2 py-1 rounded-full text-xs font-medium" style={{
-                        backgroundColor: getStatusColor(request.status),
-                        color: getStatusTextColor(request.status)
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>فوریت:</span>
+                    <p style={{ marginTop: '0.25rem' }}>
+                      <span style={{
+                        display: 'inline-block',
+                        padding: '0.125rem 0.5rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        backgroundColor: request.urgency === 'critical' ? '#fee2e2' : request.urgency === 'high' ? '#ffedd5' : '#dbeafe',
+                        color: request.urgency === 'critical' ? '#991b1b' : request.urgency === 'high' ? '#9a3412' : '#1e40af'
                       }}>
-                        {getStatusLabel(request.status)}
+                        {request.urgency === 'critical' ? 'بحرانی' : request.urgency === 'high' ? 'زیاد' : request.urgency === 'medium' ? 'متوسط' : 'کم'}
                       </span>
                     </p>
                   </div>
                   <div>
-                    <span className="text-gray-500 text-sm">قیمت پیشنهادی:</span>
-                    <p className="mt-1 font-bold text-green-600 text-lg">{safeFormatPrice(request.quoted_price)}</p>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>تاریخ شروع مطلوب:</span>
+                    <p style={{ marginTop: '0.25rem' }}>{request.desired_start_date || '—'}</p>
                   </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">قیمت نهایی:</span>
-                    <p className="mt-1 font-bold text-green-600">{safeFormatPrice(request.final_price)}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">پیش‌پرداخت الزامی:</span>
-                    <p className="mt-1">{request.advance_payment_required ? 'بله' : 'خیر'}</p>
-                  </div>
-                  {request.advance_payment_amount > 0 && (
-                    <div>
-                      <span className="text-gray-500 text-sm">مبلغ پیش‌پرداخت:</span>
-                      <p className="mt-1 font-medium">{safeFormatPrice(request.advance_payment_amount)}</p>
-                    </div>
-                  )}
-                  <div>
-                    <span className="text-gray-500 text-sm">پیش‌پرداخت پرداخت شده:</span>
-                    <p className="mt-1">
-                      {request.advance_payment_paid ? (
-                        <span className="text-green-600">✓ بله</span>
-                      ) : (
-                        <span className="text-red-600">✗ خیر</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* ردیف دوم - سایر اطلاعات */}
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">📌 سایر اطلاعات</h3>
-                <div className="space-y-4">
-                  <div>
-                    <span className="text-gray-500 text-sm">آی دی سفارش:</span>
-                    <p className="mt-1">{request.order || '—'}</p>
-                  </div>
-                  <div>
-                    <span className="text-gray-500 text-sm">تاریخ بروزرسانی:</span>
-                    <p className="mt-1">{safeFormatDate(request.updated_at)}</p>
-                  </div>
-                  {request.extra_data && Object.keys(request.extra_data).length > 0 && (
-                    <div>
-                      <span className="text-gray-500 text-sm">اطلاعات تکمیلی:</span>
-                      <pre className="mt-1 text-xs bg-gray-50 p-3 rounded-lg overflow-x-auto max-h-32">
-                        {JSON.stringify(request.extra_data, null, 2)}
-                      </pre>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
-            {/* لیست پیشنهادهای قیمت */}
-            {request.quotes && request.quotes.length > 0 && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">💰 پیشنهادهای قیمت ({request.quotes.length})</h3>
-                <div className="space-y-3">
-                  {request.quotes.map((quote) => (
-                    <div key={quote.id} className={`p-4 rounded-lg border ${quote.is_selected ? 'bg-green-50 border-green-300' : 'bg-white border-gray-200'}`}>
-                      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <div>
-                          <p className="font-semibold text-gray-900">{quote.provider_name}</p>
-                          <p className="text-sm text-gray-500">{quote.provider_phone}</p>
-                          <p className="text-xl font-bold text-green-600 mt-1">{safeFormatPrice(quote.quoted_price)}</p>
-                          {quote.provider_notes && <p className="text-sm text-gray-600 mt-1">{quote.provider_notes}</p>}
-                          {quote.is_selected && <p className="text-sm text-green-600 mt-1">✓ انتخاب شده توسط خریدار</p>}
-                        </div>
-                        {quote.is_selected && (
-                          <span className="px-3 py-1 bg-green-200 text-green-800 rounded-full text-xs font-medium">انتخاب شده</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+            {/* ستون چپ - طرفین */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>طرفین</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Buyer ID:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.buyer}</p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>نام:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.buyer_name}</p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>تلفن:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.buyer_phone}</p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>ارائه‌دهنده:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.provider_name || '—'}</p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>خدمت:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.service_title || 'بدون سرویس'}</p>
+                </div>
+                {request.related_asset && (
+                  <div>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>دارایی مرتبط:</span>
+                    <p style={{ marginTop: '0.25rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{request.related_asset}</span>
+                      {request.related_asset_name && <span style={{ color: '#6b7280', marginRight: '0.5rem' }}>({request.related_asset_name})</span>}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* ستون راست - وضعیت و مالی (ردیف دوم) */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>وضعیت و مالی</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>وضعیت:</span>
+                  <p style={{ marginTop: '0.25rem' }}>
+                    <span style={{
+                      display: 'inline-block',
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      fontSize: '0.75rem',
+                      fontWeight: '500',
+                      backgroundColor: getStatusColor(request.status),
+                      color: getStatusTextColor(request.status)
+                    }}>
+                      {getStatusLabel(request.status)}
+                    </span>
+                  </p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>قیمت پیشنهادی:</span>
+                  <p style={{ marginTop: '0.25rem', fontWeight: '500', color: '#16a34a' }}>
+                    {request.quoted_price ? request.quoted_price.toLocaleString() + ' ریال' : '—'}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>قیمت نهایی:</span>
+                  <p style={{ marginTop: '0.25rem', fontWeight: '500', color: '#16a34a' }}>
+                    {request.final_price ? request.final_price.toLocaleString() + ' ریال' : '—'}
+                  </p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>پیش‌پرداخت الزامی:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.advance_payment_required ? 'بله' : 'خیر'}</p>
+                </div>
+                {request.advance_payment_amount && (
+                  <div>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>مبلغ پیش‌پرداخت:</span>
+                    <p style={{ marginTop: '0.25rem' }}>{request.advance_payment_amount.toLocaleString()} ریال</p>
+                  </div>
+                )}
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>پیش‌پرداخت پرداخت شده:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.advance_payment_paid ? 'بله' : 'خیر'}</p>
                 </div>
               </div>
-            )}
+            </div>
 
-            {/* یادداشت‌ها */}
-            {(request.provider_notes || request.completion_notes || request.force_majeure_declared) && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">📝 یادداشت‌ها</h3>
-                {request.provider_notes && (
-                  <div className="mb-3 p-3 bg-blue-50 rounded-lg">
-                    <span className="font-medium text-blue-800">یادداشت ارائه‌دهنده:</span>
-                    <p className="mt-1 text-blue-700">{request.provider_notes}</p>
-                  </div>
-                )}
-                {request.completion_notes && (
-                  <div className="mb-3 p-3 bg-green-50 rounded-lg">
-                    <span className="font-medium text-green-800">✅ یادداشت تکمیل:</span>
-                    <p className="mt-1 text-green-700">{request.completion_notes}</p>
-                  </div>
-                )}
-                {request.force_majeure_declared && (
-                  <div className="p-3 bg-red-50 rounded-lg">
-                    <span className="font-medium text-red-800">🚨 فورس ماژور:</span>
-                    <p className="mt-1 text-red-700">{request.force_majeure_reason}</p>
-                  </div>
-                )}
+            {/* ستون چپ - سایر اطلاعات (ردیف دوم) */}
+            <div>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>سایر اطلاعات</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>اطلاعات تکمیلی:</span>
+                  <pre style={{
+                    marginTop: '0.25rem',
+                    backgroundColor: '#f9fafb',
+                    padding: '0.5rem',
+                    borderRadius: '0.5rem',
+                    fontSize: '0.75rem',
+                    overflow: 'auto',
+                    maxHeight: '150px'
+                  }}>
+                    {JSON.stringify(request.extra_data, null, 2)}
+                  </pre>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>Order:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.order || '—'}</p>
+                </div>
+                <div>
+                  <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>تاریخ بروزرسانی:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{formatSimpleDate(request.updated_at)}</p>
+                </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* فایل‌های ضمیمه */}
-            {(request.attachments?.length > 0 || request.completion_images?.length > 0) && (
-              <div className="mt-6 pt-6 border-t border-gray-200">
-                <h3 className="font-semibold text-gray-800 mb-4 text-base">📎 فایل‌های ضمیمه</h3>
-                
-                {request.attachments?.length > 0 && (
-                  <div className="mb-4">
-                    <p className="text-gray-500 text-sm mb-2">📄 فایل‌های خریدار ({request.attachments.length})</p>
-                    <div className="flex flex-wrap gap-2">
-                      {request.attachments.map((att) => (
-                        <a
-                          key={att.id}
-                          href={att.file_url || att.file}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg text-sm text-gray-700 hover:bg-gray-200 transition"
-                        >
-                          <FiEye className="w-4 h-4" />
-                          {att.description || 'فایل'}
-                        </a>
-                      ))}
+          {/* لیست پیشنهادهای قیمت */}
+          {request.quotes && request.quotes.length > 0 && (
+            <div style={{ padding: '1.5rem', borderTop: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>💰 پیشنهادهای قیمت ({request.quotes.length})</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                {request.quotes.map((quote) => (
+                  <div key={quote.id} style={{
+                    padding: '1rem',
+                    backgroundColor: quote.is_selected ? '#dcfce7' : 'white',
+                    borderRadius: '0.5rem',
+                    border: '1px solid #e5e7eb',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '1rem'
+                  }}>
+                    <div>
+                      <p style={{ fontWeight: '600' }}>{quote.provider_name}</p>
+                      <p style={{ fontSize: '0.875rem', color: '#4b5563' }}>{quote.provider_phone}</p>
+                      <p style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#16a34a', marginTop: '0.25rem' }}>
+                        {quote.quoted_price.toLocaleString()} ریال
+                      </p>
+                      {quote.provider_notes && <p style={{ fontSize: '0.75rem', color: '#6b7280', marginTop: '0.25rem' }}>{quote.provider_notes}</p>}
+                      {quote.is_selected && <p style={{ fontSize: '0.75rem', color: '#16a34a', marginTop: '0.25rem' }}>✓ انتخاب شده توسط خریدار</p>}
                     </div>
+                    {quote.is_selected && (
+                      <span style={{ padding: '0.25rem 0.75rem', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '9999px', fontSize: '0.75rem' }}>
+                        انتخاب شده
+                      </span>
+                    )}
                   </div>
-                )}
+                ))}
+              </div>
+            </div>
+          )}
 
-                {request.completion_images?.length > 0 && (
-                  <div>
-                    <p className="text-gray-500 text-sm mb-2">✅ تصاویر تکمیل کار ({request.completion_images.length})</p>
-                    <div className="flex flex-wrap gap-2">
-                      {request.completion_images.map((img) => (
+          {/* یادداشت‌ها */}
+          {(request.provider_notes || request.completion_notes || request.force_majeure_declared) && (
+            <div style={{ padding: '1.5rem', borderTop: '1px solid #e5e7eb', backgroundColor: '#f9fafb' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>یادداشت‌ها</h3>
+              {request.provider_notes && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#dbeafe', borderRadius: '0.5rem' }}>
+                  <span style={{ fontWeight: '500' }}>یادداشت ارائه‌دهنده:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.provider_notes}</p>
+                </div>
+              )}
+              {request.completion_notes && (
+                <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#dcfce7', borderRadius: '0.5rem' }}>
+                  <span style={{ fontWeight: '500' }}>✅ یادداشت تکمیل:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.completion_notes}</p>
+                </div>
+              )}
+              {request.force_majeure_declared && (
+                <div style={{ padding: '0.75rem', backgroundColor: '#fee2e2', borderRadius: '0.5rem' }}>
+                  <span style={{ fontWeight: '500' }}>🚨 فورس ماژور:</span>
+                  <p style={{ marginTop: '0.25rem' }}>{request.force_majeure_reason}</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* فایل‌های ضمیمه */}
+          {(request.attachments?.length > 0 || request.completion_images?.length > 0) && (
+            <div style={{ padding: '1.5rem', borderTop: '1px solid #e5e7eb' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '600', marginBottom: '1rem', color: '#374151' }}>فایل‌های ضمیمه</h3>
+
+              {request.attachments?.length > 0 && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>📎 فایل‌های خریدار ({request.attachments.length})</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {request.attachments.map((att) => (
+                      <a
+                        key={att.id}
+                        href={att.file_url || att.file}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.5rem',
+                          padding: '0.5rem 0.75rem',
+                          backgroundColor: '#f3f4f6',
+                          borderRadius: '0.5rem',
+                          textDecoration: 'none',
+                          color: '#374151',
+                          fontSize: '0.875rem'
+                        }}
+                      >
+                        📄 {att.description || 'فایل'}
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {request.completion_images?.length > 0 && (
+                <div>
+                  <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.5rem' }}>✅ تصاویر تکمیل کار ({request.completion_images.length})</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    {request.completion_images.map((img) => (
+                      <a
+                        key={img.id}
+                        href={img.image_url || img.image}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ display: 'block' }}
+                      >
                         <img
-                          key={img.id}
                           src={img.image_url || img.image}
-                          alt="تصویر تکمیل"
-                          className="w-20 h-20 object-cover rounded-lg border border-gray-200 cursor-pointer hover:opacity-80 transition"
+                          alt=""
+                          style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '0.5rem', border: '1px solid #e5e7eb' }}
                           onClick={() => setPreviewImage(img.image_url || img.image)}
                         />
-                      ))}
-                    </div>
+                      </a>
+                    ))}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Modal نمایش تصویر */}
       {previewImage && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-3xl w-full max-h-[90vh] overflow-auto p-4">
-            <img src={previewImage} alt="تصویر" className="w-full rounded-lg" />
-            <button
-              onClick={() => setPreviewImage(null)}
-              className="mt-4 w-full py-2 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-            >
+        <div style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50 }}>
+          <div style={{ backgroundColor: 'white', borderRadius: '0.5rem', padding: '1rem', maxWidth: '90vw', maxHeight: '90vh', overflow: 'auto' }}>
+            <img src={previewImage} alt="تصویر" style={{ maxWidth: '100%', maxHeight: '80vh', borderRadius: '0.25rem' }} />
+            <button onClick={() => setPreviewImage(null)} style={{ marginTop: '1rem', padding: '0.5rem 1rem', backgroundColor: '#f3f4f6', borderRadius: '0.5rem', border: 'none', cursor: 'pointer', width: '100%' }}>
               بستن
             </button>
           </div>

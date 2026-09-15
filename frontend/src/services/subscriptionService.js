@@ -9,7 +9,7 @@ const subscriptionService = {
   getActiveSubscription: () => api.get('/api/subscription/active/'),
   getMySubscription: () => api.get('/api/subscription/my-subscription/'),
   getUsageStats: () => api.get('/api/subscription/usage-stats/'),
-  
+
   // ارتقاء و لغو
   upgrade: (planSlug, billingCycle = 'monthly') => api.post('/api/subscription/upgrade/', {
     plan_slug: planSlug,

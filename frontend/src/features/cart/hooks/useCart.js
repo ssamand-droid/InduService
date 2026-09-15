@@ -6,11 +6,11 @@ export const useCart = () => {
   const removeItem = useCartStore((state) => state.removeItem)
   const updateQuantity = useCartStore((state) => state.updateQuantity)
   const clearCart = useCartStore((state) => state.clearCart)
-  
+
   const totalItems = useCartStore((state) => {
     return state.items.reduce((total, item) => total + (item.quantity || 1), 0)
   })
-  
+
   const totalPrice = useCartStore((state) => {
     return state.items.reduce((total, item) => total + ((item.price || 0) * (item.quantity || 1)), 0)
   })

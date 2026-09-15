@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { 
-  Activity, MapPin, Calendar, DollarSign, 
+import {
+  Activity, MapPin, Calendar, DollarSign,
   AlertTriangle, Settings, Camera, FileText,
-  Thermometer, Wind 
+  Thermometer, Wind
 } from 'lucide-react';
 import assetService from '../services/assetService';
 import HealthGauge from './ui/HealthGauge';
@@ -40,7 +40,7 @@ const AssetDetail = () => {
     </div>;
   }
 
-  const healthColor = asset.health_index >= 80 ? 'green' : 
+  const healthColor = asset.health_index >= 80 ? 'green' :
                       asset.health_index >= 60 ? 'yellow' : 'red';
 
   return (
@@ -73,7 +73,7 @@ const AssetDetail = () => {
               </div>
             </div>
           </div>
-          
+
           <button
             onClick={() => assetService.emergencyStop(id)}
             className="bg-red-600 text-white px-6 py-3 rounded-xl hover:bg-red-700 transition flex items-center gap-2"
@@ -91,8 +91,8 @@ const AssetDetail = () => {
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={`px-6 py-3 font-medium transition ${
-              activeTab === tab 
-                ? 'border-b-2 border-indigo-600 text-indigo-600' 
+              activeTab === tab
+                ? 'border-b-2 border-indigo-600 text-indigo-600'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -108,10 +108,10 @@ const AssetDetail = () => {
       {activeTab === 'overview' && dashboard && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <HotspotImage 
-              asset={asset} 
+            <HotspotImage
+              asset={asset}
               hotspots={asset.hotspots}
-              mainImage={asset.main_image} 
+              mainImage={asset.main_image}
             />
           </div>
           <div>
@@ -136,7 +136,7 @@ const AssetDetail = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-xl shadow-sm p-6">
               <h3 className="font-bold text-lg mb-4">هشدارهای فعال</h3>
               {dashboard.open_alerts?.length > 0 ? (

@@ -7,11 +7,11 @@ import sys
 def main():
     """Run administrative tasks."""
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'InduService.settings')
-    
+
     # اضافه کردن پوشه apps به مسیر پایتون
     # این کار باعث میشه جنگو اپ‌ها رو با نام ساده (مثلاً 'users') بشناسه
     sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'apps'))
-    
+
     try:
         from django.core.management import execute_from_command_line
     except ImportError as exc:

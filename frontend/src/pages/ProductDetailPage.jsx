@@ -1,11 +1,9 @@
-// src/pages/ProductDetailPage.jsx
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { FiShoppingCart, FiMinus, FiPlus, FiArrowRight, FiPackage, FiShield, FiTruck } from 'react-icons/fi'
 import { useProduct } from '@features/products/hooks/useProducts'
 import { useCartStore } from '@features/cart/store/cartStore'
 import { Spinner, Alert, Button, Badge, Card, Tabs, TabList, Tab, TabPanels, TabPanel } from '@components/ui'
-import { SEO } from '@components/SEO'
 import { formatPrice } from '@lib/utils'
 import { PRODUCT_CONDITIONS } from '@lib/constants'
 import toast from 'react-hot-toast'
@@ -32,10 +30,18 @@ export default function ProductDetailPage() {
     )
   }
 
-  if (error || !product) {
+  if (error) {
     return (
       <div className="container-custom py-8">
         <Alert variant="error">خطا در دریافت اطلاعات محصول</Alert>
+      </div>
+    )
+  }
+
+  if (!product) {
+    return (
+      <div className="container-custom py-8">
+        <Alert variant="warning">محصول یافت نشد</Alert>
       </div>
     )
   }
@@ -56,12 +62,6 @@ export default function ProductDetailPage() {
     images,
     sku,
     lead_time_days,
-    meta_title,
-    meta_description,
-    meta_keywords,
-    created_at,
-    updated_at,
-    average_rating,
   } = product
 
   const hasDiscount = discount_price && discount_price < price
@@ -71,63 +71,8 @@ export default function ProductDetailPage() {
     toast.success(`${name} به سبد خرید اضافه شد`)
   }
 
-  // ===== داده‌های سئو =====
-  const seoData = {
-    title: meta_title || `${name} | خرید با بهترین قیمت | InduService`,
-    description: meta_description || short_description || `خرید ${name} با بهترین قیمت و ضمانت اصالت. مشخصات فنی، قیمت و موجودی ${name} در InduService`,
-    keywords: meta_keywords || `${name}, قطعه صنعتی, ${category?.name || ''}, ${brand?.name || ''}`,
-    image: images?.[0]?.image || '/logo.png',
-    url: `https://induservice.pro/products/${slug}`,
-    canonical: `https://induservice.pro/products/${slug}`,
-    publishedTime: created_at,
-    modifiedTime: updated_at,
-    schemaType: 'Product',
-    productData: {
-      sku,
-      price: final_price,
-      final_price,
-      is_in_stock,
-      brand,
-      average_rating,
-      review_count: 0,
-    },
-    breadcrumbItems: [
-      { name: 'خانه', url: 'https://induservice.pro' },
-      { name: 'محصولات', url: 'https://induservice.pro/products' },
-      { name: category?.name || 'دسته‌بندی', url: category ? `https://induservice.pro/products?category=${category.slug}` : '' },
-      { name: name, url: `https://induservice.pro/products/${slug}` },
-    ],
-  }
-
   return (
-    <>
-      <SEO {...seoData} />
-      
-      {/* ===== بردکرامب با Schema ===== */}
-      <div className="container-custom py-4" itemScope itemType="https://schema.org/BreadcrumbList">
-        <div className="flex items-center gap-2 text-sm text-secondary-500">
-          <Link to="/" itemProp="item" itemScope itemType="https://schema.org/Thing">
-            <span itemProp="name">خانه</span>
-            <meta itemProp="position" content="1" />
-          </Link>
-          <FiArrowRight className="h-4 w-4" />
-          <Link to="/products" itemProp="item" itemScope itemType="https://schema.org/Thing">
-            <span itemProp="name">محصولات</span>
-            <meta itemProp="position" content="2" />
-          </Link>
-          {category && (
-            <>
-              <FiArrowRight className="h-4 w-4" />
-              <Link to={`/products?category=${category.slug}`} itemProp="item" itemScope itemType="https://schema.org/Thing">
-                <span itemProp="name">{category.name}</span>
-                <meta itemProp="position" content="3" />
-              </Link>
-            </>
-          )}
-        </div>
-      </div>
-      
-      <div className="container-custom py-8">
+    <div className="container-custom py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-secondary-500 mb-6">
         <Link to="/" className="hover:text-primary-600">خانه</Link>
@@ -352,7 +297,6 @@ export default function ProductDetailPage() {
           </div>
         </Card>
       </div>
-      </div>
-    </> 
+    </div>
   )
 }

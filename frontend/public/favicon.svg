@@ -1,7 +1,16 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120"><metadata><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:dc="http://purl.org/dc/elements/1.1/"><rdf:Description><dc:creator>RealFaviconGenerator</dc:creator><dc:source>https://realfavicongenerator.net</dc:source></rdf:Description></rdf:RDF></metadata><rect width="120" height="120" fill="#FFFFFF"></rect><g transform="translate(60, 60)">
-    <polygon points="0,-50 43,-25 43,25 0,50 -43,25 -43,-25" fill="none" stroke="#0B2B5B" stroke-width="6" stroke-linejoin="round"></polygon>
-    <path d="M 43,-25 Q 70,0 43,25" fill="none" stroke="#F15A24" stroke-width="6" stroke-linecap="round"></path>
-    <circle cx="0" cy="0" r="16" fill="#0B2B5B"></circle>
-    <circle cx="0" cy="-50" r="5" fill="#F15A24"></circle>
-    <circle cx="0" cy="50" r="5" fill="#F15A24"></circle>
-  </g></svg>
+<svg style="shape-rendering: geometricPrecision;" viewBox="0 0 200 200" height="512" width="512" xmlns="http://www.w3.org/2000/svg">
+  <g transform="translate(100, 100)">
+
+    <polygon stroke-linejoin="round" stroke-width="7.8" stroke="#08213F" fill="none" points="0,-48 41,-24 41,24 0,48 -41,24 -41,-24"></polygon>
+
+
+    <path stroke-linejoin="round" stroke-linecap="round" stroke-width="7.1" stroke="#FF4A1F" fill="none" d="M 41,-24 Q 69,0 41,24"></path>
+
+
+    <circle fill="#08213F" r="16.8" cy="0" cx="0"></circle>
+
+
+    <circle fill="#FF4A1F" r="6.2" cy="-48" cx="0"></circle>
+    <circle fill="#FF4A1F" r="6.2" cy="48" cx="0"></circle>
+  </g>
+</svg>

@@ -177,7 +177,7 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
                 ProductImage.objects.create(product=instance, **img_data)
 
         return instance
-    
+
 class ProductUpdateSerializer(serializers.ModelSerializer):
     """سریالایزر مخصوص ویرایش - بدون تغییر slug و seller"""
     category = serializers.PrimaryKeyRelatedField(queryset=Category.objects.all())
@@ -197,4 +197,4 @@ class ProductUpdateSerializer(serializers.ModelSerializer):
         # چک کند sku تکراری نباشد (به جز خودش)
         if self.instance and Product.objects.filter(sku=value).exclude(id=self.instance.id).exists():
             raise serializers.ValidationError("این کد انبار قبلاً ثبت شده است")
-        return value    
+        return value

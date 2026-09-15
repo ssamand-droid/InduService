@@ -1,8 +1,8 @@
 // src/pages/BlogPage.jsx
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { 
-  FiCalendar, FiUser, FiClock, FiSearch, FiArrowLeft, 
+import {
+  FiCalendar, FiUser, FiClock, FiSearch, FiArrowLeft,
   FiBookOpen, FiTag, FiStar, FiTrendingUp, FiGrid,
   FiList, FiFilter, FiX, FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
@@ -24,17 +24,17 @@ export default function BlogPage() {
   const [showFilters, setShowFilters] = useState(false);
 
   // استفاده از React Query
-  const { 
-    data: postsData, 
-    isLoading, 
+  const {
+    data: postsData,
+    isLoading,
     error,
     isFetching,
-    refetch 
+    refetch
   } = useBlogPosts(filters);
-  
-  const { 
+
+  const {
     data: categoriesData,
-    isLoading: categoriesLoading 
+    isLoading: categoriesLoading
   } = useBlogCategories();
 
   const posts = postsData?.results || [];
@@ -57,14 +57,14 @@ export default function BlogPage() {
     const category = searchParams.get('category');
     const search = searchParams.get('search');
     const page = parseInt(searchParams.get('page')) || 1;
-    
+
     setFilters(prev => ({
       ...prev,
       category: category || '',
       search: search || '',
       page: page,
     }));
-    
+
     if (search) setSearchQuery(search);
   }, []);
 
@@ -132,8 +132,8 @@ export default function BlogPage() {
         viewMode === 'list' ? 'flex flex-col md:flex-row' : 'flex flex-col'
       }`}
     >
-      <Link 
-        to={`/blog/${post.slug}`} 
+      <Link
+        to={`/blog/${post.slug}`}
         className={`block overflow-hidden bg-slate-100 ${viewMode === 'list' ? 'md:w-72 md:shrink-0' : ''}`}
       >
         <div className={`${viewMode === 'list' ? 'h-52 md:h-full' : 'h-52'} bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center overflow-hidden`}>
@@ -149,7 +149,7 @@ export default function BlogPage() {
           )}
         </div>
       </Link>
-      
+
       <div className={`p-6 flex-1 flex flex-col ${viewMode === 'list' ? 'md:p-8' : ''}`}>
         {/* Badges */}
         <div className="flex items-center gap-2 mb-3 flex-wrap">
@@ -172,7 +172,7 @@ export default function BlogPage() {
             </span>
           )}
         </div>
-        
+
         <Link to={`/blog/${post.slug}`}>
           <h3 className={`font-bold text-slate-800 mb-2 group-hover:text-blue-700 transition ${
             viewMode === 'list' ? 'text-2xl' : 'text-xl'
@@ -180,11 +180,11 @@ export default function BlogPage() {
             {post.title}
           </h3>
         </Link>
-        
+
         <p className="text-slate-500 text-sm mb-4 line-clamp-3 leading-relaxed flex-1">
           {post.excerpt}
         </p>
-        
+
         {/* Meta info */}
         <div className="flex items-center justify-between text-xs text-slate-400 pt-4 border-t border-slate-100">
           <span className="flex items-center gap-1.5">
@@ -212,7 +212,7 @@ export default function BlogPage() {
       <section className="relative min-h-[45vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:80px_80px]" />
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_0.8px,transparent_1px)] bg-[size:40px_40px]" />
-        
+
         <div className="container-custom relative z-10 py-16 md:py-20">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-blue-400/30 bg-blue-950/60 backdrop-blur-md mb-6">
@@ -225,7 +225,7 @@ export default function BlogPage() {
             <p className="text-xl text-blue-100 leading-relaxed max-w-2xl mx-auto mb-8">
               مقالات تخصصی در زمینه تعمیرات، نگهداری و اورهال تجهیزات صنعتی
             </p>
-            
+
             {/* Search Bar - مشابه صفحه اصلی */}
             <form onSubmit={handleSearch} className="max-w-md mx-auto">
               <div className="flex gap-3">
@@ -253,7 +253,7 @@ export default function BlogPage() {
 
       <div className="bg-white">
         <div className="container-custom py-8 md:py-12">
-          
+
           {/* Header with filters and view options */}
           <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
             <div className="flex items-center gap-3">
@@ -267,7 +267,7 @@ export default function BlogPage() {
                   <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
                 )}
               </button>
-              
+
               {/* Desktop categories */}
               <div className="hidden md:flex flex-wrap gap-2">
                 <button
@@ -418,9 +418,9 @@ export default function BlogPage() {
                   icon={null}
                   title="مقاله‌ای یافت نشد"
                   description={
-                    filters.category 
-                      ? 'در این دسته‌بندی مقاله‌ای وجود ندارد.' 
-                      : filters.search 
+                    filters.category
+                      ? 'در این دسته‌بندی مقاله‌ای وجود ندارد.'
+                      : filters.search
                         ? `نتیجه‌ای برای "${filters.search}" یافت نشد.`
                         : 'به زودی مقالات جدید منتشر می‌شود.'
                   }
@@ -449,11 +449,11 @@ export default function BlogPage() {
                     <FiChevronRight className="h-4 w-4" />
                     قبلی
                   </button>
-                  
+
                   <span className="text-sm text-slate-500">
                     صفحه {filters.page} از {Math.ceil(totalCount / (postsData?.page_size || 10))}
                   </span>
-                  
+
                   <button
                     onClick={() => {
                       if (nextPage) {

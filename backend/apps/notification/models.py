@@ -11,11 +11,12 @@ class Notification(TimeStampedModel):
         ORDER = 'order', _('سفارش')
         SERVICE = 'service', _('خدمات')
         PAYMENT = 'payment', _('پرداخت')
+        SERVICE_REQUEST = 'service_request', _('درخواست خدمت')
         SYSTEM = 'system', _('سیستمی')
         REVIEW = 'review', _('نظر')
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
-    type = models.CharField(_('نوع'), max_length=10, choices=NotificationType.choices)
+    type = models.CharField(_('نوع'), max_length=20, choices=NotificationType.choices)
     title = models.CharField(_('عنوان'), max_length=200)
     message = models.TextField(_('پیام'))
     link = models.URLField(_('لینک'), blank=True)

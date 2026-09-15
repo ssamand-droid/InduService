@@ -74,7 +74,7 @@ class ServiceAPITestCase(TestCase):
     def test_create_service_request_minimal(self):
         """تست ایجاد درخواست خدمت با حداقل داده"""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
-        
+
         response = self.client.post('/api/services/requests/', {
             'title': 'تعمیر پمپ CIP',
             'description': 'پمپ لرزش غیرعادی دارد',
@@ -86,7 +86,7 @@ class ServiceAPITestCase(TestCase):
     def test_create_service_request_with_service(self):
         """تست ایجاد درخواست خدمت با انتخاب سرویس"""
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
-        
+
         response = self.client.post('/api/services/requests/', {
             'title': 'تعمیر پمپ',
             'description': 'لرزش پمپ',
@@ -212,7 +212,7 @@ class ServiceAPITestCase(TestCase):
             'estimated_completion_date': '2025-06-15',
         })
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        
+
         req.refresh_from_db()
         self.assertEqual(req.status, 'quoted')
         self.assertEqual(req.quoted_price, 50000000)
@@ -223,7 +223,7 @@ class ServiceAPITestCase(TestCase):
         """تست آپلود فایل پیوست"""
         import tempfile
         from django.core.files.uploadedfile import SimpleUploadedFile
-        
+
         req = ServiceRequest.objects.create(
             buyer=self.buyer,
             title='درخواست با پیوست',

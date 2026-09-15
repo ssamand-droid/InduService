@@ -1,13 +1,13 @@
 import { create } from 'zustand'
 
 export const useUIStore = create((set) => ({
-  // Cart
+  // Cart state
   isCartOpen: false,
   openCart: () => set({ isCartOpen: true }),
   closeCart: () => set({ isCartOpen: false }),
   toggleCart: () => set((state) => ({ isCartOpen: !state.isCartOpen })),
 
-  // Sidebar (برای موبایل)
+  // Sidebar state (برای موبایل)
   isSidebarOpen: false,
   openSidebar: () => set({ isSidebarOpen: true }),
   closeSidebar: () => set({ isSidebarOpen: false }),

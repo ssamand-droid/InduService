@@ -16,17 +16,17 @@ export default function PortfolioManager() {
   const handleFileSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     if (!file.type.startsWith('image/')) {
       toast.error('فقط فایل‌های تصویری مجاز هستند');
       return;
     }
-    
+
     if (file.size > 5 * 1024 * 1024) {
       toast.error('حداکثر حجم ۵ مگابایت');
       return;
     }
-    
+
     setSelectedFile(file);
     setPreviewUrl(URL.createObjectURL(file));
   };
@@ -78,7 +78,7 @@ export default function PortfolioManager() {
       {/* بخش آپلود */}
       <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
         <h4 className="font-medium text-slate-800 mb-3">➕ آپلود نمونه کار جدید</h4>
-        
+
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -122,7 +122,7 @@ export default function PortfolioManager() {
             <FiImage size={18} />
             {selectedFile ? selectedFile.name : 'انتخاب تصویر'}
           </button>
-          
+
           {previewUrl && (
             <div className="relative w-16 h-16 rounded-lg overflow-hidden border border-slate-200">
               <img src={previewUrl} alt="پیش‌نمایش" className="w-full h-full object-cover" />
@@ -159,9 +159,9 @@ export default function PortfolioManager() {
           {items.map((item) => (
             <div key={item.id} className="relative group rounded-xl overflow-hidden border border-slate-200 bg-white">
               <div className="aspect-square">
-                <img 
-                  src={item.image_url || item.image} 
-                  alt={item.title} 
+                <img
+                  src={item.image_url || item.image}
+                  alt={item.title}
                   className="w-full h-full object-cover"
                 />
               </div>

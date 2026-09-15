@@ -24,7 +24,7 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         user = self.request.user
         if user.is_staff:
             return self.queryset
-        
+
         # فاکتورهای مربوط به این کاربر (چه buyer چه seller)
         return self.queryset.filter(
             db_models.Q(buyer=user) | db_models.Q(seller=user)
@@ -78,18 +78,18 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
             transaction.status = Transaction.TransactionStatus.FAILED
             transaction.save()
             return Response({'error': 'پرداخت ناموفق'}, status=400)
-        
+
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def verify_payment(self, request, pk=None):
         """ادمین: تایید رسید و واریز به کیف پول فروشنده"""
         invoice = self.get_object()
-        
+
         if invoice.payment_verified:
             return Response({'error': 'قبلاً تایید شده'}, status=400)
-        
+
         if not invoice.payment_receipt:
             return Response({'error': 'رسیدی آپلود نشده'}, status=400)
-        
+
         invoice.payment_verified = True
         invoice.status = Invoice.InvoiceStatus.PAID
         invoice.paid_at = timezone.now()
@@ -127,7 +127,7 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         create_notification(user=invoice.seller, type='payment',
             title='💰 پرداخت تایید شد',
             message=f'{amount_to_seller:,} ریال به کیف پول شما واریز شد.', link='/wallet')
-        
+
         create_notification(user=invoice.buyer, type='payment',
             title='✅ پرداخت تایید شد',
             message=f'پرداخت فاکتور {invoice.invoice_number} تایید شد.')
@@ -146,7 +146,7 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
         invoice.payment_receipt = None
         invoice.payment_verified = False
         invoice.save()
-        
+
         from notification.services import create_notification
         create_notification(
             user=invoice.buyer,
@@ -154,7 +154,7 @@ class InvoiceViewSet(viewsets.ReadOnlyModelViewSet):
             title='❌ رسید پرداخت رد شد',
             message=f'رسید فاکتور {invoice.invoice_number} رد شد. لطفاً مجدداً رسید را آپلود کنید.',
         )
-        
+
         return Response({'success': True, 'message': 'رسید پرداخت رد شد'})
 
 class CommissionRuleViewSet(viewsets.ModelViewSet):
@@ -188,11 +188,11 @@ class WalletViewSet(viewsets.ModelViewSet):
         transactions = wallet.transactions.all().order_by('-created_at')[:50]
         serializer = WalletTransactionSerializer(transactions, many=True)
         return Response(serializer.data)
-    
+
     @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def verify_payment(self, request, pk=None):
         invoice = self.get_object()
-        
+
         invoice.payment_verified = True
         invoice.status = Invoice.InvoiceStatus.PAID
         invoice.paid_at = timezone.now()
@@ -231,7 +231,7 @@ class WalletViewSet(viewsets.ModelViewSet):
             message=f'{amount_to_seller:,} ریال به کیف پول شما واریز شد.', link='/wallet')
 
         return Response({'success': True, 'message': f'{amount_to_seller:,} ریال به فروشنده واریز شد.'})
-        
+
 # apps/payment/views.py - SettlementViewSet.perform_create
 
 class SettlementViewSet(viewsets.ModelViewSet):
@@ -248,7 +248,7 @@ class SettlementViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         wallet = Wallet.objects.get(user=self.request.user)
         amount = serializer.validated_data['amount']
-        
+
         if amount > wallet.available_balance:
             raise serializers.ValidationError("موجودی کافی نیست")
 
@@ -256,7 +256,7 @@ class SettlementViewSet(viewsets.ModelViewSet):
         wallet.save()
 
         profile = self.request.user.profile
-        
+
         # اطلاعات بانکی را از پروفایل بگیر، اگر خالی بود از default استفاده کن
         bank_name = profile.bank_name or 'تعیین نشده'
         bank_account_number = profile.bank_account_number or 'تعیین نشده'
@@ -279,7 +279,7 @@ class SettlementViewSet(viewsets.ModelViewSet):
         settlement = self.get_object()
         if settlement.status != Settlement.SettlementStatus.PENDING:
             return Response({'error': 'وضعیت قابل تغییر نیست'}, status=400)
-        
+
         settlement.status = Settlement.SettlementStatus.APPROVED
         settlement.approved_at = timezone.now()
         settlement.save()
@@ -290,7 +290,7 @@ class SettlementViewSet(viewsets.ModelViewSet):
         settlement = self.get_object()
         if settlement.status != Settlement.SettlementStatus.APPROVED:
             return Response({'error': 'ابتدا باید تایید شود'}, status=400)
-        
+
         settlement.status = Settlement.SettlementStatus.PAID
         settlement.paid_at = timezone.now()
         settlement.save()

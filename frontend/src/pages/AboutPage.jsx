@@ -41,7 +41,7 @@ export default function AboutPage() {
       <section className="relative min-h-[50vh] flex items-center overflow-hidden bg-gradient-to-br from-slate-950 via-blue-950 to-slate-950 text-white">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff08_1px,transparent_1px),linear-gradient(to_bottom,#ffffff08_1px,transparent_1px)] bg-[size:80px_80px]" />
         <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#3b82f6_0.8px,transparent_1px)] bg-[size:40px_40px]" />
-        
+
         <div className="container-custom relative z-10 py-20 md:py-24">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-blue-400/30 bg-blue-950/60 backdrop-blur-md mb-6">
@@ -89,15 +89,15 @@ export default function AboutPage() {
               معتبر، با هدف کاهش توقفات تولید، افزایش بهره‌وری و توسعه پایدار صنعت ایران.
             </p>
           </div>
-          
+
           <div className="group bg-white rounded-2xl border border-slate-200 p-6 md:p-8 hover:border-blue-500 hover:shadow-xl transition-all duration-300">
             <div className="w-14 h-14 rounded-2xl bg-blue-100 flex items-center justify-center mb-6 group-hover:scale-110 transition">
               <span className="text-3xl">🔭</span>
             </div>
             <h3 className="text-2xl font-bold text-slate-800 mb-4">چشم‌انداز ما</h3>
             <p className="text-slate-600 leading-relaxed">
-              تبدیل شدن به مرجع اول و اصلی خدمات MRO در ایران تا سال ۱۴۱۰، با پوشش کامل
-              زنجیره تامین، تعمیرات و نگهداری صنایع .
+              تبدیل شدن به مرجع اول و اصلی خدمات MRO در خاورمیانه تا سال ۱۴۱۰، با پوشش کامل
+              زنجیره تامین، تعمیرات و نگهداری صنایع نفت، گاز، پتروشیمی، فولاد و نیروگاهی.
             </p>
           </div>
         </div>
@@ -110,7 +110,7 @@ export default function AboutPage() {
             <h2 className="text-3xl md:text-4xl font-bold text-slate-800 mb-3">ارزش‌های بنیادین ما</h2>
             <p className="text-slate-500 max-w-2xl mx-auto">اصولی که هر روز با آنها کار می‌کنیم</p>
           </div>
-          
+
           <div className="grid md:grid-cols-3 gap-6">
             {values.map((value) => {
               const Icon = value.icon;

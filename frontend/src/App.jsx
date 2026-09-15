@@ -24,7 +24,7 @@ function App() {
     } catch (e) {
       // ignore errors
     }
-    
+
     // مقداردهی اولیه Theme
     initTheme()
   }, [initTheme])
@@ -32,7 +32,7 @@ function App() {
   useEffect(() => {
     const initAuth = async () => {
       const token = useAuthStore.getState().accessToken
-      
+
       if (!token) {
         setLoading(false)
         return
@@ -46,17 +46,17 @@ function App() {
         if (error.response?.status !== 401) {
           console.error('Auth error:', error)
         }
-        useAuthStore.setState({ 
-          accessToken: null, 
+        useAuthStore.setState({
+          accessToken: null,
           refreshToken: null,
           user: null,
-          isAuthenticated: false 
+          isAuthenticated: false
         })
       } finally {
         setLoading(false)
       }
     }
-    
+
     initAuth()
   }, [setUser, setLoading])
 

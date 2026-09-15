@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -77,24 +77,17 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
   const onSubmit = async (data) => {
     const { service, title, description, equipment_details, desired_start_date, urgency, ...extraData } = data
 
-    // ایجاد FormData برای ارسال فایل‌ها
-    const formData = new FormData()
-    
-    // اضافه کردن فیلدهای معمولی
-    formData.append('service', service || '')
-    formData.append('title', title)
-    formData.append('description', description)
-    formData.append('equipment_details', equipment_details || '')
-    if (desired_start_date) formData.append('desired_start_date', desired_start_date)
-    formData.append('urgency', urgency)
-    formData.append('extra_data', JSON.stringify(extraData))
-    
-    // اضافه کردن فایل‌های ضمیمه
-    files.forEach((file, index) => {
-      formData.append('attachments', file)
-    })
-    
-    createRequest(formData, {
+    const payload = {
+      service,
+      title,
+      description,
+      equipment_details,
+      desired_start_date,
+      urgency,
+      extra_data: extraData,
+    }
+
+    createRequest(payload, {
       onSuccess: (response) => {
         setCreatedRequestId(response.id)
         setShowSuccess(true)
@@ -182,38 +175,22 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
       {/* بخش آپلود فایل */}
       <div>
         <label className="block text-sm font-medium mb-2">📎 تصاویر و فایل‌های ضمیمه (حداکثر ۵ فایل)</label>
-        <div 
-          className="border-2 border-dashed border-secondary-300 dark:border-secondary-600 rounded-lg p-4 text-center hover:border-primary-500 transition cursor-pointer"
-          onClick={() => document.getElementById('file-upload')?.click()}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={(e) => {
-            e.preventDefault()
-            const droppedFiles = Array.from(e.dataTransfer.files)
-            setFiles(prev => [...prev, ...droppedFiles].slice(0, 5))
-          }}
-        >
-          <input 
-            id="file-upload" 
-            type="file" 
-            multiple 
-            className="hidden"
-            accept="image/*,.pdf,.doc,.docx,.zip" 
-            onChange={handleFileChange} 
-          />
+        <div className="border-2 border-dashed border-secondary-300 dark:border-secondary-600 rounded-lg p-4 text-center hover:border-primary-500 transition cursor-pointer"
+          onClick={() => document.getElementById('file-upload').click()}>
+          <input id="file-upload" type="file" multiple className="hidden"
+            accept="image/*,.pdf,.doc,.docx,.zip" onChange={handleFileChange} />
           <FiUpload className="h-8 w-8 mx-auto text-secondary-400 mb-2" />
           <p className="text-sm text-secondary-500">کلیک کنید یا فایل‌ها را اینجا رها کنید</p>
-          <p className="text-xs text-secondary-400 mt-1">حداکثر ۵ فایل، هر فایل حداکثر ۱۰ مگابایت</p>
         </div>
         {files.length > 0 && (
-          <div className="mt-3 space-y-2">
+          <div className="mt-2 space-y-1">
             {files.map((file, index) => (
               <div key={index} className="flex items-center justify-between bg-secondary-50 dark:bg-secondary-800 p-2 rounded text-sm">
-                <span className="flex items-center gap-2 truncate">
-                  <FiFile className="h-4 w-4 text-primary-500 flex-shrink-0" />
-                  <span className="truncate">{file.name}</span>
-                  <span className="text-xs text-secondary-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                <span className="flex items-center gap-2">
+                  <FiFile className="h-4 w-4 text-primary-500" />
+                  {file.name} ({(file.size / 1024).toFixed(1)} KB)
                 </span>
-                <button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700 p-1">
+                <button type="button" onClick={() => removeFile(index)} className="text-red-500 hover:text-red-700">
                   <FiX className="h-4 w-4" />
                 </button>
               </div>

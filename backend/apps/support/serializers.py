@@ -48,7 +48,7 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     user_phone = serializers.CharField(read_only=True)
     user_name = serializers.CharField(read_only=True)
     assigned_to_name = serializers.CharField(read_only=True)
-    
+
     # ✅ اضافه کردن فیلدهای نمایشی
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -57,22 +57,22 @@ class TicketDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
         fields = [
-            "id", 
-            "subject", 
+            "id",
+            "subject",
             "body",  # ← این خط مهم است
-            "status", 
-            "status_display", 
-            "priority", 
+            "status",
+            "status_display",
+            "priority",
             "priority_display",
-            "category", 
-            "category_display", 
-            "user_phone", 
-            "user_name", 
+            "category",
+            "category_display",
+            "user_phone",
+            "user_name",
             "assigned_to_name",
-            "order", 
-            "messages", 
+            "order",
+            "messages",
             "messages_count",
-            "created_at", 
+            "created_at",
             "updated_at",
         ]
 

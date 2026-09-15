@@ -41,12 +41,12 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
     def usage_stats(self, request):
         """آمار مصرف کاربر"""
         sub = Subscription.get_active_subscription(request.user)
-        
+
         from assets.models import Asset
         assets_count = Asset.objects.filter(owner=request.user, is_active=True).count()
-        
+
         max_assets = sub.max_assets_allowed if sub else 5
-        
+
         return Response({
             'assets_used': assets_count,
             'assets_limit': max_assets,
@@ -59,7 +59,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         """ارتقاء اشتراک"""
         plan_slug = request.data.get('plan_slug')
         billing_cycle = request.data.get('billing_cycle', 'monthly')
-        
+
         try:
             plan = Plan.objects.get(slug=plan_slug)
         except Plan.DoesNotExist:
@@ -71,7 +71,7 @@ class SubscriptionViewSet(viewsets.ModelViewSet):
         # ایجاد اشتراک جدید
         from dateutil.relativedelta import relativedelta
         duration = relativedelta(years=1) if billing_cycle == 'yearly' else relativedelta(months=1)
-        
+
         sub = Subscription.objects.create(
             user=request.user,
             plan=plan,

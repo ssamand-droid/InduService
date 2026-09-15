@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import { 
+import {
   Activity, Thermometer, Wind, Gauge, Zap,
   Plus, TrendingUp, TrendingDown, Minus
 } from 'lucide-react'
@@ -131,14 +131,14 @@ const AssetSensorsPage = () => {
           <h3 className="font-bold text-lg mb-4 text-gray-900 dark:text-white">
             نمودار قرائت‌ها - ۲۴ ساعت اخیر
           </h3>
-          
+
           <div className="h-64 flex items-end gap-1">
             {chartData.chart_data?.map((point, i) => {
               const maxVal = Math.max(...chartData.chart_data.map(p => p.value), 1)
               const height = (point.value / maxVal) * 100
               const color = point.status === 'critical' ? 'bg-red-500' :
                            point.status === 'warning' ? 'bg-yellow-500' : 'bg-indigo-500'
-              
+
               return (
                 <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
                   <div
