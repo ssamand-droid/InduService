@@ -478,3 +478,375 @@ This document is an **architecture and execution baseline**, not a claim that ev
 
 **Confidence:** High for repository/app structure and architectural mapping; medium-high for current frontend-to-domain mapping where route composition spans shared page files.  
 **Verification status:** Repository source inspected; runtime/production behavior not asserted without separate execution tests.
+
+
+---
+
+## 15. Product management layer
+
+> **Status: PARTIALLY DEFINED — product decisions below are proposals until validated with target customers.**
+>
+> This section extends the architecture baseline into a product execution plan. It does not claim that proposed features are implemented or that production behavior has been verified.
+
+### 15.1 Product vision (proposed)
+
+InduService aims to help industrial organizations discover qualified service providers and spare parts, authorize work, coordinate execution, and retain a traceable history of assets, service outcomes, and commercial transactions.
+
+The product should connect four related capabilities over time:
+
+1. Industrial service marketplace.
+2. B2B spare-parts and procurement marketplace.
+3. Asset maintenance / CMMS.
+4. Field-service execution and coordination.
+
+**Product principle:** deliver one reliable end-to-end industrial service journey before expanding horizontally into every domain.
+
+### 15.2 Target customer hypothesis
+
+**Initial segment hypothesis — VALIDATION REQUIRED:** factories with recurring maintenance needs and identifiable production assets, initially focusing on one selected industrial segment (candidate segments include packaging, beverage/food production, and industrial machinery).
+
+Primary buyer/user hypotheses:
+- Factory maintenance or engineering manager.
+- Procurement manager / buyer.
+- Operations manager.
+- Service provider owner / service coordinator.
+- Field technician.
+
+These are hypotheses, not validated personas. Customer interviews and evidence of willingness to pay are **PENDING**.
+
+### 15.3 Core problem hypothesis
+
+A factory has difficulty turning a maintenance need into a timely, trusted, traceable completed job because provider discovery, diagnosis, quotation, approval, execution evidence, acceptance, and payment are fragmented.
+
+Proposed value:
+- Traceable requests and quotations.
+- Explicit customer approval before authorized work.
+- Clear assignment, execution evidence, and service report.
+- Separate technical completion, customer acceptance, and financial settlement.
+- A reusable asset/service history.
+
+The magnitude of this problem and the relative importance of each pain point are **PENDING customer validation**.
+
+### 15.4 Product positioning boundaries
+
+Initial product should not promise:
+- Guaranteed provider availability or a specific repair time without operational evidence.
+- Predictive maintenance accuracy without a validated model and dataset.
+- Verified supplier stock or pricing unless the data is refreshed and its source is visible.
+- Escrow, payment processing, tax, or regulatory capabilities before the operating market and legal/payment constraints are confirmed.
+
+### 15.5 Business model hypotheses
+
+Potential revenue streams for validation:
+- Commission or transaction fee on completed service jobs.
+- Commercial fee on successful spare-parts transactions.
+- Organization subscription for advanced workflow / CMMS capabilities.
+- Paid SLA/AMC administration and reporting.
+
+**PENDING:** initial revenue stream, fee basis, who pays, refund/chargeback rules, tax treatment, settlement timing, market-specific payment feasibility, and provider commercial terms. Do not implement pricing or commission assumptions as hard-coded rules before approval.
+
+---
+
+## 16. First operational release — PRD draft v0.1
+
+> **Status: DRAFT / NOT APPROVED.** This is a scope proposal to guide validation and backlog creation, not an approved commitment to release.
+
+### 16.1 Proposed release goal
+
+Allow one factory organization to submit a service request for one of its assets, receive and compare provider quotations, approve a quote, track an authorized work order, review the service report, accept or reject the work with a recorded reason, and view the related invoice/payment state.
+
+The first release should prove one complete service journey. It should not attempt to deliver every domain in the master matrix.
+
+### 16.2 Proposed primary persona
+
+A factory maintenance manager who is authorized to request and approve maintenance work for a specific organization.
+
+**PENDING:** confirm the first customer segment, authority levels, user research, language, geography, and expected service categories.
+
+### 16.3 In-scope capabilities (proposed)
+
+1. Organization membership and tenant-aware access for factory and service-provider organizations.
+2. Asset reference sufficient to identify the affected equipment; full enterprise asset hierarchy can follow.
+3. Service request creation, attachments, priority, status history, and request ownership.
+4. Provider response and versioned service quotation with scope, price, validity, estimated schedule, exclusions, and terms.
+5. Explicit quote acceptance/rejection and an auditable approval record.
+6. Work order creation only from an approved/authorized scope, with assignment and controlled state transitions.
+7. Execution notes, checklist/evidence attachments, parts/time records where needed, and a service report.
+8. Customer acceptance or rejection with evidence/reason and a defined rework path.
+9. Invoice and payment state visibility, without assuming a payment gateway or escrow exists.
+10. Notifications for important state changes.
+11. Admin/support handling for blocked requests and disputes.
+12. Audit events and automated tests for authorization, invalid transitions, and tenant isolation.
+
+### 16.4 Explicitly out of scope for this first release (proposed)
+
+- Predictive maintenance / AI recommendations.
+- IoT streaming and advanced sensor analytics.
+- A fully configurable general-purpose workflow engine.
+- Full procurement lifecycle (RFQ → supplier quote → PO → goods receipt).
+- Advanced warehouse/inventory management.
+- Full accounting/ERP.
+- Complex subscription entitlements.
+- Multi-country tax and payment integrations.
+- Native mobile apps, unless customer validation makes them a release blocker.
+
+### 16.5 User stories and acceptance criteria (draft)
+
+**US-01 — Create a service request**
+- Given an authenticated, authorized organization member, when they submit a valid request, then it is associated with the correct organization and asset (if selected), receives a valid initial state, and is visible only to authorized parties.
+- Invalid or incomplete required data is rejected with field-level feedback.
+- Attachments are validated and access-controlled.
+
+**US-02 — Provider responds with a quotation**
+- Only an authorized provider member can quote a request routed/invited to that provider.
+- The quote stores scope, price/currency, validity, exclusions, and estimated schedule as structured data.
+- Quote revisions preserve prior versions or an equivalent auditable revision history.
+
+**US-03 — Factory approves a quote**
+- Only an authorized buyer can approve or reject a quote.
+- Approval records actor, time, selected quote version, and terms.
+- Rejected, expired, or superseded quotes cannot silently create an executable work order.
+
+**US-04 — Create and execute a work order**
+- A work order references the accepted commercial scope and source request/quote.
+- Invalid state transitions are rejected by the backend.
+- Assignment, task/evidence updates, and state changes are authorized and audited.
+
+**US-05 — Submit service report and request acceptance**
+- The provider submits a report and required evidence before marking the work ready for acceptance.
+- The customer can accept or reject with a reason.
+- Rejection creates a traceable rework/dispute path; it does not erase the original report.
+
+**US-06 — View financial lifecycle**
+- Work order state and invoice/payment/settlement state are independently represented.
+- A completed work order does not automatically imply that payment is complete.
+- Financial state changes are permission-checked and auditable.
+
+**US-07 — Tenant isolation**
+- Users from Organization A cannot read or modify Organization B's private requests, quotes, work orders, assets, documents, invoices, or provider-only data unless an explicitly authorized cross-organization relationship grants access.
+- Tests cover list endpoints, detail endpoints, nested resources, file access, and mutation endpoints.
+
+**US-08 — Operational support**
+- Authorized support/admin users can inspect a case and record actions without bypassing audit requirements.
+- Disputes reference the underlying business object and retain evidence and resolution history.
+
+### 16.6 Release gates
+
+Release must not be approved until:
+- The agreed end-to-end journey passes in a staging-like environment.
+- Tenant-isolation and object-level permission tests pass.
+- State-transition and regression tests pass.
+- Migrations are tested against a representative copy/fixture of existing data and have documented rollback/recovery steps.
+- API schema and frontend consumers agree.
+- Error, empty, loading, and unauthorized UI states exist.
+- Logs, monitoring, backups, and operational ownership are defined.
+- A pilot customer/provider has completed UAT and unresolved critical issues are closed.
+
+**PENDING:** approved persona, exact initial service category, commercial terms, acceptance policy, payment operating model, pilot participants, and measurable release targets.
+
+---
+
+## 17. Product backlog and execution gates
+
+> **Status: PRIORITIZED BACKLOG SKELETON.** Items below require issue-level decomposition, owner assignment, estimates, and dependency review before implementation.
+
+| ID | Workstream | Priority | Deliverable / exit gate | Status |
+| --- | --- | --- | --- | --- |
+| VAL-01 | Customer discovery | P0 | Interview target factories/providers; document pain points and willingness-to-pay evidence | **PENDING** |
+| BASE-01 | Repository baseline | P0 | Re-run source inventory against the target branch; reconcile this document with current code | **PENDING verification** |
+| RUN-01 | Runtime gate | P0 | Verify environment settings, database engine, migrations, service processes, and staging behavior safely | **PENDING** |
+| SEC-01 | Security gate | P0 | Review secrets/configuration, auth, object permissions, file access, and tenant boundaries | **PENDING** |
+| API-01 | API contract baseline | P0 | Export current OpenAPI schema; map each endpoint to consumer, permission, and state effects | **PENDING** |
+| DATA-01 | Data/migration plan | P0 | Map current Profile/roles/provider data to Organization/Membership; define backfill and rollback | **PENDING** |
+| ORG-01 | Organization foundation | P0 | Organization and membership model/API/tests, introduced with backward-compatible migration | **NOT STARTED / VERIFY** |
+| TEN-01 | Tenant authorization | P0 | Centralized queryset/object permission strategy plus negative tests for cross-tenant access | **NOT STARTED / VERIFY** |
+| AUD-01 | Audit foundation | P0 | Structured audit for sensitive actions, with actor, timestamp, object, action, and outcome | **NOT STARTED / VERIFY** |
+| SRV-01 | Service lifecycle specification | P0 | Approved state machine, quote rules, approval rules, cancellation and rework paths | **PENDING approval** |
+| SRV-02 | Service quote separation | P0 | Versioned ServiceQuote contract and migration away from embedded request-quote semantics | **NOT STARTED / VERIFY** |
+| WO-01 | Work order core | P0 | WorkOrder model/API/state machine linked to authorized scope and source request/quote | **NOT STARTED / VERIFY** |
+| UX-01 | Primary user journey | P0 | Factory and provider UI support the approved end-to-end journey and all UI states | **NOT STARTED / VERIFY** |
+| QA-01 | End-to-end acceptance | P0 | Automated happy-path, failure-path, permission, migration, and regression suite | **PENDING** |
+| OPS-01 | Release operations | P0 | Staging, backup/restore evidence, monitoring, deployment and rollback runbook | **PENDING** |
+| DIS-01 | Dispatch and scheduling | P1 | Assignment, availability, visit scheduling, and rescheduling rules | **NOT STARTED / VERIFY** |
+| CHK-01 | Checklist and evidence | P1 | Reusable checklist templates/instances and execution evidence | **NOT STARTED / VERIFY** |
+| ACC-01 | Customer acceptance/warranty | P1 | Acceptance/rejection, rework, warranty terms and claims lifecycle | **NOT STARTED / VERIFY** |
+| OFFER-01 | Product offers | P1 | Product/offer separation and seller-specific price/availability/lead-time | **NOT STARTED / VERIFY** |
+| RFQ-01 | Procurement | P1 | RFQ, supplier quote, purchase order and goods receipt workflow | **NOT STARTED / VERIFY** |
+| FIN-01 | Financial lifecycle | P1 | Separate invoice/payment/refund/commission/settlement states and reconciliation rules | **NOT STARTED / VERIFY** |
+| CMMS-01 | Core maintenance | P1/P2 | Asset hierarchy, maintenance schedule, work-order history, and maintenance KPIs | **NOT STARTED / VERIFY** |
+| DOC-01 | Document management | P2 | Access-controlled document metadata, versioning, and domain links | **NOT STARTED / VERIFY** |
+| SLA-01 | SLA/AMC | P2 | Contract service scope, response/restore targets, renewal, and breach handling | **NOT STARTED / VERIFY** |
+| SUB-01 | SaaS entitlements | P2 | Approved plans, organization ownership, entitlements, usage, and subscription billing | **PENDING business decision** |
+| INT-01 | Domain events/notifications | P2 | Versioned event contracts, delivery records, retries, and preferences | **NOT STARTED / VERIFY** |
+| AI-01 | Predictive capabilities | P3 | Data quality gate, offline evaluation, measurable performance, and human-safe fallback | **BLOCKED on evidence/data** |
+
+### Backlog rules
+
+- Convert each row into an issue only after the scope and acceptance criteria are clear.
+- Every issue must state allowed paths, forbidden paths, dependencies, migration impact, tests, owner, and rollback considerations.
+- One shared database-foundation migration stream at a time.
+- Do not assign independent agents concurrent changes to shared models/migrations.
+- No issue is done merely because code compiles; apply the domain Definition of Done in Section 9.
+- Preserve the existing public API or document a deprecation/migration plan before breaking it.
+
+---
+
+## 18. Product metrics and instrumentation plan
+
+> **Status: METRIC DEFINITIONS PROPOSED; event instrumentation and baselines are PENDING.**
+
+Initial metrics to instrument:
+- Request completion rate: eligible requests reaching customer-accepted completion / eligible requests created in the cohort.
+- Time to first qualified provider response.
+- Quote coverage: eligible requests receiving at least one valid quote.
+- Quote acceptance rate.
+- Time from quote approval to work start.
+- First-pass acceptance rate.
+- Cancellation and dispute rates.
+- Invoice aging and time from invoice issue to payment.
+- Provider response/fulfilment reliability.
+- Factory repeat usage and cohort retention.
+- PM on-time completion rate, once maintenance scheduling is operational.
+
+For each metric, define event names, event properties, numerator, denominator, exclusions, cohort window, owner, and dashboard. Do not set numeric targets until a baseline is collected or a target is explicitly approved.
+
+---
+
+## 19. Non-functional product requirements
+
+> **Status: REQUIREMENTS TO VALIDATE AGAINST DEPLOYMENT AND CUSTOMER NEEDS.**
+
+### Security and privacy
+- Enforce organization-aware authorization on every API and file/document access path.
+- Never trust tenant identifiers supplied by the client without authorization checks.
+- Keep secrets out of source control; use environment-specific secret management.
+- Record sensitive administrative and financial actions.
+- Define retention, export, deletion, and access rules for personal and commercial data.
+
+### Reliability and recovery
+- Define backup frequency, retention, restore testing, and recovery objectives.
+- Make state-changing operations safe against accidental duplicate submissions where relevant.
+- Use transaction boundaries and idempotency controls for payment/settlement integrations where applicable.
+- Monitor errors, failed jobs, email/notification delivery, and database health.
+
+### Performance and scale
+- Establish baseline API latency and database-query behavior before setting targets.
+- Paginate large collections and test list/filter/search endpoints.
+- Index verified query patterns rather than adding speculative indexes.
+- Define file size/type limits and secure storage/access behavior.
+
+### Accessibility and usability
+- Consistent loading, empty, error, permission-denied, and success states.
+- Responsive mobile experience for field execution.
+- Localization, date/time, currency, and RTL behavior according to approved markets.
+- Clear status names and actionable validation messages.
+
+### Compliance and market constraints
+- **PENDING:** operating countries, applicable privacy/tax/contract rules, payment-provider availability, and data-residency requirements.
+- Do not represent a payment, escrow, electronic signature, or compliance capability as available until its provider, legal basis, and production operation are verified.
+
+---
+
+## 20. Product and architecture decision register
+
+| Decision ID | Topic | Current direction | Status |
+| --- | --- | --- | --- |
+| ADR-001 | User vs Organization | Separate person/account from business tenant; connect via membership | Direction recorded; implementation/approval verification **PENDING** |
+| ADR-002 | Request vs WorkOrder | Request expresses need; WorkOrder is authorized executable work | Direction recorded; state rules **PENDING approval** |
+| ADR-003 | Product vs ProductOffer | Canonical catalog product separate from seller's commercial offer | Direction recorded; field migration **PENDING** |
+| ADR-004 | Business vs financial states | Independent state machines | Direction recorded; finance invariants **PENDING** |
+| ADR-005 | Workflow engine | Build reusable workflow infrastructure only when justified by validated repeated patterns | Needs detailed ADR and scope **PENDING** |
+| ADR-006 | Asset as operational root | Asset history links maintenance, work, parts, documents, failures, and costs | Direction recorded; hierarchy design **PENDING** |
+| PM-001 | Initial target segment | Select one segment for the first operational release | **PENDING customer validation** |
+| PM-002 | First release revenue model | Decide payer, fee basis, and settlement assumptions | **PENDING business decision** |
+| PM-003 | First release payment model | Decide manual tracking vs payment integration and supported markets | **PENDING feasibility/legal review** |
+| PM-004 | Acceptance and warranty policy | Define evidence, rejection, rework, warranty, and dispute rules | **PENDING business decision** |
+| PM-005 | Localization | Confirm initial language, currency, timezone, and market | **PENDING** |
+
+A recorded direction is not proof of an implemented or formally approved ADR. Detailed ADRs should include context, alternatives, consequences, migration implications, and status (proposed/accepted/superseded).
+
+---
+
+## 21. Open items and continuation register
+
+> **This register is intentionally persistent. Items marked PENDING must not be silently treated as complete. Resume work from this list in later sessions.**
+
+### A. Required before product scope is finalized
+- [ ] **PENDING — Customer discovery:** identify interviewees and validate the first customer segment and highest-value problem.
+- [ ] **PENDING — PRD approval:** approve or revise the draft scope in Section 16.
+- [ ] **PENDING — Commercial model:** decide initial payer, commission/fee model, refund rules, and provider terms.
+- [ ] **PENDING — Operating market:** confirm country/countries, language, currency, timezone, legal constraints, and payment feasibility.
+- [ ] **PENDING — Release targets:** define baseline and target values for primary KPIs.
+
+### B. Required technical verification
+- [ ] **PENDING — Runtime verification:** run backend/frontend checks in a safe environment and document observed results.
+- [ ] **PENDING — Production configuration review:** verify effective settings, database connection, deployment configuration, secrets handling, and migrations without making unapproved production changes.
+- [ ] **PENDING — Database/migration audit:** record applied migrations, data counts, integrity constraints, and a tested recovery plan.
+- [ ] **PENDING — API contract inventory:** export the current schema and map endpoints to frontend consumers, permissions, and state changes.
+- [ ] **PENDING — Frontend/runtime inventory:** verify real route behavior, API integration, loading/error states, and primary user flows.
+- [ ] **PENDING — Security audit:** verify tenant isolation, object-level authorization, upload/download access, admin privileges, and secret/configuration handling.
+- [ ] **PENDING — Test baseline:** record current unit, integration, end-to-end, and regression test coverage/results.
+
+### C. Required before implementation of shared foundations
+- [ ] **PENDING — Data migration design:** map legacy Profile/provider/company fields into Organization and Membership without losing ownership or permissions.
+- [ ] **PENDING — Canonical state machines:** approve ServiceRequest, ServiceQuote, WorkOrder, acceptance, invoice, payment, refund, and settlement transitions.
+- [ ] **PENDING — API compatibility plan:** document versioning/deprecation and frontend rollout order.
+- [ ] **PENDING — Audit and document policy:** define immutability expectations, access policy, retention, and evidence requirements.
+- [ ] **PENDING — Agent boundaries:** assign issue owners and allowed file paths; serialize shared migration work.
+- [ ] **PENDING — Release operations:** staging gate, backup/restore proof, monitoring, deployment checklist, rollback runbook, and pilot UAT.
+
+### D. Later capabilities, explicitly not complete
+- [ ] **PENDING — Dispatch/scheduling design**
+- [ ] **PENDING — Checklist template/instance design**
+- [ ] **PENDING — Customer acceptance, rework, and warranty rules**
+- [ ] **PENDING — ProductOffer and compatibility model**
+- [ ] **PENDING — RFQ → SupplierQuote → PurchaseOrder → GoodsReceipt lifecycle**
+- [ ] **PENDING — Invoice/payment/refund/commission/settlement invariants**
+- [ ] **PENDING — CMMS hierarchy and preventive-maintenance policy**
+- [ ] **PENDING — Document versioning and access model**
+- [ ] **PENDING — SLA/AMC and renewal model**
+- [ ] **PENDING — Subscription/entitlement business decision**
+- [ ] **PENDING — Domain event and notification delivery contracts**
+- [ ] **PENDING — Predictive analytics data-quality and evaluation gate**
+
+### Resume protocol
+
+When continuing this project:
+1. Read this document from the current target branch.
+2. Read the latest baseline/audit artifacts and open issues; do not assume historical status remains current.
+3. Select the earliest unresolved prerequisite from Sections 17 and 21.
+4. Verify actual repository/runtime evidence before changing any status from PENDING.
+5. Update this register and the relevant domain/ADR/PRD document in the same work item.
+6. Keep production changes, destructive migrations, restarts, and secret changes behind explicit verification and approval.
+
+---
+
+## 22. Status semantics and evidence policy
+
+Use these status labels consistently:
+- **VERIFIED:** evidence was observed for the stated scope in the stated environment; include date, command/test, and result.
+- **IMPLEMENTED — NOT VERIFIED:** code exists but required behavior has not been demonstrated.
+- **PARTIAL:** some acceptance criteria pass and others remain open; enumerate them.
+- **PROPOSED:** design recommendation awaiting product/architecture approval.
+- **PENDING:** work or decision has not been completed.
+- **BLOCKED:** cannot proceed until a named dependency is resolved.
+- **NOT APPLICABLE:** explicitly justified for this release; do not use as a substitute for investigation.
+
+Evidence rules:
+- Source inspection does not prove runtime behavior.
+- A passing local test does not prove production configuration or data correctness.
+- An existing model/API/page does not prove end-to-end product completion.
+- A commit does not prove release, deployment, or customer acceptance.
+- Never mark a checklist item verified without recording the evidence and scope.
+
+## 23. Current document status
+
+**Document status:** Architecture baseline plus proposed product-management extension.
+
+**Verified from the supplied repository review:** the master-plan document describes 14 current Django apps, current/target separation, target domains, migration rules, agent governance, and architecture priorities.
+
+**Not independently verified in this update:** live production behavior, effective production configuration, database contents/applied migrations, endpoint authorization, complete user journeys, customer demand, willingness to pay, and any claim that proposed new domains are implemented.
+
+**Immediate next action:** complete the technical/runtime verification and customer discovery gates; then approve PRD v1.0 and create issue-level backlog items. Do not start broad feature implementation before these gates are resolved.
+
+**Confidence:** high for the document structure and proposed product/architecture distinctions; not established for runtime behavior, market validation, or implementation status until the listed evidence is collected.
