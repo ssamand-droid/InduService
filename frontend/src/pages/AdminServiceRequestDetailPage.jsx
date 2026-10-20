@@ -20,7 +20,7 @@ export default function AdminServiceRequestDetailPage() {
   })
 
   const updateStatusMutation = useMutation({
-    mutationFn: (status) => api.patch(`/api/services/requests/${id}/`, { status }),
+    mutationFn: (status) => api.patch(`/api/services/requests/${id}/admin_update_status/`, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-service-request', id] })
       queryClient.invalidateQueries({ queryKey: ['admin-service-requests'] })
@@ -50,7 +50,8 @@ export default function AdminServiceRequestDetailPage() {
     { value: 'quoted', label: 'قیمت داده شده' },
     { value: 'accepted', label: 'پذیرفته شده' },
     { value: 'in_progress', label: 'در حال انجام' },
-    { value: 'completed', label: 'تکمیل شده' },
+    { value: 'pending_acceptance', label: 'در انتظار تأیید کارخانه' },
+    { value: 'completed', label: 'تأیید نهایی شده' },
     { value: 'cancelled', label: 'لغو شده' },
   ]
 
@@ -61,6 +62,7 @@ export default function AdminServiceRequestDetailPage() {
       quoted: '#e0e7ff',
       accepted: '#dcfce7',
       in_progress: '#f3e8ff',
+      pending_acceptance: '#fef3c7',
       completed: '#d1fae5',
       cancelled: '#fee2e2',
     }
@@ -74,6 +76,7 @@ export default function AdminServiceRequestDetailPage() {
       quoted: '#3730a3',
       accepted: '#166534',
       in_progress: '#6b21a5',
+      pending_acceptance: '#92400e',
       completed: '#065f46',
       cancelled: '#991b1b',
     }
@@ -87,7 +90,8 @@ export default function AdminServiceRequestDetailPage() {
       quoted: 'قیمت داده شده',
       accepted: 'پذیرفته شده',
       in_progress: 'در حال انجام',
-      completed: 'تکمیل شده',
+      pending_acceptance: 'در انتظار تأیید کارخانه',
+      completed: 'تأیید نهایی شده',
       cancelled: 'لغو شده',
     }
     return labels[status] || status

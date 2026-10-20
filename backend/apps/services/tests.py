@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from services.models import (
-    ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment
+    ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceRequestQuote
 )
 
 User = get_user_model()
@@ -215,7 +215,120 @@ class ServiceAPITestCase(TestCase):
 
         req.refresh_from_db()
         self.assertEqual(req.status, 'quoted')
-        self.assertEqual(req.quoted_price, 50000000)
+        quote = req.quotes.get(provider=self.provider)
+        self.assertEqual(quote.quoted_price, 50000000)
+
+    def test_provider_cannot_update_request_through_generic_patch(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=self.service,
+            title='درخواست',
+            description='توضیحات',
+            urgency='medium',
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+        response = self.client.patch(
+            f'/api/services/requests/{req.id}/',
+            {'status': 'completed', 'quoted_price': 1, 'title': 'دستکاری'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'pending')
+        self.assertIsNone(req.quoted_price)
+        self.assertEqual(req.title, 'درخواست')
+
+    def test_buyer_cannot_set_workflow_fields_through_generic_patch(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            title='درخواست',
+            description='توضیحات',
+            urgency='medium',
+        )
+        response = self.client.patch(
+            f'/api/services/requests/{req.id}/',
+            {'status': 'completed', 'quoted_price': 1, 'title': 'عنوان جدید'},
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'pending')
+        self.assertIsNone(req.quoted_price)
+        self.assertEqual(req.title, 'عنوان جدید')
+
+    def test_selected_provider_can_start_request_without_service(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=None,
+            title='درخواست بدون سرویس منطبق',
+            description='توضیحات',
+            urgency='medium',
+            status='accepted',
+        )
+        ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=50000000,
+            is_selected=True,
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+        response = self.client.post(f'/api/services/requests/{req.id}/start_work/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'in_progress')
+
+    def test_provider_completion_waits_for_factory_acceptance(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=self.service,
+            title='درخواست تکمیل',
+            description='توضیحات',
+            urgency='medium',
+            status='in_progress',
+        )
+        ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=50000000,
+            is_selected=True,
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+        response = self.client.post(
+            f'/api/services/requests/{req.id}/complete_with_images/',
+            {'completion_notes': 'کار انجام شد'},
+            format='multipart',
+        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'pending_acceptance')
+
+    def test_only_request_buyer_can_accept_completion(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=self.service,
+            title='درخواست در انتظار تأیید',
+            description='توضیحات',
+            urgency='medium',
+            status='pending_acceptance',
+        )
+        ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=50000000,
+            is_selected=True,
+        )
+        other_buyer = User.objects.create_user(
+            phone_number='09120000004',
+            password='testpass123',
+            role='buyer',
+        )
+        self.client.force_authenticate(user=other_buyer)
+        denied = self.client.post(f'/api/services/requests/{req.id}/accept_completion/')
+        self.assertEqual(denied.status_code, status.HTTP_404_NOT_FOUND)
+
+        self.client.force_authenticate(user=self.buyer)
+        accepted = self.client.post(f'/api/services/requests/{req.id}/accept_completion/')
+        self.assertEqual(accepted.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'completed')
 
     # ============ آپلود پیوست ============
 
