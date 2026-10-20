@@ -6,6 +6,7 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
 from django.db import models as db_models
+from rest_framework.exceptions import PermissionDenied
 from .models import ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
 from .serializers import (
     ServiceCategorySerializer, ServiceListSerializer, ServiceDetailSerializer,
@@ -113,6 +114,39 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     queryset = ServiceRequest.objects.select_related('buyer', 'service').all()
     serializer_class = ServiceRequestSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_serializer_class(self):
+        if self.action in ['update', 'partial_update']:
+            return ServiceRequestUpdateSerializer
+        return ServiceRequestSerializer
+
+    def perform_update(self, serializer):
+        request_obj = self.get_object()
+        if request_obj.buyer_id != self.request.user.id:
+            raise PermissionDenied("فقط ثبت‌کننده درخواست می‌تواند آن را ویرایش کند")
+        if request_obj.status != ServiceRequest.Status.PENDING:
+            raise PermissionDenied("فقط درخواست‌های در انتظار بررسی قابل ویرایش هستند")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        user = self.request.user
+        is_admin = user.is_staff or user.role == 'admin'
+        if not is_admin and (instance.buyer_id != user.id or instance.status != ServiceRequest.Status.PENDING):
+            raise PermissionDenied("فقط درخواست در انتظار بررسی توسط ثبت‌کننده قابل حذف است")
+        instance.delete()
+
+    @staticmethod
+    def _get_selected_provider(service_request):
+        selected_quote = service_request.quotes.filter(is_selected=True).select_related('provider').first()
+        if selected_quote:
+            return selected_quote.provider
+        if service_request.service_id:
+            return service_request.service.provider
+        return None
+
+    @staticmethod
+    def _is_admin(user):
+        return user.is_staff or user.role == 'admin'
 
     # ============================================================
     # اصلاح get_queryset در کلاس ServiceRequestViewSet برای نمایش درخواست‌های بدون سرویس
@@ -431,7 +465,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             Invoice.objects.create(
                 service_request=service_request,
                 buyer=service_request.buyer,
-                seller=service_request.service.provider,
+                seller=quote.provider,
                 subtotal=total_price,
                 total=total_price,
                 advance_payment=float(advance),
@@ -564,8 +598,11 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         """ارائه‌دهنده یا ادمین کار را شروع می‌کند"""
         service_request = self.get_object()
 
-        # اجازه به ارائه‌دهنده و ادمین
-        if service_request.service.provider != request.user and not request.user.is_staff:
+        # فقط ارائه‌دهنده منتخب یا ادمین می‌تواند کار را شروع کند
+        provider = self._get_selected_provider(service_request)
+        if provider is None:
+            return Response({'error': 'ارائه‌دهنده منتخب برای این درخواست مشخص نیست'}, status=400)
+        if provider != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
 
         if service_request.status != ServiceRequest.Status.ACCEPTED:
@@ -622,18 +659,25 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         """ارائه‌دهنده یا ادمین خدمت را تکمیل می‌کند"""
         service_request = self.get_object()
 
-        # اجازه به ارائه‌دهنده و ادمین
-        if service_request.service.provider != request.user and not request.user.is_staff:
+        # فقط ارائه‌دهنده منتخب یا ادمین می‌تواند انجام کار را اعلام کند
+        provider = self._get_selected_provider(service_request)
+        if provider is None:
+            return Response({'error': 'ارائه‌دهنده منتخب برای این درخواست مشخص نیست'}, status=400)
+        if provider != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if service_request.status != ServiceRequest.Status.IN_PROGRESS:
             return Response({'error': 'وضعیت فعلی قابل تکمیل نیست'}, status=status.HTTP_400_BAD_REQUEST)
 
-        service_request.status = ServiceRequest.Status.COMPLETED
+        service_request.status = ServiceRequest.Status.PENDING_ACCEPTANCE
         service_request.actual_completion_date = timezone.now()
-        service_request.save()
+        service_request.save(update_fields=['status', 'actual_completion_date', 'updated_at'])
 
-        return Response({'message': 'خدمت با موفقیت تکمیل شد.'})
+        return Response({
+            'success': True,
+            'status': service_request.status,
+            'message': 'انجام کار ثبت شد و در انتظار تأیید کارخانه است.'
+        })
 
     # ============================================================
     # 6. upload_attachment - آپلود فایل ضمیمه
@@ -688,7 +732,6 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # 8. provider_quote - ارائه‌دهنده اعلام قیمت می‌کند
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
-    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def provider_quote(self, request, pk=None):
         """ارائه‌دهنده: اعلام قیمت با جزئیات کامل (چندین ارائه‌دهنده می‌توانند قیمت اعلام کنند)"""
         from .models import ServiceRequestQuote
@@ -720,10 +763,13 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             extra_data__request_id=service_request.id
         ).exists()
 
-        is_admin = user.is_staff or user.role == 'admin'
+        provider_roles = ['seller', 'service_provider', 'company_seller', 'company_provider']
+        if user.role not in provider_roles:
+            return Response({'error': 'فقط ارائه‌دهنده خدمات می‌تواند پیشنهاد قیمت ثبت کند'}, status=403)
+
         is_direct_provider = service_request.service and service_request.service.provider == user
 
-        if not (has_notification or is_admin or is_direct_provider):
+        if not (has_notification or is_direct_provider):
             return Response({
                 'error': 'شما دسترسی به اعلام قیمت برای این درخواست ندارید'
             }, status=403)
@@ -778,8 +824,10 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         """ارائه‌دهنده یا ادمین: اعلام فورس ماژور"""
         service_request = self.get_object()
 
-        # اجازه به ارائه‌دهنده و ادمین
-        if request.user != service_request.service.provider and not request.user.is_staff:
+        provider = self._get_selected_provider(service_request)
+        if provider is None:
+            return Response({'error': 'ارائه‌دهنده منتخب برای این درخواست مشخص نیست'}, status=400)
+        if request.user != provider and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if service_request.status not in ['accepted', 'in_progress']:
@@ -821,18 +869,20 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         """ارائه‌دهنده یا ادمین: تکمیل خدمت با آپلود عکس"""
         service_request = self.get_object()
 
-        # اجازه به ارائه‌دهنده و ادمین
-        if request.user != service_request.service.provider and not request.user.is_staff:
+        provider = self._get_selected_provider(service_request)
+        if provider is None:
+            return Response({'error': 'ارائه‌دهنده منتخب برای این درخواست مشخص نیست'}, status=400)
+        if request.user != provider and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
-        if service_request.status != 'in_progress':
+        if service_request.status != ServiceRequest.Status.IN_PROGRESS:
             return Response({'error': 'خدمت در حال انجام نیست'}, status=400)
 
         # ذخیره یادداشت
         service_request.completion_notes = request.data.get('completion_notes', '')
-        service_request.status = 'completed'
+        service_request.status = ServiceRequest.Status.PENDING_ACCEPTANCE
         service_request.actual_completion_date = timezone.now()
-        service_request.save()
+        service_request.save(update_fields=['completion_notes', 'status', 'actual_completion_date', 'updated_at'])
 
         # ذخیره تصاویر
         saved_images = []
@@ -845,12 +895,6 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'id': img.id,
                 'url': request.build_absolute_uri(img.image.url),
             })
-
-        # به‌روزرسانی آمار پروفایل
-        profile = request.user.profile
-        profile.completed_orders += 1
-        profile.total_revenue += (service_request.final_price or service_request.quoted_price or 0)
-        profile.save()
 
         # اعلان به خریدار
         create_notification(
@@ -866,6 +910,41 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             'success': True,
             'message': 'خدمت تکمیل شد',
             'images': saved_images,
+        })
+
+    # ============================================================
+    # پذیرش انجام کار توسط کارخانه
+    # ============================================================
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def accept_completion(self, request, pk=None):
+        service_request = self.get_object()
+        if service_request.buyer_id != request.user.id and not self._is_admin(request.user):
+            return Response({'error': 'فقط کارخانه ثبت‌کننده می‌تواند انجام کار را تأیید کند'}, status=403)
+        if service_request.status != ServiceRequest.Status.PENDING_ACCEPTANCE:
+            return Response({'error': 'این درخواست در انتظار تأیید انجام کار نیست'}, status=400)
+
+        service_request.status = ServiceRequest.Status.COMPLETED
+        service_request.save(update_fields=['status', 'updated_at'])
+
+        provider = self._get_selected_provider(service_request)
+        if provider is not None:
+            profile = getattr(provider, 'profile', None)
+            if profile is not None:
+                profile.completed_orders += 1
+                profile.total_revenue += (service_request.final_price or service_request.quoted_price or 0)
+                profile.save(update_fields=['completed_orders', 'total_revenue'])
+            create_notification(
+                user=provider,
+                type='service',
+                title='کار توسط کارخانه تأیید شد',
+                message=f'انجام خدمت «{service_request.title}» توسط کارخانه تأیید شد.',
+                link=f'/dashboard/service-requests/{service_request.id}'
+            )
+
+        return Response({
+            'success': True,
+            'status': service_request.status,
+            'message': 'انجام کار تأیید شد.'
         })
 
     # ============================================================
@@ -962,10 +1041,12 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # ============================================================
     # 13. admin_update_status - ادمین تغییر وضعیت مستقیم
     # ============================================================
-    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAdminUser])
+    @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def admin_update_status(self, request, pk=None):
         """ادمین: تغییر مستقیم وضعیت درخواست"""
         service_request = self.get_object()
+        if not self._is_admin(request.user):
+            return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         new_status = request.data.get('status')
         if not new_status:
