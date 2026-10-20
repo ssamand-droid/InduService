@@ -549,7 +549,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request = self.get_object()
 
         # اجازه به خریدار و ادمین
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if service_request.buyer != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if not service_request.advance_payment_required:
@@ -576,7 +576,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             create_notification(
                 user=provider,
                 type='payment',
-            title='پیش‌پرداخت واریز شد',
+                title='پیش‌پرداخت واریز شد',
                 message=f'پیش‌پرداخت خدمت "{service_request.title}" پرداخت شد. می‌توانید کار را شروع کنید.',
                 link=f'/dashboard/service-requests/{service_request.id}'
             )
@@ -626,7 +626,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request = self.get_object()
 
         # اجازه به خریدار و ادمین
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if service_request.buyer != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if service_request.status != 'completed':
@@ -1001,7 +1001,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request = self.get_object()
 
         # اجازه به خریدار و ادمین
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if service_request.buyer != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if 'receipt' not in request.FILES:
