@@ -214,7 +214,7 @@ class ServiceAPITestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
 
         req.refresh_from_db()
-        self.assertEqual(req.status, 'reviewed')
+        self.assertEqual(req.status, 'quoted')
         quote = req.quotes.get(provider=self.provider)
         self.assertEqual(quote.quoted_price, 50000000)
 
