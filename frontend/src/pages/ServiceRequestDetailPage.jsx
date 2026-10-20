@@ -501,7 +501,7 @@ export default function ServiceRequestDetailPage() {
                 <h3 className="font-semibold mb-3 text-gray-700 border-b pb-2">⚙️ اقدامات</h3>
 
                 {/* دکمه اعلام قیمت */}
-                {(request.status === 'pending' || request.status === 'reviewed') && !hasUserQuoted && (
+                {(request.status === 'pending' || request.status === 'reviewed' || request.status === 'quoted') && !hasUserQuoted && (
                   <button
                     onClick={() => {
                       if (!isProfileComplete) {
