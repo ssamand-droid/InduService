@@ -215,7 +215,8 @@ class ServiceAPITestCase(TestCase):
 
         req.refresh_from_db()
         self.assertEqual(req.status, 'reviewed')
-        self.assertEqual(req.quoted_price, 50000000)
+        quote = req.quotes.get(provider=self.provider)
+        self.assertEqual(quote.quoted_price, 50000000)
 
     def test_provider_cannot_update_request_through_generic_patch(self):
         req = ServiceRequest.objects.create(
