@@ -143,7 +143,8 @@ class ServiceRequest(TimeStampedModel):
         ACCEPTED = 'accepted', _('پذیرفته شده')
         REJECTED = 'rejected', _('رد شده')
         IN_PROGRESS = 'in_progress', _('در حال انجام')
-        COMPLETED = 'completed', _('تکمیل شده')
+        PENDING_ACCEPTANCE = 'pending_acceptance', _('در انتظار تأیید کارخانه')
+        COMPLETED = 'completed', _('تأیید نهایی شده')
         CANCELLED = 'cancelled', _('لغو شده')
 
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_requests',
@@ -160,7 +161,7 @@ class ServiceRequest(TimeStampedModel):
         ('critical', 'بحرانی'),
     ), default='medium')
 
-    status = models.CharField(_('وضعیت'), max_length=15, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(_('وضعیت'), max_length=20, choices=Status.choices, default=Status.PENDING)
     provider_notes = models.TextField(_('یادداشت ارائه‌دهنده'), blank=True)
     quoted_price = models.DecimalField(_('قیمت پیشنهادی'), max_digits=14, decimal_places=0, null=True, blank=True)
     final_price = models.DecimalField(_('قیمت نهایی'), max_digits=14, decimal_places=0, null=True, blank=True)
