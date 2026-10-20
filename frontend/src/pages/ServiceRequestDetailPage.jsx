@@ -6,7 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   FiArrowRight, FiUser, FiPhone, FiCalendar, FiAlertCircle,
-  FiDollarSign, FiPaperclip, FiDownload, FiStar, FiEdit3, FiPlay, FiFlag
+  FiDollarSign, FiPaperclip, FiDownload, FiStar, FiEdit3, FiPlay, FiFlag, FiCheck
 } from 'react-icons/fi'
 import { useAuthStore } from '@stores/authStore'
 import { serviceApi } from '@features/services/services/serviceApi'
@@ -116,6 +116,18 @@ export default function ServiceRequestDetailPage() {
     }
   }
 
+  const acceptCompletion = async () => {
+    const confirmed = window.confirm('آیا انجام کار را بررسی کرده‌اید و آن را تأیید می‌کنید؟')
+    if (!confirmed) return
+    try {
+      const response = await serviceApi.acceptCompletion(id)
+      toast.success(response?.message || 'انجام کار تأیید شد')
+      refetch()
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.userMessage || 'خطا در تأیید انجام کار')
+    }
+  }
+
   // ============================================================
   // وضعیت‌ها و رنگ‌ها
   // ============================================================
@@ -128,7 +140,8 @@ export default function ServiceRequestDetailPage() {
       accepted: 'پذیرفته شده',
       rejected: 'رد شده',
       in_progress: 'در حال انجام',
-      completed: 'تکمیل شده',
+      pending_acceptance: 'در انتظار تأیید کارخانه',
+      completed: 'تأیید نهایی شده',
       cancelled: 'لغو شده'
     }
     return labels[status] || status
@@ -141,6 +154,7 @@ export default function ServiceRequestDetailPage() {
       quoted: 'bg-indigo-100 text-indigo-800',
       accepted: 'bg-green-100 text-green-800',
       in_progress: 'bg-purple-100 text-purple-800',
+      pending_acceptance: 'bg-amber-100 text-amber-800',
       completed: 'bg-emerald-100 text-emerald-800',
       cancelled: 'bg-red-100 text-red-800'
     }
@@ -186,17 +200,9 @@ export default function ServiceRequestDetailPage() {
   const hasSelected = request.quotes?.some(q => q.is_selected === true) || false
   const hasUserQuoted = request.quotes?.some(q => q.provider === user?.id) || false
 
-  // تشخیص ارائه‌دهنده انتخاب شده
-  let selectedProviderId = null
-  if (request.service && typeof request.service === 'object') {
-    selectedProviderId = request.service?.provider?.id || request.service?.provider_id
-  } else if (request.service && typeof request.service === 'number') {
-    // اگر service فقط ID باشد
-    selectedProviderId = request.provider_id
-  } else {
-    selectedProviderId = request.provider_id
-  }
-
+  // شناسه ارائه‌دهنده منتخب از پیشنهاد انتخاب‌شده در API می‌آید؛
+  // بنابراین با ارائه‌دهنده سرویس اولیه اشتباه گرفته نمی‌شود.
+  const selectedProviderId = request.selected_provider_id ?? request.provider_id ?? null
   const isSelectedProvider = selectedProviderId === user?.id
 
   // تشخیص اینکه آیا ارائه‌دهنده فعلی می‌تواند شروع کند
@@ -538,11 +544,27 @@ export default function ServiceRequestDetailPage() {
                   <p className="text-sm text-gray-500 text-center py-2">
                     {request.status === 'accepted' ? 'در انتظار شروع کار توسط شما' :
                      request.status === 'in_progress' ? 'در حال انجام...' :
-                     request.status === 'completed' ? '✅ این خدمت تکمیل شده است' :
+                     request.status === 'pending_acceptance' ? 'در انتظار تأیید کارخانه' :
+                     request.status === 'completed' ? '✅ کارخانه انجام کار را تأیید کرده است' :
                      request.status === 'cancelled' ? '❌ این خدمت لغو شده است' :
                      `وضعیت: ${getStatusLabel(request.status)}`}
                   </p>
                 )}
+              </div>
+            )}
+
+            {isBuyer && request.status === 'pending_acceptance' && (
+              <div className="bg-white rounded-xl border p-6">
+                <h3 className="font-semibold mb-2">تأیید انجام کار</h3>
+                <p className="text-sm text-gray-600 mb-4">
+                  مستندات و نتیجه کار را بررسی کنید. پس از تأیید، درخواست وارد مرحله نهایی می‌شود.
+                </p>
+                <button
+                  onClick={acceptCompletion}
+                  className="w-full px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"
+                >
+                  <FiCheck size={18} /> تأیید انجام کار
+                </button>
               </div>
             )}
 
