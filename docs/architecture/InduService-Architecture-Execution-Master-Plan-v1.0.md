@@ -850,3 +850,38 @@ Evidence rules:
 **Immediate next action:** complete the technical/runtime verification and customer discovery gates; then approve PRD v1.0 and create issue-level backlog items. Do not start broad feature implementation before these gates are resolved.
 
 **Confidence:** high for the document structure and proposed product/architecture distinctions; not established for runtime behavior, market validation, or implementation status until the listed evidence is collected.
+
+
+---
+
+## 24. Target customer and core problem validation
+
+**Detailed working document:** [`docs/product/customer-problem-validation-v0.1.md`](../product/customer-problem-validation-v0.1.md)
+
+**Status: PROPOSED / PENDING CUSTOMER EVIDENCE.** This is a research protocol and testable hypothesis, not a claim of validated demand.
+
+### Current beachhead hypothesis
+Test reachable small-to-mid-sized manufacturing plants with production-critical machinery and recurring service needs. Food/beverage/packaging and plastics processing are the first discovery cohorts to compare, not an approved exclusive target market.
+
+### Core problem hypothesis
+A factory may struggle to coordinate a production-critical maintenance incident across diagnosis, qualified service-provider sourcing, compatible spare parts, quote/scope approval, execution evidence and completion acceptance. The first-release wedge to test is a traceable factory-to-provider request/quote/fulfilment workflow. CMMS, predictive maintenance and broader procurement must not be assumed to be the first priority.
+
+### Evidence distinction
+Desk research supports the plausibility of maintenance/downtime as a problem category and confirms that commercial alternatives exist. It does **not** validate the local target segment, launch geography, local incident costs, market size, willingness to pay or product-market fit. Vendor surveys and pricing pages must not be treated as independent proof of local demand.
+
+### Required validation gates
+1. Conduct 20–30 discovery interviews as a starting target (factory-side, service-provider and parts-supplier roles); record real recent incidents, current alternatives, consequences, budget owners and disconfirming evidence.
+2. Review at least five anonymized workflow artifacts where customers permit.
+3. Compare the first industry cohorts using evidence-backed criteria rather than intuition.
+4. Run 3–5 real concierge pilot jobs before broad automation; record baseline timestamps, quote response, job completion, acceptance and repeat-use signals.
+5. Test willingness to pay through a concrete paid pilot or purchasing step, not only stated interest.
+6. Update and obtain approval for the first-release PRD and selected beachhead based on the findings.
+
+### Open decisions
+- Launch geography / city / industrial cluster.
+- Industry and company-size beachhead.
+- Whether the primary wedge is provider sourcing, parts sourcing, job accountability or preventive maintenance.
+- Buyer, budget owner, pricing/payer, provider economics and contractual allocation of technical/warranty liability.
+- Whether CMMS is in the first release or deferred.
+
+**Resume rule:** Until the required primary evidence exists, retain these items as PENDING. Do not label the market or customer problem “validated” and do not broaden implementation based only on this desk-research document.
