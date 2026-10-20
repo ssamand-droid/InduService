@@ -279,7 +279,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request = self.get_object()
 
         # فقط خریدار صاحب درخواست می‌تواند پیمانکاران را ببیند
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if service_request.buyer != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         # چک کردن اینکه Matching Engine فعال باشد
@@ -443,7 +443,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         except ServiceRequestQuote.DoesNotExist:
             return Response({'error': 'پیشنهاد یافت نشد'}, status=404)
 
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if service_request.buyer != request.user and not self._is_admin(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         # بررسی وضعیت درخواست
@@ -570,14 +570,16 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request.final_price = service_request.quoted_price
         service_request.save()
 
-        # اعلان به ارائه‌دهنده
-        create_notification(
-            user=service_request.service.provider,
-            type='payment',
+        # اعلان به ارائه‌دهنده منتخب
+        provider = self._get_selected_provider(service_request)
+        if provider is not None:
+            create_notification(
+                user=provider,
+                type='payment',
             title='پیش‌پرداخت واریز شد',
-            message=f'پیش‌پرداخت خدمت "{service_request.title}" پرداخت شد. می‌توانید کار را شروع کنید.',
-            link=f'/dashboard/service-requests/{service_request.id}'
-        )
+                message=f'پیش‌پرداخت خدمت "{service_request.title}" پرداخت شد. می‌توانید کار را شروع کنید.',
+                link=f'/dashboard/service-requests/{service_request.id}'
+            )
 
         # اعلان به ادمین
         admins = User.objects.filter(role='admin')
@@ -883,12 +885,12 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'url': request.build_absolute_uri(img.image.url),
             })
 
-        # اعلان به خریدار
+        # اعلان به خریدار برای بررسی و تأیید نهایی
         create_notification(
             user=service_request.buyer,
             type='service',
-            title='خدمت تکمیل شد',
-            message=f'خدمت "{service_request.title}" تکمیل شد. لطفاً نتیجه را بررسی و تایید کنید.',
+            title='انجام کار در انتظار تأیید کارخانه',
+            message=f'ارائه‌دهنده انجام خدمت «{service_request.title}» را ثبت کرده است. لطفاً نتیجه را بررسی و تأیید کنید.',
             link=f'/dashboard/service-requests/{service_request.id}',
             extra_data={'images': saved_images}
         )
