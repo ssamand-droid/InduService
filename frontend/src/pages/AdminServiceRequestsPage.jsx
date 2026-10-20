@@ -62,7 +62,8 @@ export default function AdminServiceRequestsPage() {
     { value: 'quoted', label: 'قیمت داده شده' },
     { value: 'accepted', label: 'پذیرفته شده' },
     { value: 'in_progress', label: 'در حال انجام' },
-    { value: 'completed', label: 'تکمیل شده' },
+    { value: 'pending_acceptance', label: 'در انتظار تأیید کارخانه' },
+    { value: 'completed', label: 'تأیید نهایی شده' },
     { value: 'cancelled', label: 'لغو شده' },
   ]
 
@@ -73,6 +74,7 @@ export default function AdminServiceRequestsPage() {
       quoted: '#e0e7ff',
       accepted: '#dcfce7',
       in_progress: '#f3e8ff',
+      pending_acceptance: '#fef3c7',
       completed: '#d1fae5',
       cancelled: '#fee2e2',
     }
@@ -86,6 +88,7 @@ export default function AdminServiceRequestsPage() {
       quoted: '#3730a3',
       accepted: '#166534',
       in_progress: '#6b21a5',
+      pending_acceptance: '#92400e',
       completed: '#065f46',
       cancelled: '#991b1b',
     }
@@ -99,7 +102,8 @@ export default function AdminServiceRequestsPage() {
       quoted: 'قیمت داده شده',
       accepted: 'پذیرفته شده',
       in_progress: 'در حال انجام',
-      completed: 'تکمیل شده',
+      pending_acceptance: 'در انتظار تأیید کارخانه',
+      completed: 'تأیید نهایی شده',
       cancelled: 'لغو شده',
     }
     return labels[status] || status
