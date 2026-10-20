@@ -274,6 +274,7 @@ export const TaskCard = ({ title, description, dueDate, status, onAction }) => {
   const statusColors = {
     pending: 'bg-yellow-100 text-yellow-700',
     in_progress: 'bg-blue-100 text-blue-700',
+    pending_acceptance: 'bg-amber-100 text-amber-800',
     completed: 'bg-green-100 text-green-700',
     cancelled: 'bg-red-100 text-red-700',
   };
@@ -281,7 +282,8 @@ export const TaskCard = ({ title, description, dueDate, status, onAction }) => {
   const statusLabels = {
     pending: 'در انتظار',
     in_progress: 'در حال انجام',
-    completed: 'تکمیل شده',
+    pending_acceptance: 'در انتظار تأیید کارخانه',
+    completed: 'تأیید نهایی شده',
     cancelled: 'لغو شده',
   };
 
