@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from django.db import models as db_models
+from django.db import models as db_models, transaction
 from rest_framework.exceptions import PermissionDenied
 from .models import ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
 from .serializers import (
@@ -411,6 +411,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # جایگزینی متد accept_quote در کلاس ServiceRequestViewSet
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @transaction.atomic
     def accept_quote(self, request, pk=None):
         """خریدار: انتخاب یک پیشنهاد قیمت (فقط یک بار)"""
         from .models import ServiceRequestQuote
@@ -418,6 +419,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         from decimal import Decimal
 
         service_request = self.get_object()
+        service_request = ServiceRequest.objects.select_for_update().get(pk=service_request.pk)
         quote_id = request.data.get('quote_id')
 
         if not quote_id:
@@ -736,7 +738,6 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         """ارائه‌دهنده: اعلام قیمت با جزئیات کامل (چندین ارائه‌دهنده می‌توانند قیمت اعلام کنند)"""
         from .models import ServiceRequestQuote
         from notification.services import create_notification
-        from notification.models import Notification
 
         service_request = self.get_object()
         user = request.user
@@ -754,25 +755,11 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'error': 'خریدار قبلاً یک پیشنهاد را انتخاب کرده است. امکان اعلام قیمت جدید وجود ندارد.'
             }, status=400)
 
-        # ============================================================
-        # بررسی دسترسی: آیا این کاربر برای این درخواست نوتیفیکیشن گرفته است؟
-        # ============================================================
-        has_notification = Notification.objects.filter(
-            user=user,
-            type='service_request',
-            extra_data__request_id=service_request.id
-        ).exists()
-
+        # دسترسی به خود درخواست در get_object کنترل شده است؛
+        # در اینجا فقط نقش ارائه‌دهنده را بررسی می‌کنیم.
         provider_roles = ['seller', 'service_provider', 'company_seller', 'company_provider']
         if user.role not in provider_roles:
             return Response({'error': 'فقط ارائه‌دهنده خدمات می‌تواند پیشنهاد قیمت ثبت کند'}, status=403)
-
-        is_direct_provider = service_request.service and service_request.service.provider == user
-
-        if not (has_notification or is_direct_provider):
-            return Response({
-                'error': 'شما دسترسی به اعلام قیمت برای این درخواست ندارید'
-            }, status=403)
 
         # بررسی وضعیت درخواست
         if service_request.status not in ['pending', 'reviewed']:
