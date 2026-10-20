@@ -201,7 +201,14 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 status__in=['pending', 'reviewed', 'quoted']
             ).exclude(buyer=user)
 
-            return (direct_requests | scenario_requests | free_requests | notified_requests).select_related(
+            # درخواست‌هایی که این ارائه‌دهنده برایشان پیشنهاد منتخب دارد باید
+            # در تمام مراحل بعدی نیز در دسترس او باقی بمانند.
+            selected_quote_requests = ServiceRequest.objects.filter(
+                quotes__provider=user,
+                quotes__is_selected=True,
+            )
+
+            return (direct_requests | scenario_requests | free_requests | notified_requests | selected_quote_requests).select_related(
                 'buyer', 'service__provider'
             ).prefetch_related('quotes', 'quotes__provider').order_by('-created_at').distinct()
 
@@ -232,6 +239,10 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         # ارائه‌دهنده: دسترسی به درخواست‌های مرتبط
         # ============================================================
         if user.role in ['seller', 'service_provider', 'company_seller', 'company_provider']:
+            # ارائه‌دهنده منتخب باید پس از پذیرش قیمت نیز به درخواست دسترسی داشته باشد.
+            if obj.quotes.filter(provider=user, is_selected=True).exists():
+                return obj
+
             # دسترسی مستقیم (درخواست برای خدمات خودش)
             if obj.service and obj.service.provider == user:
                 return obj
