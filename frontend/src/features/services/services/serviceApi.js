@@ -91,6 +91,11 @@ export const serviceApi = {
     return response.data
   },
 
+  acceptCompletion: async (id) => {
+    const response = await api.post(`/api/services/requests/${id}/accept_completion/`)
+    return response.data
+  },
+
   uploadAttachment: async (requestId, file, description = '') => {
     const formData = new FormData()
     formData.append('file', file)
