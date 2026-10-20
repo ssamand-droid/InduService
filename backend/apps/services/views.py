@@ -916,8 +916,10 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # پذیرش انجام کار توسط کارخانه
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    @transaction.atomic
     def accept_completion(self, request, pk=None):
         service_request = self.get_object()
+        service_request = ServiceRequest.objects.select_for_update().get(pk=service_request.pk)
         if service_request.buyer_id != request.user.id and not self._is_admin(request.user):
             return Response({'error': 'فقط کارخانه ثبت‌کننده می‌تواند انجام کار را تأیید کند'}, status=403)
         if service_request.status != ServiceRequest.Status.PENDING_ACCEPTANCE:
