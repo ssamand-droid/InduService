@@ -202,6 +202,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     attachments = ServiceRequestAttachmentSerializer(many=True, read_only=True)
     completion_images = ServiceCompletionImageSerializer(many=True, read_only=True)
     remaining_amount = serializers.SerializerMethodField(read_only=True)
+    selected_provider_id = serializers.SerializerMethodField(read_only=True)
 
     # 🔥 اضافه کردن فیلد quotes برای نمایش لیست پیشنهادات قیمت
     quotes = ServiceRequestQuoteSerializer(many=True, read_only=True)
@@ -209,7 +210,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceRequest
         fields = [
-            'id', 'buyer', 'buyer_name', 'buyer_phone',
+            'id', 'buyer', 'buyer_name', 'buyer_phone', 'selected_provider_id',
             'service', 'service_title', 'provider_name',
             'title', 'description', 'equipment_details',
             'desired_start_date', 'urgency',
@@ -224,7 +225,21 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
             'order', 'remaining_amount', 'created_at', 'updated_at',
             'quotes',  # ← اضافه شد
         ]
-        read_only_fields = ['buyer', 'status', 'created_at', 'updated_at']
+        read_only_fields = [
+            'buyer', 'status', 'provider_notes', 'quoted_price', 'final_price',
+            'advance_payment_required', 'advance_payment_amount', 'advance_payment_paid',
+            'estimated_completion_date', 'actual_completion_date', 'force_majeure_declared',
+            'force_majeure_reason', 'completion_notes', 'buyer_rating', 'buyer_review',
+            'reviewed_at', 'order', 'created_at', 'updated_at',
+        ]
+
+    def get_selected_provider_id(self, obj):
+        selected_quote = obj.quotes.filter(is_selected=True).select_related('provider').first()
+        if selected_quote:
+            return selected_quote.provider_id
+        if obj.service_id:
+            return obj.service.provider_id
+        return None
 
     def get_remaining_amount(self, obj):
         if hasattr(obj, 'invoice'):
@@ -236,10 +251,10 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
 # ServiceRequestUpdate
 # ============================================================
 class ServiceRequestUpdateSerializer(serializers.ModelSerializer):
-    """برای بروزرسانی توسط ارائه‌دهنده (تغییر وضعیت، قیمت و یادداشت)"""
+    """فیلدهای قابل ویرایش خریدار، فقط پیش از شروع بررسی"""
     class Meta:
         model = ServiceRequest
-        fields = ['status', 'provider_notes', 'quoted_price']
+        fields = ['title', 'description', 'equipment_details', 'desired_start_date', 'urgency', 'extra_data']
 
 
 # ============================================================
