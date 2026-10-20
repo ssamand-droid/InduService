@@ -196,7 +196,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     service_title = serializers.CharField(source='service.title', read_only=True)
-    provider_name = serializers.CharField(source='service.provider.full_name', read_only=True)
+    provider_name = serializers.SerializerMethodField(read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     related_asset_name = serializers.CharField(source='related_asset.name', read_only=True)
     attachments = ServiceRequestAttachmentSerializer(many=True, read_only=True)
@@ -232,6 +232,14 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
             'force_majeure_reason', 'completion_notes', 'buyer_rating', 'buyer_review',
             'reviewed_at', 'order', 'created_at', 'updated_at',
         ]
+
+    def get_provider_name(self, obj):
+        selected_quote = obj.quotes.filter(is_selected=True).select_related('provider').first()
+        if selected_quote:
+            return selected_quote.provider.full_name
+        if obj.service_id:
+            return obj.service.provider.full_name
+        return None
 
     def get_selected_provider_id(self, obj):
         selected_quote = obj.quotes.filter(is_selected=True).select_related('provider').first()
