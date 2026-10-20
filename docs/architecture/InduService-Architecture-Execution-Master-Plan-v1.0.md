@@ -885,3 +885,34 @@ Desk research supports the plausibility of maintenance/downtime as a problem cat
 - Whether CMMS is in the first release or deferred.
 
 **Resume rule:** Until the required primary evidence exists, retain these items as PENDING. Do not label the market or customer problem “validated” and do not broaden implementation based only on this desk-research document.
+
+
+---
+
+## 25. End-to-end industrial service workflow specification
+
+**Detailed specification:** [`docs/product/service-workflow-specification-v0.1.md`](../product/service-workflow-specification-v0.1.md)
+
+**Status: PROPOSED SPECIFICATION — NOT IMPLEMENTATION-VERIFIED.**
+
+### Workflow boundary
+Factory request → assessment/clarification → provider invitation and quote → factory approval of an exact quote version → work order and execution/evidence → factory acceptance/rework.
+
+### Non-negotiable business distinctions
+- A submitted request is not a quote-ready request.
+- A submitted quote is not factory approval.
+- A provider's completion report is not customer acceptance.
+- Technical acceptance is not payment/settlement.
+- Any material post-approval change to scope/price/schedule requires explicit approval and a preserved version history.
+- Factory and provider tenant boundaries must be enforced server-side, including attachments and list/search endpoints.
+
+### Current specification decisions
+The workflow document defines logical entities, roles, request/quote/work-order states, six main steps, exception paths, notifications, security/audit requirements, API capability map, page map, definition of done and end-to-end test scenarios. These are target requirements, not claims about existing code.
+
+### Required next gate
+Map every requirement against the current repository implementation before making feature changes. Inspect models, serializers, APIs, permissions, migrations, frontend pages/hooks/state and tests. Classify each requirement as VERIFIED, IMPLEMENTED — NOT VERIFIED, PARTIAL, MISSING, CONFLICTING or BLOCKED, and cite concrete code/test evidence.
+
+### Deferred scope
+Full CMMS, preventive maintenance, predictive AI, standalone spare-parts marketplace, subscriptions, broad finance/settlement and ERP integration remain outside this workflow unless the repository audit demonstrates that a limited capability is already essential to complete the current service journey.
+
+**Resume rule:** The next work item is the requirement-to-code matrix for this workflow, not implementation of new broad features.
