@@ -688,6 +688,14 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request.actual_completion_date = timezone.now()
         service_request.save(update_fields=['status', 'actual_completion_date', 'updated_at'])
 
+        create_notification(
+            user=service_request.buyer,
+            type='service',
+            title='انجام کار در انتظار تأیید کارخانه',
+            message=f'ارائه‌دهنده انجام خدمت «{service_request.title}» را ثبت کرده است. لطفاً نتیجه را بررسی و تأیید کنید.',
+            link=f'/dashboard/service-requests/{service_request.id}'
+        )
+
         return Response({
             'success': True,
             'status': service_request.status,
