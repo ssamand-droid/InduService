@@ -775,7 +775,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             return Response({'error': 'فقط ارائه‌دهنده خدمات می‌تواند پیشنهاد قیمت ثبت کند'}, status=403)
 
         # بررسی وضعیت درخواست
-        if service_request.status not in ['pending', 'reviewed']:
+        if service_request.status not in ['pending', 'reviewed', 'quoted']:
             return Response({
                 'error': 'در این مرحله نمی‌توانید قیمت اعلام کنید'
             }, status=400)
@@ -796,10 +796,11 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             }
         )
 
-        # تغییر وضعیت درخواست به reviewed (اگر اولین قیمت باشد)
-        if service_request.status == 'pending':
-            service_request.status = 'reviewed'
-            service_request.save()
+        # پس از ثبت اولین پیشنهاد، درخواست در وضعیت «قیمت داده شده» قرار می‌گیرد.
+        # در این وضعیت سایر ارائه‌دهندگان نیز می‌توانند پیشنهاد خود را ثبت کنند.
+        if service_request.status == ServiceRequest.Status.PENDING:
+            service_request.status = ServiceRequest.Status.QUOTED
+            service_request.save(update_fields=['status', 'updated_at'])
 
         # اعلان به خریدار
         create_notification(
