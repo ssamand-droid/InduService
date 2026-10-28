@@ -1,6 +1,6 @@
 # InduService — Service Workflow Requirement-to-Code Audit v0.1
 
-**Status:** STATIC SOURCE REVIEW COMPLETE FOR FIRST PASS; RUNTIME/TEST VERIFICATION PENDING  
+**Status:** STATIC SOURCE REVIEW COMPLETE; LOCAL BASELINE TESTS EXECUTED (20 PASSED, 1 FAILED); FULL WORKFLOW VERIFICATION PENDING  
 **Review ref:** `docs/architecture-master-plan-v1`  
 **Review date:** 2026-10-28  
 **Scope:** Factory request → assessment → service quote → factory approval → execution/evidence → factory acceptance  
@@ -39,7 +39,7 @@ The most important gap is the final acceptance boundary: the provider completion
 | RQ-17 | Factory-to-factory and provider-to-provider isolation | `get_queryset`, `get_object`, `ServiceRequestSerializer`, user-role model | PARTIAL — HIGH PRIORITY | Buyer object access is filtered to own requests. Provider visibility is broader than explicit invitation in some paths. No organization/site tenant boundary is represented on ServiceRequest; phone/name/quote fields and attachment URLs need role-specific serialization and storage/access tests. |
 | RQ-18 | Rejection/cancellation/no-quote/expiry/dispute/rework paths | `ServiceRequest.Status`; action methods | PARTIAL | `rejected` and `cancelled` status values exist, but reason capture, quote expiry/withdrawal, no-quote outcome, rework and dispute handling were not found as complete workflows. |
 | RQ-19 | Notifications cover each material transition | `notification.services` calls in `services/views.py` | PARTIAL | Notifications exist for request creation, quote selection, completion and some payment events; coverage is action-specific and is not driven from a complete transition/event map. |
-| RQ-20 | Tests cover full journey and negative permission cases | `backend/apps/services/tests.py`; `backend/apps/orders/tests.py` | PARTIAL — NOT RUN | Service API tests exist, including basic request access and quote actions. No complete request→assessment→quote→approval→execution→factory acceptance journey was evidenced. One test expects status `quoted` after provider quote, while inspected implementation sets status `reviewed`; this is a source/test mismatch and likely a failing assertion, but tests have not been run in this audit. |
+| RQ-20 | Tests cover full journey and negative permission cases | `backend/apps/services/tests.py`; `backend/apps/orders/tests.py`; local output supplied 2026-10-28 | PARTIAL — BASELINE RUN; 1 FAILURE | Command `python manage.py test apps.services apps.orders --verbosity 2` ran 21 tests: 20 passed, 1 failed. `test_provider_quote` fails at `apps/services/tests.py:217`: expected `quoted`, actual `reviewed`. The test database was created as an in-memory SQLite database and destroyed after the run. The full request→assessment→quote→approval→execution→factory acceptance journey is still not covered by this run. |
 | RQ-21 | Frontend presents stage-appropriate actions | `ServiceRequestDetailPage.jsx`; `AdminServiceRequestDetailPage.jsx`; service API/hooks/components | PARTIAL | Request detail has quote selection, start and completion UI. Admin detail permits direct status selection/deletion. Distinct factory acceptance/rework controls were not evidenced. The frontend request form displays selected files but does not include them in its submit payload. |
 | RQ-22 | Runtime and production behavior verified | No local test run, staging run or production shell evidence in this pass | BLOCKED / PENDING | GitHub source inspection only. No claims about runtime, deployed revision, live database or production authorization behavior are made. |
 
@@ -75,10 +75,10 @@ Evidence: `frontend/src/features/services/components/ServiceRequestForm.jsx`; `s
 
 The form maintains a `files` state and renders file names, but the submit payload is constructed from form data and does not append/upload `files`. The separate `upload_attachment` API exists, but this form does not call it in the inspected submit path.
 
-### F-07 — Tests and implementation disagree on quote status
-Evidence: `backend/apps/services/tests.py` test `test_provider_quote`; `backend/apps/services/views.py` action `provider_quote`.
+### F-07 — Confirmed test/code mismatch on quote status
+Evidence: `backend/apps/services/tests.py`, `test_provider_quote` (assertion at line 217 in the reported local copy); `backend/apps/services/views.py`, action `provider_quote`; local test output supplied 2026-10-28.
 
-The test expects `req.status == 'quoted'`, while the implementation changes a pending request to `reviewed`. Do not choose which behavior is correct by guessing; run the test and then align the intended status contract, code and test.
+**Runtime-confirmed in the supplied local test run:** `python manage.py test apps.services apps.orders --verbosity 2` reports `AssertionError: 'reviewed' != 'quoted'`. The test expects `req.status == 'quoted'`, while the implementation leaves/sets the request to `reviewed`. This confirms a mismatch, not which side is correct. Before changing either code or assertion, reconcile the intended meaning of `reviewed` (request assessment) versus `quoted` (provider offer received) with the workflow specification. Prefer a regression test for the intended transition and then make the smallest consistent code/test change.
 
 ### F-08 — Generic admin status updates bypass transition semantics
 Evidence: `admin_update_status` and `AdminServiceRequestDetailPage.jsx`.
@@ -99,10 +99,10 @@ No duplicate domain models should be added until these current concepts and migr
 ## 5. Recommended remediation order (not yet implemented)
 
 ### Gate 1 — Reproduce and baseline
-1. Run the focused services and orders test suites in a local, isolated environment.
-2. Record exact command, environment, failures and test output.
-3. Add regression tests for quote status, service-null request, duplicate quote approval, provider visibility and completion/acceptance separation.
-4. Do not run migrations or alter production data during this gate.
+1. **Completed for the supplied local run:** `python manage.py test apps.services apps.orders --verbosity 2` — 21 tests discovered, 20 passed, 1 failed (`test_provider_quote`). Django system check reported no issues. The test runner created and destroyed an in-memory SQLite test database; no production DB is evidenced by this output.
+2. The failure is `apps/services/tests.py:217`: expected `req.status == 'quoted'`, actual `'reviewed'`.
+3. Add/finalize regression tests for the intended quote status, service-null request, duplicate quote approval, provider visibility and completion/acceptance separation.
+4. Do not run migrations or alter production data during this gate. The warning `No directory at ...\\staticfiles\\` appeared during tests; it did not cause this test failure, but static-file setup should be checked separately if relevant.
 
 ### Gate 2 — Approve lifecycle semantics
 1. Decide whether request triage status and execution status should be separate linked state machines.
@@ -137,14 +137,14 @@ For this audit, all findings are based on source inspection. No row is marked ru
 
 ## 7. Next action and continuation record
 
-**Immediate next action:** run the existing `services` and `orders` tests in an isolated local environment and capture the exact results. If a local runtime is not available to the agent, request the user to run the documented commands and paste outputs; do not infer test results. After baseline, write the issue-level implementation plan and proceed only with the service workflow.
+**Immediate next action:** resolve the quote-status contract before editing implementation: determine whether `reviewed` is the assessment state and provider quote submission should advance to a distinct `quoted` state, or whether the test is outdated. Add/adjust a focused regression test based on the approved semantics, then rerun `apps.services` and `apps.orders`. The supplied run is evidence for this local copy only, not staging or production.
 
 **Not done:** no application code changed; no migrations generated or applied; no production settings/database touched; no deployment or production smoke test performed.
 
 
 ### Local test execution instructions (PowerShell)
 
-The GitHub repository has no checked-in `.github/workflows/` test workflow in the inspected tree, and this session does not have the user's local Python environment or database. Therefore tests cannot honestly be marked as run from this session.
+The GitHub repository had no checked-in `.github/workflows/` test workflow in the inspected tree. The user supplied a local test run on 2026-10-28; results are recorded above. This session did not independently execute the user's local Python environment.
 
 Run these commands on the local development copy, using its existing project virtual environment and local test database (not production):
 
@@ -154,4 +154,4 @@ python manage.py check
 python manage.py test apps.services apps.orders --verbosity 2
 ```
 
-If the project virtual environment is not already active, activate the existing environment first. Do not create/apply migrations or point these commands at production. Paste the full terminal output, including the first traceback and test summary. If test settings require an environment variable, share the variable name and error message but do not paste secrets or database passwords.
+If the project virtual environment is not already active, activate the existing environment first. Do not create/apply migrations or point these commands at production. After resolving the quote-status contract, rerun the command and record the full terminal summary. If test settings require an environment variable, share the variable name and error message but do not paste secrets or database passwords.
