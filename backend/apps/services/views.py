@@ -557,14 +557,23 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         service_request.final_price = service_request.quoted_price
         service_request.save()
 
-        # اعلان به ارائه‌دهنده
-        create_notification(
-            user=service_request.service.provider,
-            type='payment',
-            title='پیش‌پرداخت واریز شد',
-            message=f'پیش‌پرداخت خدمت "{service_request.title}" پرداخت شد. می‌توانید کار را شروع کنید.',
-            link=f'/dashboard/service-requests/{service_request.id}'
+        # اعلان به ارائه‌دهنده منتخب؛ service ممکن است برای این درخواست خالی باشد.
+        from .models import ServiceRequestQuote
+        selected_quote = ServiceRequestQuote.objects.filter(
+            service_request=service_request, is_selected=True
+        ).select_related('provider').first()
+        assigned_provider = (
+            selected_quote.provider if selected_quote
+            else (service_request.service.provider if service_request.service else None)
         )
+        if assigned_provider:
+            create_notification(
+                user=assigned_provider,
+                type='payment',
+                title='پیش‌پرداخت واریز شد',
+                message=f'پیش‌پرداخت خدمت "{service_request.title}" پرداخت شد. می‌توانید کار را شروع کنید.',
+                link=f'/dashboard/service-requests/{service_request.id}'
+            )
 
         # اعلان به ادمین
         admins = User.objects.filter(role='admin')
