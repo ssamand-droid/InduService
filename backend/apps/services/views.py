@@ -584,18 +584,27 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def start_work(self, request, pk=None):
-        """ارائه‌دهنده یا ادمین کار را شروع می‌کند"""
-        service_request = self.get_object()
+        """ارائه‌دهنده منتخب یا ادمین کار را شروع می‌کند."""
+        from .models import ServiceRequestQuote
 
-        # اجازه به ارائه‌دهنده و ادمین
-        if service_request.service.provider != request.user and not request.user.is_staff:
-            return Response({'error': 'دسترسی غیرمجاز'}, status=status.HTTP_403_FORBIDDEN)
+        service_request = self.get_object()
+        selected_quote = ServiceRequestQuote.objects.filter(
+            service_request=service_request, is_selected=True
+        ).select_related('provider').first()
+        assigned_provider = (
+            selected_quote.provider if selected_quote
+            else (service_request.service.provider if service_request.service else None)
+        )
+
+        if request.user != assigned_provider and not request.user.is_staff and request.user.role != 'admin':
+            return Response({'error': 'فقط ارائه‌دهنده منتخب می‌تواند کار را شروع کند.'},
+                            status=status.HTTP_403_FORBIDDEN)
 
         if service_request.status != ServiceRequest.Status.ACCEPTED:
             return Response({'error': 'ابتدا باید درخواست پذیرفته شود'}, status=status.HTTP_400_BAD_REQUEST)
 
         service_request.status = ServiceRequest.Status.IN_PROGRESS
-        service_request.save()
+        service_request.save(update_fields=['status', 'updated_at'])
 
         return Response({'message': 'شروع فرآیند ثبت شد.'})
 
