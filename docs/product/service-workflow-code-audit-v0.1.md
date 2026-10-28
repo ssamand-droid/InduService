@@ -149,9 +149,11 @@ The GitHub repository had no checked-in `.github/workflows/` test workflow in th
 Run these commands on the local development copy, using its existing project virtual environment and local test database (not production). Switch to `fix/quote-acceptance-workflow` first:
 
 ```powershell
-Set-Location "D:\Projects\InduService\backend"
+git fetch origin
+git switch fix/quote-acceptance-workflow
+Set-Location "C:\Users\hp\Desktop\Server\Indu\backend"
 python manage.py check
 python manage.py test apps.services apps.orders --verbosity 2
 ```
 
-If the project virtual environment is not already active, activate the existing environment first. Do not create/apply migrations or point these commands at production. After resolving the quote-status contract, rerun the command and record the full terminal summary. If test settings require an environment variable, share the variable name and error message but do not paste secrets or database passwords.
+If the project virtual environment is not already active, activate the existing environment first. Do not create/apply migrations or point these commands at production. After running the new branch, record the full terminal summary and fix any regression before merging. If test settings require an environment variable, share the variable name and error message but do not paste secrets or database passwords.
