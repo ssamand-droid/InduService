@@ -6,7 +6,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
 from services.models import (
-    ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment
+    ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceRequestQuote
 )
 
 User = get_user_model()
@@ -269,6 +269,131 @@ class ServiceAPITestCase(TestCase):
         )
         self.assertEqual(second_quote_response.status_code, status.HTTP_200_OK)
         self.assertEqual(req.quotes.count(), 2)
+
+    # ============ انتخاب پیشنهاد و گردش اجرای خدمت ============
+
+    def test_accept_quote_without_service_creates_invoice_for_selected_provider(self):
+        """درخواست بدون سرویس اولیه باید بتواند پیشنهاد را بپذیرد و فاکتور صحیح بسازد."""
+        from payment.models import Invoice
+
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=None,
+            title='درخواست بدون سرویس اولیه',
+            description='نیازمند ارزیابی و پیشنهاد',
+            urgency='medium',
+            status='quoted',
+        )
+        quote = ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=1250000,
+            provider_notes='پیشنهاد منتخب',
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
+        response = self.client.post(
+            f'/api/services/requests/{req.id}/accept_quote/',
+            {'quote_id': quote.id},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        req.refresh_from_db()
+        quote.refresh_from_db()
+        invoice = Invoice.objects.get(service_request=req)
+        self.assertEqual(req.status, ServiceRequest.Status.ACCEPTED)
+        self.assertEqual(req.final_price, quote.quoted_price)
+        self.assertTrue(quote.is_selected)
+        self.assertEqual(invoice.seller_id, self.provider.id)
+        self.assertEqual(invoice.total, quote.quoted_price)
+
+    def test_selected_provider_can_start_and_complete_request_without_service(self):
+        """درخواست بدون سرویس باید توسط ارائه‌دهنده پیشنهاد منتخب اجرا و تکمیل شود."""
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=None,
+            title='درخواست اجرای بدون سرویس',
+            description='شرح درخواست',
+            urgency='medium',
+            status='quoted',
+        )
+        quote = ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=900000,
+            is_selected=True,
+        )
+        req.status = ServiceRequest.Status.ACCEPTED
+        req.save(update_fields=['status', 'updated_at'])
+
+        other_provider = User.objects.create_user(
+            phone_number='09120000005',
+            password='testpass123',
+            role='service_provider',
+        )
+        other_response = self.client.post(
+            f'/api/token/',
+            {'phone_number': '09120000005', 'password': 'testpass123'},
+        )
+        self.assertEqual(other_response.status_code, status.HTTP_200_OK)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {other_response.data['access']}"
+        )
+        denied = self.client.post(f'/api/services/requests/{req.id}/start_work/')
+        self.assertNotEqual(denied.status_code, status.HTTP_200_OK)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+        start_response = self.client.post(f'/api/services/requests/{req.id}/start_work/')
+        self.assertEqual(start_response.status_code, status.HTTP_200_OK, start_response.data)
+
+        complete_response = self.client.post(
+            f'/api/services/requests/{req.id}/complete/',
+            {'completion_notes': 'گزارش انجام کار ثبت شد'},
+            format='json',
+        )
+        self.assertEqual(complete_response.status_code, status.HTTP_200_OK, complete_response.data)
+        req.refresh_from_db()
+        self.assertEqual(req.status, ServiceRequest.Status.COMPLETED)
+        self.assertEqual(req.completion_notes, 'گزارش انجام کار ثبت شد')
+
+    def test_quote_cannot_be_selected_twice(self):
+        """پس از انتخاب پیشنهاد اول، انتخاب پیشنهاد دوم برای همان درخواست رد شود."""
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=self.service,
+            title='درخواست با دو پیشنهاد',
+            description='شرح درخواست',
+            urgency='medium',
+            status='quoted',
+        )
+        second_provider = User.objects.create_user(
+            phone_number='09120000006',
+            password='testpass123',
+            role='service_provider',
+        )
+        first_quote = ServiceRequestQuote.objects.create(
+            service_request=req, provider=self.provider, quoted_price=1000000
+        )
+        second_quote = ServiceRequestQuote.objects.create(
+            service_request=req, provider=second_provider, quoted_price=1100000
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
+        first_response = self.client.post(
+            f'/api/services/requests/{req.id}/accept_quote/',
+            {'quote_id': first_quote.id},
+            format='json',
+        )
+        self.assertEqual(first_response.status_code, status.HTTP_200_OK, first_response.data)
+
+        second_response = self.client.post(
+            f'/api/services/requests/{req.id}/accept_quote/',
+            {'quote_id': second_quote.id},
+            format='json',
+        )
+        self.assertEqual(second_response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertEqual(req.quotes.filter(is_selected=True).count(), 1)
 
     # ============ آپلود پیوست ============
 
