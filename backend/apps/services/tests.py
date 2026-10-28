@@ -217,6 +217,58 @@ class ServiceAPITestCase(TestCase):
         self.assertEqual(req.status, 'quoted')
         self.assertEqual(req.quoted_price, 50000000)
 
+    def test_second_provider_can_quote_after_first_quote(self):
+        """ثبت پیشنهاد ارائه‌دهنده دوم پس از اولین پیشنهاد باید ممکن باشد."""
+        from notification.models import Notification
+
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=self.service,
+            title='درخواست چند پیشنهاد',
+            description='توضیحات تست',
+            urgency='medium',
+        )
+        second_provider = User.objects.create_user(
+            phone_number='09120000004',
+            password='testpass123',
+            first_name='مریم',
+            last_name='ارائه‌دهنده دوم',
+            role='service_provider',
+        )
+        Notification.objects.create(
+            user=second_provider,
+            type='service_request',
+            title='درخواست خدمت جدید',
+            message='برای این درخواست دعوت شده‌اید',
+            extra_data={'request_id': req.id},
+        )
+
+        # ارائه‌دهنده اول پیشنهاد می‌دهد و وضعیت باید quoted شود.
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+        first_response = self.client.post(
+            f'/api/services/requests/{req.id}/provider_quote/',
+            {'quoted_price': 50000000, 'provider_notes': 'پیشنهاد اول'},
+        )
+        self.assertEqual(first_response.status_code, status.HTTP_200_OK)
+        req.refresh_from_db()
+        self.assertEqual(req.status, 'quoted')
+
+        # پیشنهاد دوم نیز تا پیش از انتخاب پیشنهاد توسط خریدار مجاز است.
+        second_response = self.client.post(
+            f'/api/token/',
+            {'phone_number': '09120000004', 'password': 'testpass123'},
+        )
+        self.assertEqual(second_response.status_code, status.HTTP_200_OK)
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f"Bearer {second_response.data['access']}"
+        )
+        second_quote_response = self.client.post(
+            f'/api/services/requests/{req.id}/provider_quote/',
+            {'quoted_price': 45000000, 'provider_notes': 'پیشنهاد دوم'},
+        )
+        self.assertEqual(second_quote_response.status_code, status.HTTP_200_OK)
+        self.assertEqual(req.quotes.count(), 2)
+
     # ============ آپلود پیوست ============
 
     def test_upload_attachment(self):
