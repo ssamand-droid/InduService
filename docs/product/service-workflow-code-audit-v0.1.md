@@ -1,10 +1,10 @@
 # InduService — Service Workflow Requirement-to-Code Audit v0.1
 
-**Status:** STATIC SOURCE REVIEW COMPLETE; LOCAL BASELINE TESTS EXECUTED (20 PASSED, 1 FAILED); FULL WORKFLOW VERIFICATION PENDING  
-**Review ref:** `docs/architecture-master-plan-v1`  
+**Status:** LOCAL BASELINE EXECUTED (20 PASSED, 1 FAILED); QUOTE-STATUS FIX AND REGRESSION TEST ADDED ON `fix/quote-status-workflow`; RERUN PENDING  
+**Review ref:** `fix/quote-status-workflow` (implementation change isolated on a dedicated branch)  
 **Review date:** 2026-10-28  
 **Scope:** Factory request → assessment → service quote → factory approval → execution/evidence → factory acceptance  
-**Change policy:** This pass is read-only. No application code, schema, migration, production setting or database was changed.
+**Change policy:** Initial audit was read-only. A minimal quote-status implementation change and a regression test were subsequently committed to a dedicated branch. No schema, migration, production setting or database was changed; the changed code has not yet been executed.
 
 > Statuses in this document describe evidence found in the source files only. `IMPLEMENTED — NOT VERIFIED` means code exists but has not been exercised. `PARTIAL` means some of the required behavior exists but important requirements are absent or inconsistent. A source review is not proof of runtime behavior.
 
@@ -78,7 +78,7 @@ The form maintains a `files` state and renders file names, but the submit payloa
 ### F-07 — Confirmed test/code mismatch on quote status
 Evidence: `backend/apps/services/tests.py`, `test_provider_quote` (assertion at line 217 in the reported local copy); `backend/apps/services/views.py`, action `provider_quote`; local test output supplied 2026-10-28.
 
-**Runtime-confirmed in the supplied local test run:** `python manage.py test apps.services apps.orders --verbosity 2` reports `AssertionError: 'reviewed' != 'quoted'`. The test expects `req.status == 'quoted'`, while the implementation leaves/sets the request to `reviewed`. This confirms a mismatch, not which side is correct. Before changing either code or assertion, reconcile the intended meaning of `reviewed` (request assessment) versus `quoted` (provider offer received) with the workflow specification. Prefer a regression test for the intended transition and then make the smallest consistent code/test change.
+**Runtime-confirmed in the supplied baseline run:** `python manage.py test apps.services apps.orders --verbosity 2` reported `AssertionError: 'reviewed' != 'quoted'`. The test expects `req.status == 'quoted'`, while the prior implementation set `reviewed`. The chosen minimal fix is on branch `fix/quote-status-workflow`: provider quote submission now changes `pending`/`reviewed` to `quoted`, and subsequent providers may still quote while the request remains `quoted` (until a quote is selected). A regression test, `test_second_provider_can_quote_after_first_quote`, covers two providers submitting offers. **These new changes are not yet runtime-tested.** This status choice treats `reviewed` as assessment and `quoted` as at least one offer received; confirm against product semantics before merging.
 
 ### F-08 — Generic admin status updates bypass transition semantics
 Evidence: `admin_update_status` and `AdminServiceRequestDetailPage.jsx`.
@@ -99,10 +99,10 @@ No duplicate domain models should be added until these current concepts and migr
 ## 5. Recommended remediation order (not yet implemented)
 
 ### Gate 1 — Reproduce and baseline
-1. **Completed for the supplied local run:** `python manage.py test apps.services apps.orders --verbosity 2` — 21 tests discovered, 20 passed, 1 failed (`test_provider_quote`). Django system check reported no issues. The test runner created and destroyed an in-memory SQLite test database; no production DB is evidenced by this output.
-2. The failure is `apps/services/tests.py:217`: expected `req.status == 'quoted'`, actual `'reviewed'`.
-3. Add/finalize regression tests for the intended quote status, service-null request, duplicate quote approval, provider visibility and completion/acceptance separation.
-4. Do not run migrations or alter production data during this gate. The warning `No directory at ...\\staticfiles\\` appeared during tests; it did not cause this test failure, but static-file setup should be checked separately if relevant.
+1. **Baseline completed for the supplied local copy:** `python manage.py test apps.services apps.orders --verbosity 2` — 21 tests discovered, 20 passed, 1 failed (`test_provider_quote`). Django system check reported no issues. The runner created and destroyed an in-memory SQLite test database; no production DB is evidenced.
+2. **Patch prepared but not yet tested** on `fix/quote-status-workflow`: provider quote submission sets `quoted` from `pending` or `reviewed`; additional providers are allowed to submit while status is `quoted`, until a quote is selected. Added `test_second_provider_can_quote_after_first_quote`.
+3. Next: run `python manage.py check` and `python manage.py test apps.services apps.orders --verbosity 2` against the checkout of `fix/quote-status-workflow`; record all output. Then continue regression tests for service-null requests, duplicate quote approval, provider visibility and completion/acceptance separation.
+4. Do not run migrations or alter production data during this gate. The warning `No directory at ...\\staticfiles\\` appeared during baseline tests; it did not cause the quote-status assertion failure.
 
 ### Gate 2 — Approve lifecycle semantics
 1. Decide whether request triage status and execution status should be separate linked state machines.
@@ -137,9 +137,9 @@ For this audit, all findings are based on source inspection. No row is marked ru
 
 ## 7. Next action and continuation record
 
-**Immediate next action:** resolve the quote-status contract before editing implementation: determine whether `reviewed` is the assessment state and provider quote submission should advance to a distinct `quoted` state, or whether the test is outdated. Add/adjust a focused regression test based on the approved semantics, then rerun `apps.services` and `apps.orders`. The supplied run is evidence for this local copy only, not staging or production.
+**Immediate next action:** check out `fix/quote-status-workflow` in the local development checkout and run the documented Django checks/tests. If they pass, review the diff and decide whether to merge; do not deploy directly to production.
 
-**Not done:** no application code changed; no migrations generated or applied; no production settings/database touched; no deployment or production smoke test performed.
+**Not done:** the modified application code has not been run in this session; no migrations generated or applied; no production settings/database touched; no deployment or production smoke test performed.
 
 
 ### Local test execution instructions (PowerShell)
