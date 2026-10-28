@@ -5,7 +5,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.utils import timezone
-from django.db import models as db_models
+from django.db import models as db_models, transaction
 from .models import ServiceCategory, Service, ServiceRequest, ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
 from .serializers import (
     ServiceCategorySerializer, ServiceListSerializer, ServiceDetailSerializer,
@@ -378,7 +378,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def accept_quote(self, request, pk=None):
-        """خریدار: انتخاب یک پیشنهاد قیمت (فقط یک بار)"""
+        """خریدار: انتخاب اتمیک یک پیشنهاد قیمت و صدور فاکتور برای همان ارائه‌دهنده."""
         from .models import ServiceRequestQuote
         from notification.services import create_notification
         from decimal import Decimal
@@ -389,69 +389,77 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         if not quote_id:
             return Response({'error': 'شناسه پیشنهاد مشخص نشده'}, status=400)
 
-        # ============================================================
-        # بررسی: آیا قبلاً پیشنهادی انتخاب شده است؟
-        # ============================================================
-        already_selected = ServiceRequestQuote.objects.filter(
-            service_request=service_request,
-            is_selected=True
-        ).exists()
-
-        if already_selected:
-            return Response({
-                'error': 'شما قبلاً یک پیشنهاد را انتخاب کرده‌اید. امکان انتخاب مجدد وجود ندارد.'
-            }, status=400)
-
-        try:
-            quote = ServiceRequestQuote.objects.get(id=quote_id, service_request=service_request)
-        except ServiceRequestQuote.DoesNotExist:
-            return Response({'error': 'پیشنهاد یافت نشد'}, status=404)
-
         if service_request.buyer != request.user and not request.user.is_staff:
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
-        # بررسی وضعیت درخواست
-        if service_request.status not in ['reviewed', 'quoted']:
-            return Response({'error': 'وضعیت درخواست قابل قبول نیست'}, status=400)
+        # قفل درخواست، بررسی و انتخاب پیشنهاد را در یک تراکنش نگه می‌دارد تا
+        # دو درخواست هم‌زمان نتوانند دو پیشنهاد را انتخاب کنند.
+        with transaction.atomic():
+            service_request = ServiceRequest.objects.select_for_update().get(pk=service_request.pk)
 
-        # علامت‌گذاری این پیشنهاد به عنوان انتخاب شده
-        quote.is_selected = True
-        quote.save()
+            if service_request.status not in ['reviewed', 'quoted']:
+                return Response({'error': 'وضعیت درخواست قابل قبول نیست'}, status=400)
 
-        total_price = Decimal(str(quote.quoted_price))
-        advance = Decimal(str(quote.advance_payment_amount)) if quote.advance_payment_required and quote.advance_payment_amount else Decimal('0')
-        remaining = total_price - advance
+            if ServiceRequestQuote.objects.filter(
+                service_request=service_request, is_selected=True
+            ).exists():
+                return Response({
+                    'error': 'برای این درخواست قبلاً یک پیشنهاد انتخاب شده است.'
+                }, status=400)
 
-        # ایجاد فاکتور
-        from payment.models import Invoice
-        if not hasattr(service_request, 'invoice'):
-            commission_rate = Decimal('10')  # 10% کمیسیون
-            commission_amount = (total_price * commission_rate) / Decimal('100')
+            try:
+                quote = ServiceRequestQuote.objects.select_related('provider').get(
+                    id=quote_id, service_request=service_request
+                )
+            except ServiceRequestQuote.DoesNotExist:
+                return Response({'error': 'پیشنهاد یافت نشد'}, status=404)
 
-            Invoice.objects.create(
-                service_request=service_request,
-                buyer=service_request.buyer,
-                seller=service_request.service.provider,
-                subtotal=total_price,
-                total=total_price,
-                advance_payment=float(advance),
-                remaining_amount=float(remaining),
-                platform_commission_rate=float(commission_rate),
-                platform_commission_amount=float(commission_amount),
-                status='issued',
-                issued_at=timezone.now(),
+            total_price = Decimal(str(quote.quoted_price))
+            advance = (
+                Decimal(str(quote.advance_payment_amount))
+                if quote.advance_payment_required and quote.advance_payment_amount
+                else Decimal('0')
             )
+            if advance < 0 or advance > total_price:
+                return Response({
+                    'error': 'مبلغ پیش‌پرداخت باید بین صفر و مبلغ کل پیشنهاد باشد.'
+                }, status=400)
 
-        # به‌روزرسانی ServiceRequest با قیمت انتخاب شده
-        service_request.quoted_price = total_price
-        service_request.final_price = total_price
-        service_request.provider_notes = quote.provider_notes
-        service_request.advance_payment_required = quote.advance_payment_required
-        service_request.advance_payment_amount = advance if advance > 0 else None
-        service_request.status = ServiceRequest.Status.ACCEPTED
-        service_request.save()
+            # فاکتور باید به ارائه‌دهنده پیشنهاد منتخب متصل باشد؛ درخواست ممکن
+            # است از ابتدا service نداشته باشد یا سرویس اولیه با پیشنهاد فرق کند.
+            invoice, invoice_created = Invoice.objects.get_or_create(
+                service_request=service_request,
+                defaults={
+                    'buyer': service_request.buyer,
+                    'seller': quote.provider,
+                    'subtotal': total_price,
+                    'total': total_price,
+                    'advance_payment': float(advance),
+                    'remaining_amount': float(total_price - advance),
+                    'platform_commission_rate': 10,
+                    'platform_commission_amount': float(total_price * Decimal('0.10')),
+                    'status': 'issued',
+                    'issued_at': timezone.now(),
+                }
+            )
+            if not invoice_created and invoice.seller_id != quote.provider_id:
+                return Response({
+                    'error': 'برای این درخواست فاکتوری با ارائه‌دهنده دیگری وجود دارد؛ نیاز به بررسی مدیریتی است.'
+                }, status=409)
 
-        # اعلان به ارائه‌دهنده منتخب
+            quote.is_selected = True
+            quote.save(update_fields=['is_selected', 'updated_at'])
+
+            service_request.quoted_price = total_price
+            service_request.final_price = total_price
+            service_request.provider_notes = quote.provider_notes
+            service_request.advance_payment_required = quote.advance_payment_required
+            service_request.advance_payment_amount = advance if advance > 0 else None
+            service_request.estimated_completion_date = quote.estimated_completion_date
+            service_request.status = ServiceRequest.Status.ACCEPTED
+            service_request.save()
+
+        # اعلان‌ها خارج از تراکنش داده‌های اصلی ایجاد می‌شوند.
         create_notification(
             user=quote.provider,
             type='service',
@@ -460,13 +468,9 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             link=f'/dashboard/service-requests/{service_request.id}'
         )
 
-        # اعلان به سایر ارائه‌دهندگان که پیشنهاد داده‌اند
-        other_quotes = ServiceRequestQuote.objects.filter(
-            service_request=service_request,
-            is_selected=False
-        ).exclude(provider=quote.provider)
-
-        for other_quote in other_quotes:
+        for other_quote in ServiceRequestQuote.objects.filter(
+            service_request=service_request, is_selected=False
+        ).exclude(provider=quote.provider).select_related('provider'):
             create_notification(
                 user=other_quote.provider,
                 type='service',
@@ -475,9 +479,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 link=f'/dashboard/service-requests/{service_request.id}'
             )
 
-        # اعلان به ادمین
-        admins = User.objects.filter(role='admin')
-        for admin in admins:
+        for admin in User.objects.filter(role='admin'):
             create_notification(
                 user=admin,
                 type='service',
@@ -491,7 +493,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 user=service_request.buyer,
                 type='payment',
                 title='نیاز به پیش‌پرداخت',
-                message=f'پیش‌پرداخت: {advance:,} ریال | مابقی: {remaining:,} ریال',
+                message=f'پیش‌پرداخت: {advance:,} ریال | مابقی: {total_price - advance:,} ریال',
                 link=f'/dashboard/service-requests/{service_request.id}'
             )
             return Response({
@@ -499,10 +501,13 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'message': f'قیمت پذیرفته شد. پیش‌پرداخت {advance:,} ریال را واریز کنید.',
                 'advance_payment_required': True,
                 'advance_payment_amount': float(advance),
-                'remaining_amount': float(remaining),
+                'remaining_amount': float(total_price - advance),
             })
 
-        return Response({'success': True, 'message': 'قیمت پذیرفته شد. ارائه‌دهنده می‌تواند کار را شروع کند.'})
+        return Response({
+            'success': True,
+            'message': 'قیمت پذیرفته شد. ارائه‌دهنده منتخب می‌تواند کار را شروع کند.'
+        })
 
     # ============================================================
     # 2. pay_advance - خریدار: ثبت رسید پیش‌پرداخت
@@ -619,21 +624,34 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     # ============================================================
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def complete(self, request, pk=None):
-        """ارائه‌دهنده یا ادمین خدمت را تکمیل می‌کند"""
-        service_request = self.get_object()
+        """ارائه‌دهنده منتخب یا ادمین خدمت در حال اجرا را تکمیل می‌کند."""
+        from .models import ServiceRequestQuote
 
-        # اجازه به ارائه‌دهنده و ادمین
-        if service_request.service.provider != request.user and not request.user.is_staff:
-            return Response({'error': 'دسترسی غیرمجاز'}, status=403)
+        service_request = self.get_object()
+        selected_quote = ServiceRequestQuote.objects.filter(
+            service_request=service_request, is_selected=True
+        ).select_related('provider').first()
+        assigned_provider = (
+            selected_quote.provider if selected_quote
+            else (service_request.service.provider if service_request.service else None)
+        )
+
+        if request.user != assigned_provider and not request.user.is_staff and request.user.role != 'admin':
+            return Response({'error': 'فقط ارائه‌دهنده منتخب می‌تواند خدمت را تکمیل کند.'}, status=403)
 
         if service_request.status != ServiceRequest.Status.IN_PROGRESS:
             return Response({'error': 'وضعیت فعلی قابل تکمیل نیست'}, status=status.HTTP_400_BAD_REQUEST)
 
         service_request.status = ServiceRequest.Status.COMPLETED
         service_request.actual_completion_date = timezone.now()
-        service_request.save()
+        service_request.completion_notes = request.data.get(
+            'completion_notes', service_request.completion_notes
+        )
+        service_request.save(update_fields=[
+            'status', 'actual_completion_date', 'completion_notes', 'updated_at'
+        ])
 
-        return Response({'message': 'خدمت با موفقیت تکمیل شد.'})
+        return Response({'message': 'خدمت توسط ارائه‌دهنده تکمیل شد؛ پذیرش نهایی خریدار مرحله جداگانه‌ای است.'})
 
     # ============================================================
     # 6. upload_attachment - آپلود فایل ضمیمه
