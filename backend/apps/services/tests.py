@@ -215,7 +215,8 @@ class ServiceAPITestCase(TestCase):
 
         req.refresh_from_db()
         self.assertEqual(req.status, 'quoted')
-        self.assertEqual(req.quoted_price, 50000000)
+        quote = req.quotes.get(provider=self.provider)
+        self.assertEqual(quote.quoted_price, 50000000)
 
     def test_second_provider_can_quote_after_first_quote(self):
         """ثبت پیشنهاد ارائه‌دهنده دوم پس از اولین پیشنهاد باید ممکن باشد."""
