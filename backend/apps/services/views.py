@@ -460,9 +460,13 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                     'issued_at': timezone.now(),
                 }
             )
-            if not invoice_created and invoice.seller_id != quote.provider_id:
+            if not invoice_created and (
+                invoice.seller_id != quote.provider_id
+                or invoice.buyer_id != service_request.buyer_id
+                or Decimal(str(invoice.total)) != total_price
+            ):
                 return Response({
-                    'error': 'برای این درخواست فاکتوری با ارائه‌دهنده دیگری وجود دارد؛ نیاز به بررسی مدیریتی است.'
+                    'error': 'فاکتور موجود با پیشنهاد انتخاب‌شده همخوانی ندارد؛ پیش از پذیرش به بررسی مدیریتی نیاز است.'
                 }, status=409)
 
             quote.is_selected = True
