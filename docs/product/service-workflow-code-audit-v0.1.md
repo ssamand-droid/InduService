@@ -100,9 +100,9 @@ No duplicate domain models should be added until these current concepts and migr
 
 ### Gate 1 — Reproduce and baseline
 1. **Baseline completed for the supplied local copy:** `python manage.py test apps.services apps.orders --verbosity 2` — 21 tests discovered, 20 passed, 1 failed (`test_provider_quote`). Django system check reported no issues. The runner created and destroyed an in-memory SQLite test database; no production DB is evidenced.
-2. **Patch prepared but not yet tested** on `fix/quote-status-workflow`: provider quote submission sets `quoted` from `pending` or `reviewed`; additional providers are allowed to submit while status is `quoted`, until a quote is selected. Added `test_second_provider_can_quote_after_first_quote`.
-3. Next: run `python manage.py check` and `python manage.py test apps.services apps.orders --verbosity 2` against the checkout of `fix/quote-status-workflow`; record all output. Then continue regression tests for service-null requests, duplicate quote approval, provider visibility and completion/acceptance separation.
-4. Do not run migrations or alter production data during this gate. The warning `No directory at ...\\staticfiles\\` appeared during baseline tests; it did not cause the quote-status assertion failure.
+2. **Quote-status patch tested by the user on the local checkout:** `python manage.py check` passed and `python manage.py test apps.services apps.orders --verbosity 2` discovered 22 tests and passed all 22. The test runner used an in-memory SQLite test database. The warning `No directory at ...\\staticfiles\\` did not fail the tests.
+3. **Follow-up patch prepared but not yet tested** on `fix/quote-acceptance-workflow`: quote selection now uses a transaction and request row lock, invoice seller is taken from the selected quote provider, requests without an initial service are supported in selection/start/complete paths, and selected-provider access is allowed during execution. Added regression tests for null-service acceptance/invoice ownership, single quote selection, and selected-provider start/completion.
+4. Next: check out `fix/quote-acceptance-workflow`, run `python manage.py check` and `python manage.py test apps.services apps.orders --verbosity 2`, then review any failures before merging. Do not run migrations or alter production data during this gate.
 
 ### Gate 2 — Approve lifecycle semantics
 1. Decide whether request triage status and execution status should be separate linked state machines.
@@ -137,7 +137,7 @@ For this audit, all findings are based on source inspection. No row is marked ru
 
 ## 7. Next action and continuation record
 
-**Immediate next action:** check out `fix/quote-status-workflow` in the local development checkout and run the documented Django checks/tests. If they pass, review the diff and decide whether to merge; do not deploy directly to production.
+**Current next action:** check out `fix/quote-acceptance-workflow` in the local development checkout and run the documented Django checks/tests. The quote-status branch passed the user's 22-test run, but the new acceptance/execution changes have not yet been runtime-verified. Review the diff and failures before merging; do not deploy directly to production.
 
 **Not done:** the modified application code has not been run in this session; no migrations generated or applied; no production settings/database touched; no deployment or production smoke test performed.
 
@@ -146,7 +146,7 @@ For this audit, all findings are based on source inspection. No row is marked ru
 
 The GitHub repository had no checked-in `.github/workflows/` test workflow in the inspected tree. The user supplied a local test run on 2026-10-28; results are recorded above. This session did not independently execute the user's local Python environment.
 
-Run these commands on the local development copy, using its existing project virtual environment and local test database (not production):
+Run these commands on the local development copy, using its existing project virtual environment and local test database (not production). Switch to `fix/quote-acceptance-workflow` first:
 
 ```powershell
 Set-Location "D:\Projects\InduService\backend"
