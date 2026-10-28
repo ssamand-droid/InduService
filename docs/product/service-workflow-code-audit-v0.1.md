@@ -140,3 +140,18 @@ For this audit, all findings are based on source inspection. No row is marked ru
 **Immediate next action:** run the existing `services` and `orders` tests in an isolated local environment and capture the exact results. If a local runtime is not available to the agent, request the user to run the documented commands and paste outputs; do not infer test results. After baseline, write the issue-level implementation plan and proceed only with the service workflow.
 
 **Not done:** no application code changed; no migrations generated or applied; no production settings/database touched; no deployment or production smoke test performed.
+
+
+### Local test execution instructions (PowerShell)
+
+The GitHub repository has no checked-in `.github/workflows/` test workflow in the inspected tree, and this session does not have the user's local Python environment or database. Therefore tests cannot honestly be marked as run from this session.
+
+Run these commands on the local development copy, using its existing project virtual environment and local test database (not production):
+
+```powershell
+Set-Location "D:\Projects\InduService\backend"
+python manage.py check
+python manage.py test apps.services apps.orders --verbosity 2
+```
+
+If the project virtual environment is not already active, activate the existing environment first. Do not create/apply migrations or point these commands at production. Paste the full terminal output, including the first traceback and test summary. If test settings require an environment variable, share the variable name and error message but do not paste secrets or database passwords.
