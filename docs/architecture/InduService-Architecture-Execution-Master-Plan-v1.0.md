@@ -916,3 +916,31 @@ Map every requirement against the current repository implementation before makin
 Full CMMS, preventive maintenance, predictive AI, standalone spare-parts marketplace, subscriptions, broad finance/settlement and ERP integration remain outside this workflow unless the repository audit demonstrates that a limited capability is already essential to complete the current service journey.
 
 **Resume rule:** The next work item is the requirement-to-code matrix for this workflow, not implementation of new broad features.
+
+
+---
+
+## 26. Service workflow requirement-to-code audit — first pass
+
+**Detailed audit:** [`docs/product/service-workflow-code-audit-v0.1.md`](../product/service-workflow-code-audit-v0.1.md)
+
+**Status: STATIC SOURCE REVIEW COMPLETED FOR FIRST PASS; TEST/RUNTIME VERIFICATION PENDING.**
+
+### Confirmed source-level gaps
+- The current `ServiceRequest` lifecycle has a compact status list and does not represent all required assessment, clarification, blocked, rework and customer-acceptance states.
+- Provider completion moves the request to `completed`; the buyer review endpoint is for rating/review, not explicit technical acceptance/rework.
+- Quote resubmission uses `update_or_create` with one quote per request/provider, so previous quote terms are overwritten instead of versioned.
+- Quote approval checks/sets `is_selected` without an atomic transaction/row lock and the inspected path does not create/link a WorkOrder/Order execution record.
+- Provider visibility includes open requests without explicit invitation in some paths; this requires a security-focused permission test and a deliberate discovery policy.
+- Service-less requests are supported at creation, but several downstream actions directly access `service.provider`; the unmatched-request path therefore needs targeted testing.
+- The request form tracks and displays selected files but does not include them in the inspected submit payload.
+- A service test expects quote submission to set status `quoted`, while the inspected endpoint sets `reviewed`; tests have not been run, so this is recorded as a source/test mismatch, not a confirmed test failure.
+- Admin UI/API permits direct status changes without the full transition/reason/audit rules required by the target workflow.
+
+### Current decision
+Do not implement broad features yet. First run the relevant `services` and `orders` test suites in an isolated local environment; capture the baseline; then approve state/quote/work-order/acceptance semantics and create a small issue-level backlog.
+
+### Safety and evidence boundary
+This pass changed documentation only. No application code, migration, database or production configuration was changed. Source inspection is not runtime proof. No requirement is marked runtime-VERIFIED yet.
+
+**Resume rule:** continue from Gate 1 in the code audit: run tests, capture exact results, and add regression tests for the highest-risk transitions and permissions before implementation.
