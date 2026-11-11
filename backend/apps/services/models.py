@@ -7,6 +7,7 @@ from django.utils.translation import gettext_lazy as _
 from core.models import TimeStampedModel, SoftDeleteModel
 from users.models import User
 
+
 class ServiceScenario(models.TextChoices):
     """سناریوهای استاندارد خدمات صنعتی MRO"""
     # گروه ۱: خدمات میدانی
@@ -20,7 +21,6 @@ class ServiceScenario(models.TextChoices):
     OVERHAUL = 'overhaul', _('اورهال / تعمیرات اساسی')
     REWINDING = 'rewinding', _('سیم‌پیچی الکتروموتور/ترانس')
     MACHINING = 'machining', _('ماشین‌کاری و ساخت قطعه')
-    # گروه جدید: ساخت پیشرفته
     REFURBISHMENT = 'refurbishment', _('بازسازی قطعات مستعمل')
     RAPID_PROTOTYPING = 'rapid_proto', _('ساخت سریع (پرینت سه بعدی)')
     SPECIALIZED_TEST = 'special_test', _('تست تخصصی (بالانس، عایقی و ...)')
@@ -68,6 +68,7 @@ class Service(TimeStampedModel, SoftDeleteModel):
     """
     مدل خدمات ارائه شده توسط فروشندگان/ارائه‌دهندگان خدمات
     """
+
     class ServiceType(models.TextChoices):
         REPAIR = 'repair', _('تعمیر')
         MAINTENANCE = 'maintenance', _('نگهداری')
@@ -136,6 +137,7 @@ class ServiceRequest(TimeStampedModel):
     """
     درخواست خدمات از طرف خریدار به ارائه‌دهنده
     """
+
     class Status(models.TextChoices):
         PENDING = 'pending', _('در انتظار بررسی')
         REVIEWED = 'reviewed', _('بررسی شده')
@@ -143,6 +145,8 @@ class ServiceRequest(TimeStampedModel):
         ACCEPTED = 'accepted', _('پذیرفته شده')
         REJECTED = 'rejected', _('رد شده')
         IN_PROGRESS = 'in_progress', _('در حال انجام')
+        # ✅ وضعیت جدید: در انتظار تأیید کارخانه (پس از اعلام تکمیل توسط ارائه‌دهنده)
+        SUBMITTED_FOR_ACCEPTANCE = 'submitted_for_acceptance', _('در انتظار تأیید کارخانه')
         COMPLETED = 'completed', _('تکمیل شده')
         CANCELLED = 'cancelled', _('لغو شده')
 
@@ -160,7 +164,7 @@ class ServiceRequest(TimeStampedModel):
         ('critical', 'بحرانی'),
     ), default='medium')
 
-    status = models.CharField(_('وضعیت'), max_length=15, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(_('وضعیت'), max_length=30, choices=Status.choices, default=Status.PENDING)
     provider_notes = models.TextField(_('یادداشت ارائه‌دهنده'), blank=True)
     quoted_price = models.DecimalField(_('قیمت پیشنهادی'), max_digits=14, decimal_places=0, null=True, blank=True)
     final_price = models.DecimalField(_('قیمت نهایی'), max_digits=14, decimal_places=0, null=True, blank=True)
@@ -171,18 +175,33 @@ class ServiceRequest(TimeStampedModel):
     # فیلدهای اضافی برای سناریوهای خاص (ذخیره به صورت JSON)
     extra_data = models.JSONField(_('اطلاعات تکمیلی'), default=dict, blank=True,
                                   help_text=_('داده‌های اضافی بر اساس سناریو (مثلاً توان موتور برای سیم‌پیچی)'))
-    # این فیلدها باید باشند:
+
+    # فیلدهای پرداخت
     advance_payment_required = models.BooleanField(_('پیش‌پرداخت الزامی'), default=False)
     advance_payment_amount = models.DecimalField(_('مبلغ پیش‌پرداخت'), max_digits=14, decimal_places=0, null=True, blank=True)
     advance_payment_paid = models.BooleanField(_('پیش‌پرداخت پرداخت شده'), default=False)
+
+    # تاریخ‌ها و وضعیت
     estimated_completion_date = models.DateField(_('تاریخ تخمینی اتمام'), null=True, blank=True)
     actual_completion_date = models.DateTimeField(_('تاریخ واقعی اتمام'), null=True, blank=True)
+
+    # فورس ماژور
     force_majeure_declared = models.BooleanField(_('فورس ماژور اعلام شده'), default=False)
     force_majeure_reason = models.TextField(_('دلیل فورس ماژور'), blank=True)
+
+    # تکمیل و تأیید
     completion_notes = models.TextField(_('یادداشت تکمیل'), blank=True)
+    # ✅ فیلدهای جدید برای گردش تأیید کارخانه
+    rejection_reason = models.TextField(_('دلیل رد/درخواست اصلاح'), blank=True)
+    rejected_at = models.DateTimeField(_('زمان رد/درخواست اصلاح'), null=True, blank=True)
+    accepted_at = models.DateTimeField(_('زمان تأیید نهایی کارخانه'), null=True, blank=True)
+
+    # امتیاز و نظر
     buyer_rating = models.PositiveSmallIntegerField(_('امتیاز خریدار'), null=True, blank=True, validators=[MinValueValidator(1), MaxValueValidator(5)])
     buyer_review = models.TextField(_('نظر خریدار'), blank=True)
     reviewed_at = models.DateTimeField(_('تاریخ ثبت نظر'), null=True, blank=True)
+
+    # فیلدهای مرتبط با ساخت/بازسازی قطعه
     has_sample = models.BooleanField(_('نمونه موجود است'), default=False)
     has_drawing = models.BooleanField(_('نقشه موجود است'), default=False)
     drawing_file = models.FileField(_('فایل نقشه'), upload_to='service_requests/drawings/', null=True, blank=True)
@@ -205,9 +224,16 @@ class ServiceRequest(TimeStampedModel):
     part_condition = models.TextField(_('وضعیت فعلی قطعه'), blank=True)
     expected_lifetime_months = models.PositiveIntegerField(_('عمر مورد انتظار پس از بازسازی (ماه)'), null=True, blank=True)
 
-    # فیلد اتصال به دارایی هوشمند
+    # اتصال به دارایی هوشمند
     machine_id = models.CharField(_('شناسه دستگاه'), max_length=100, blank=True, help_text='اتصال به اپ دارایی هوشمند')
     machine_name = models.CharField(_('نام دستگاه'), max_length=200, blank=True)
+
+    # تنظیم Matching
+    matching_enabled = models.BooleanField(
+        _('Matching Engine فعال'),
+        default=True,
+        help_text='در صورت غیرفعال بودن، فقط ارائه‌دهندگان مرتبط با سرویس می‌توانند درخواست را ببینند'
+    )
 
     class Meta:
         verbose_name = _('درخواست خدمت')
@@ -219,11 +245,7 @@ class ServiceRequest(TimeStampedModel):
         service_title = self.service.title if self.service else 'بدون سرویس'
         return f"درخواست {buyer_name} برای {service_title}"
 
-    matching_enabled = models.BooleanField(
-    _('Matching Engine فعال'),
-    default=True,
-    help_text='در صورت غیرفعال بودن، فقط ارائه‌دهندگان مرتبط با سرویس می‌توانند درخواست را ببینند'
-)
+
 class ServiceImage(TimeStampedModel):
     service = models.ForeignKey(Service, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(_('تصویر'), upload_to='services/images/')
@@ -249,6 +271,7 @@ class ServiceRequestAttachment(TimeStampedModel):
         verbose_name = _('پیوست درخواست')
         verbose_name_plural = _('پیوست‌های درخواست')
 
+
 class ServiceCompletionImage(TimeStampedModel):
     """تصاویر تکمیل خدمت"""
     service_request = models.ForeignKey(
@@ -262,6 +285,7 @@ class ServiceCompletionImage(TimeStampedModel):
     class Meta:
         verbose_name = _('تصویر تکمیل خدمت')
         verbose_name_plural = _('تصاویر تکمیل خدمت')
+
 
 class ServiceRequestQuote(TimeStampedModel):
     """پیشنهاد قیمت ارائه‌دهندگان برای یک درخواست"""
@@ -289,7 +313,7 @@ class ServiceRequestQuote(TimeStampedModel):
         verbose_name = _('پیشنهاد قیمت')
         verbose_name_plural = _('پیشنهادهای قیمت')
         ordering = ['-created_at']
-        unique_together = ['service_request', 'provider']  # هر ارائه‌دهنده فقط یک پیشنهاد
+        unique_together = ['service_request', 'provider']
 
     def __str__(self):
         return f"پیشنهاد {self.provider.full_name} برای درخواست #{self.service_request.id}"

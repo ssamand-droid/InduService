@@ -49,6 +49,7 @@ db.sqlite3-journal
 .env
 .env.*
 !.env.example
+!.env.local-prod.example
 
 # Django media/static generated files
 backend/media/

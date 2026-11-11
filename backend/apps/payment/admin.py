@@ -14,10 +14,10 @@ class TransactionInline(admin.TabularInline):
 @admin.register(Invoice)
 class InvoiceAdmin(admin.ModelAdmin):
     list_display = ('invoice_number', 'buyer', 'seller', 'status', 'total', 'platform_commission_amount', 'issued_at', 'paid_at')
-    list_filter = ('status', 'issued_at', 'payment_verified')
+    list_filter = ('status', 'issued_at')
     search_fields = ('invoice_number', 'buyer__phone_number', 'seller__phone_number')
     raw_id_fields = ('buyer', 'seller', 'order', 'service_request')
-    readonly_fields = ('invoice_number', 'platform_commission_amount', 'remaining_amount', 'created_at', 'updated_at')
+    readonly_fields = ('invoice_number', 'platform_commission_amount', 'remaining_amount', 'payment_verified', 'payment_receipt', 'created_at', 'updated_at')
     inlines = [TransactionInline]
     fieldsets = (
         (_('اطلاعات پایه'), {

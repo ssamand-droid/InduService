@@ -5,7 +5,7 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from rest_framework import status
-from payment.models import Invoice, Wallet, CommissionRule, Settlement
+from payment.models import Invoice, Payment, PaymentReceipt, Wallet, CommissionRule, Settlement
 
 User = get_user_model()
 
@@ -100,8 +100,16 @@ class PaymentAPITestCase(TestCase):
         temp = tempfile.NamedTemporaryFile(suffix='.jpg')
         temp.write(b'fake receipt')
         temp.seek(0)
-        self.invoice.payment_receipt = SimpleUploadedFile('receipt.jpg', temp.read())
-        self.invoice.save()
+        payment = Payment.objects.create(
+            invoice=self.invoice,
+            payment_type=Payment.PaymentType.FINAL,
+            amount=self.invoice.remaining_amount,
+            status=Payment.PaymentStatus.SUBMITTED,
+        )
+        PaymentReceipt.objects.create(
+            payment=payment,
+            image=SimpleUploadedFile('receipt.jpg', temp.read()),
+        )
 
         self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.admin_token}')
         response = self.client.post(f'/api/payment/invoices/{self.invoice.id}/verify_payment/')

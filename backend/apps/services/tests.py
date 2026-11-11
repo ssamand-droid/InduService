@@ -347,15 +347,40 @@ class ServiceAPITestCase(TestCase):
         start_response = self.client.post(f'/api/services/requests/{req.id}/start_work/')
         self.assertEqual(start_response.status_code, status.HTTP_200_OK, start_response.data)
 
+        # ارائه‌دهنده گزارش پایان کار را ثبت می‌کند
         complete_response = self.client.post(
             f'/api/services/requests/{req.id}/complete/',
             {'completion_notes': 'گزارش انجام کار ثبت شد'},
             format='json',
         )
-        self.assertEqual(complete_response.status_code, status.HTTP_200_OK, complete_response.data)
+        self.assertEqual(
+            complete_response.status_code,
+            status.HTTP_200_OK,
+            complete_response.data
+        )
+
+        req.refresh_from_db()
+        self.assertEqual(
+            req.status,
+            ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE
+        )
+        self.assertEqual(req.completion_notes, 'گزارش انجام کار ثبت شد')
+
+        # کارخانه پایان کار را تأیید می‌کند
+        self.client.credentials(
+            HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}'
+        )
+        accept_response = self.client.post(
+            f'/api/services/requests/{req.id}/accept_completion/'
+        )
+        self.assertEqual(
+            accept_response.status_code,
+            status.HTTP_200_OK,
+            accept_response.data
+        )
+
         req.refresh_from_db()
         self.assertEqual(req.status, ServiceRequest.Status.COMPLETED)
-        self.assertEqual(req.completion_notes, 'گزارش انجام کار ثبت شد')
 
     def test_quote_cannot_be_selected_twice(self):
         """پس از انتخاب پیشنهاد اول، انتخاب پیشنهاد دوم برای همان درخواست رد شود."""

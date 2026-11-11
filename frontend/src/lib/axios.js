@@ -3,7 +3,9 @@ import axios from 'axios'
 import { useAuthStore } from '@stores/authStore'
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://induservice.pro',
+  // Empty base URL keeps API calls on the current origin. Vite proxies /api
+  // during development; production can set VITE_API_BASE_URL when needed.
+  baseURL: import.meta.env.VITE_API_BASE_URL || '',
   timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
@@ -64,7 +66,11 @@ api.interceptors.response.use(
     console.error('axios response error:', error.config?.url, error.response?.status)
 
     const originalRequest = error.config
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url?.includes('/api/token/refresh/')
+    ) {
       originalRequest._retry = true
 
       try {
@@ -82,10 +88,7 @@ api.interceptors.response.use(
 
         console.log('Attempting to refresh token...')
 
-        const response = await axios.post(
-          `https://induservice.pro/api/token/refresh/`,
-          { refresh: refreshToken }
-        )
+        const response = await api.post('/api/token/refresh/', { refresh: refreshToken })
 
         const { access } = response.data
         console.log('Token refreshed successfully')

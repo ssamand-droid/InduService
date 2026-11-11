@@ -1,7 +1,11 @@
 from rest_framework import serializers
 from django.utils.text import slugify
-from .models import ServiceCategory, Service, ServiceRequest, ServiceImage, ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
+from .models import (
+    ServiceCategory, Service, ServiceRequest, ServiceImage,
+    ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
+)
 from users.serializers import UserSerializer
+
 
 # ============================================================
 # ServiceCategory
@@ -23,7 +27,7 @@ class ServiceImageSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# ServiceRequestAttachment - باید قبل از ServiceRequestSerializer بیاد
+# ServiceRequestAttachment
 # ============================================================
 class ServiceRequestAttachmentSerializer(serializers.ModelSerializer):
     file_url = serializers.SerializerMethodField()
@@ -47,7 +51,7 @@ class ServiceRequestAttachmentSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# ServiceCompletionImage - باید قبل از ServiceRequestSerializer بیاد
+# ServiceCompletionImage
 # ============================================================
 class ServiceCompletionImageSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -64,7 +68,7 @@ class ServiceCompletionImageSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# ServiceRequestQuoteSerializer (برای نمایش پیشنهادات قیمت)
+# ServiceRequestQuoteSerializer
 # ============================================================
 class ServiceRequestQuoteSerializer(serializers.ModelSerializer):
     provider_name = serializers.CharField(source='provider.full_name', read_only=True)
@@ -98,43 +102,28 @@ class ServiceListSerializer(serializers.ModelSerializer):
         ]
 
     def get_provider_name(self, obj):
-        """
-        نام فروشنده را فقط وقتی نشان بده که buyer درخواست accepted داشته باشد.
-        در غیر این صورت، مهمان و کاربران دیگر نام را نبینند.
-        """
         request = self.context.get('request')
-
-        # مهمان (لاگین نکرده) - نام را نبیند
         if not request or not request.user.is_authenticated:
             return "🔒 تایید شده"
-
-        # ادمین - ببیند
         if request.user.role == 'admin' or request.user.is_staff:
             return obj.provider.full_name
-
-        # buyer - فقط اگر درخواست accepted/in_progress/completed داشته باشد
         if request.user.role in ['buyer', 'technician', 'maintenance_manager', 'procurement']:
-            from .models import ServiceRequest
             has_accepted = ServiceRequest.objects.filter(
                 service=obj,
                 buyer=request.user,
-                status__in=['accepted', 'in_progress', 'completed']
+                status__in=['accepted', 'in_progress', 'submitted_for_acceptance', 'completed']
             ).exists()
             if has_accepted:
                 return obj.provider.full_name
             return "🔒 پس از پذیرش درخواست نمایش داده می‌شود"
-
-        # seller/provider دیگر - نام را نبیند
         return "🔒 فروشنده"
 
     def get_primary_image(self, obj):
-        """دریافت اولین تصویر خدمت"""
         try:
             first_image = obj.images.first()
             if first_image and first_image.image:
                 request = self.context.get('request')
                 if request:
-                    # اگر تصویر با http شروع نشده بود، absolute URL بساز
                     url = first_image.image.url
                     if url.startswith('/'):
                         return request.build_absolute_uri(url)
@@ -184,7 +173,7 @@ class ServiceCreateUpdateSerializer(serializers.ModelSerializer):
 
 
 # ============================================================
-# ServiceRequestSerializer (نسخه نهایی با اضافه شدن quotes)
+# ServiceRequestSerializer
 # ============================================================
 class ServiceRequestSerializer(serializers.ModelSerializer):
     buyer_name = serializers.CharField(source='buyer.full_name', read_only=True)
@@ -202,8 +191,6 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     attachments = ServiceRequestAttachmentSerializer(many=True, read_only=True)
     completion_images = ServiceCompletionImageSerializer(many=True, read_only=True)
     remaining_amount = serializers.SerializerMethodField(read_only=True)
-
-    # 🔥 اضافه کردن فیلد quotes برای نمایش لیست پیشنهادات قیمت
     quotes = ServiceRequestQuoteSerializer(many=True, read_only=True)
 
     class Meta:
@@ -219,12 +206,13 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
             'estimated_completion_date', 'actual_completion_date',
             'force_majeure_declared', 'force_majeure_reason',
             'completion_notes', 'completion_images',
+            'rejection_reason', 'rejected_at', 'accepted_at',
             'buyer_rating', 'buyer_review', 'reviewed_at',
             'attachments', 'extra_data', 'related_asset', 'related_asset_name',
             'order', 'remaining_amount', 'created_at', 'updated_at',
-            'quotes',  # ← اضافه شد
+            'quotes',
         ]
-        read_only_fields = ['buyer', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['buyer', 'status', 'created_at', 'updated_at', 'accepted_at', 'rejected_at']
 
     def get_remaining_amount(self, obj):
         if hasattr(obj, 'invoice'):
@@ -236,7 +224,6 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
 # ServiceRequestUpdate
 # ============================================================
 class ServiceRequestUpdateSerializer(serializers.ModelSerializer):
-    """برای بروزرسانی توسط ارائه‌دهنده (تغییر وضعیت، قیمت و یادداشت)"""
     class Meta:
         model = ServiceRequest
         fields = ['status', 'provider_notes', 'quoted_price']
@@ -246,7 +233,6 @@ class ServiceRequestUpdateSerializer(serializers.ModelSerializer):
 # ProviderQuote
 # ============================================================
 class ProviderQuoteSerializer(serializers.Serializer):
-    """سریالایزر اعلام قیمت توسط ارائه‌دهنده"""
     quoted_price = serializers.DecimalField(max_digits=14, decimal_places=0, required=True)
     provider_notes = serializers.CharField(required=False, allow_blank=True)
     estimated_completion_date = serializers.DateField(required=False)
@@ -265,7 +251,6 @@ class ProviderQuoteSerializer(serializers.Serializer):
 # ForceMajeure
 # ============================================================
 class ForceMajeureSerializer(serializers.Serializer):
-    """سریالایزر فورس ماژور"""
     reason = serializers.CharField(required=True)
 
 
@@ -273,6 +258,5 @@ class ForceMajeureSerializer(serializers.Serializer):
 # Review
 # ============================================================
 class ReviewSerializer(serializers.Serializer):
-    """سریالایزر نظر و امتیاز"""
     rating = serializers.IntegerField(min_value=1, max_value=5, required=True)
     review = serializers.CharField(required=False, allow_blank=True)
