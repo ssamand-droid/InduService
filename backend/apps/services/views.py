@@ -143,21 +143,6 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
 
             direct_requests = ServiceRequest.objects.filter(service__provider=user)
 
-            user_service_scenarios = Service.objects.filter(
-                provider=user, is_active=True, is_deleted=False
-            ).values_list('service_scenario', flat=True).distinct()
-
-            scenario_requests = ServiceRequest.objects.filter(
-                service__isnull=False,
-                service__service_scenario__in=user_service_scenarios,
-                status__in=['pending', 'reviewed', 'quoted']
-            ).exclude(service__provider=user)
-
-            free_requests = ServiceRequest.objects.filter(
-                service__isnull=True,
-                status__in=['pending', 'reviewed', 'quoted']
-            ).exclude(buyer=user)
-
             notified_request_ids = Notification.objects.filter(
                 user=user, type='service_request', extra_data__has_key='request_id'
             ).values_list('extra_data__request_id', flat=True).distinct()
@@ -176,8 +161,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
             )
 
             return (
-                direct_requests | scenario_requests | free_requests |
-                notified_requests | selected_quote_requests
+                direct_requests | notified_requests | selected_quote_requests
             ).select_related(
                 'buyer', 'service__provider'
             ).prefetch_related('quotes', 'quotes__provider').order_by('-created_at').distinct()
@@ -208,18 +192,6 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
 
             if obj.service and obj.service.provider == user:
                 return obj
-
-            user_service_scenarios = Service.objects.filter(
-                provider=user, is_active=True, is_deleted=False
-            ).values_list('service_scenario', flat=True).distinct()
-
-            if obj.service and obj.service.service_scenario in user_service_scenarios:
-                if obj.status in ['pending', 'reviewed', 'quoted']:
-                    return obj
-
-            if obj.service is None:
-                if obj.status in ['pending', 'reviewed', 'quoted'] and obj.buyer != user:
-                    return obj
 
             from notification.models import Notification
             has_notification = Notification.objects.filter(
@@ -553,8 +525,12 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         if service_request.status != ServiceRequest.Status.IN_PROGRESS:
             return Response({'error': 'وضعیت فعلی قابل تکمیل نیست'}, status=400)
 
+        completion_notes = (request.data.get('completion_notes') or '').strip()
+        if not completion_notes:
+            return Response({'error': 'Completion report is required.'}, status=400)
+
         service_request.status = ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE
-        service_request.completion_notes = request.data.get('completion_notes', service_request.completion_notes)
+        service_request.completion_notes = completion_notes
         service_request.save(update_fields=['status', 'completion_notes', 'updated_at'])
 
         create_notification(
@@ -590,17 +566,22 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         if service_request.status != ServiceRequest.Status.IN_PROGRESS:
             return Response({'error': 'خدمت در حال انجام نیست'}, status=400)
 
-        service_request.completion_notes = request.data.get('completion_notes', '')
-        service_request.status = ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE
-        service_request.save(update_fields=['completion_notes', 'status', 'updated_at'])
+        completion_notes = (request.data.get('completion_notes') or '').strip()
+        if not completion_notes:
+            return Response({'error': 'Completion report is required.'}, status=400)
 
         saved_images = []
-        for image in request.FILES.getlist('images'):
-            img = ServiceCompletionImage.objects.create(service_request=service_request, image=image)
-            saved_images.append({
-                'id': img.id,
-                'url': request.build_absolute_uri(img.image.url),
-            })
+        with transaction.atomic():
+            service_request.completion_notes = completion_notes
+            service_request.status = ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE
+            service_request.save(update_fields=['completion_notes', 'status', 'updated_at'])
+
+            for image in request.FILES.getlist('images'):
+                img = ServiceCompletionImage.objects.create(service_request=service_request, image=image)
+                saved_images.append({
+                    'id': img.id,
+                    'url': request.build_absolute_uri(img.image.url),
+                })
 
         create_notification(
             user=service_request.buyer, type='service',

@@ -81,6 +81,16 @@ export const serviceApi = {
     return response.data
   },
 
+  acceptCompletion: async (id) => {
+    const response = await api.post(`/api/services/requests/${id}/accept_completion/`)
+    return response.data
+  },
+
+  requestCompletionRevision: async (id, note) => {
+    const response = await api.post(`/api/services/requests/${id}/request_revision/`, { note })
+    return response.data
+  },
+
   startWork: async (id) => {
     const response = await api.post(`/api/services/requests/${id}/start_work/`)
     return response.data

@@ -5,9 +5,11 @@ import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { FiUpload, FiX, FiFile } from 'react-icons/fi'
 import { useService, useCreateServiceRequest } from '../hooks/useServices'
+import { serviceApi } from '../services/serviceApi'
 import { Button, Alert } from '@components/ui'
 import { FormInput, FormTextarea, FormSelect } from '@components/forms'
 import { WorkflowPreview } from './WorkflowPreview'
+import toast from 'react-hot-toast'
 
 const baseSchema = z.object({
   service: z.number(),
@@ -39,11 +41,13 @@ const getScenarioSchema = (scenario) => {
 export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
   const navigate = useNavigate()
   const { data: service } = useService(serviceId)
-  const { mutate: createRequest, isPending, error } = useCreateServiceRequest()
+  const { mutateAsync: createRequest, isPending, error } = useCreateServiceRequest()
 
   const [files, setFiles] = useState([])
   const [showSuccess, setShowSuccess] = useState(false)
   const [createdRequestId, setCreatedRequestId] = useState(null)
+  const [failedFiles, setFailedFiles] = useState([])
+  const [isUploading, setIsUploading] = useState(false)
 
   const scenario = service?.service_scenario
   const extraSchema = getScenarioSchema(scenario)
@@ -87,13 +91,34 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
       extra_data: extraData,
     }
 
-    createRequest(payload, {
-      onSuccess: (response) => {
-        setCreatedRequestId(response.id)
-        setShowSuccess(true)
-        onSuccess?.()
-      },
-    })
+    try {
+      const response = await createRequest(payload)
+      setCreatedRequestId(response.id)
+      setShowSuccess(true)
+      onSuccess?.()
+      await uploadRequestFiles(response.id, files)
+    } catch {
+      // The mutation hook presents the API error to the user.
+    }
+  }
+
+  const uploadRequestFiles = async (requestId, pendingFiles) => {
+    if (!pendingFiles.length) return
+    setIsUploading(true)
+    const results = await Promise.allSettled(
+      pendingFiles.map((file) => serviceApi.uploadAttachment(requestId, file))
+    )
+    const failed = results.flatMap((result, index) =>
+      result.status === 'rejected' ? [pendingFiles[index]] : []
+    )
+    setFailedFiles(failed)
+    if (failed.length === 0) {
+      setFiles([])
+      toast.success('همهٔ فایل‌های پیوست بارگذاری شدند')
+    } else {
+      toast.error(`بارگذاری ${failed.length} فایل ناموفق بود؛ از همین صفحه دوباره تلاش کنید`)
+    }
+    setIsUploading(false)
   }
 
   if (showSuccess) {
@@ -102,6 +127,19 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
         <div className="text-6xl mb-4">✅</div>
         <h3 className="text-xl font-bold mb-2">درخواست شما با موفقیت ثبت شد</h3>
         <p className="text-secondary-600 mb-6">شماره درخواست: {createdRequestId}</p>
+        {failedFiles.length > 0 && (
+          <div className="max-w-lg mx-auto mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-right">
+            <p className="mb-3 text-sm text-amber-900">{failedFiles.length} پیوست بارگذاری نشده است.</p>
+            <Button
+              variant="outline"
+              onClick={() => uploadRequestFiles(createdRequestId, failedFiles)}
+              isLoading={isUploading}
+              loadingText="در حال بارگذاری..."
+            >
+              تلاش دوباره برای بارگذاری
+            </Button>
+          </div>
+        )}
         <div className="flex justify-center gap-3">
           <Button variant="primary" onClick={() => { setShowSuccess(false); navigate('/services') }}>
             ثبت درخواست جدید

@@ -187,6 +187,20 @@ class ServiceAPITestCase(TestCase):
         response = self.client.get(f'/api/services/requests/{req.id}/')
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_provider_cannot_access_uninvited_unassigned_request(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=None,
+            title='درخواست خصوصی بدون دعوت',
+            description='جزئیات نباید برای ارائه‌دهندهٔ دعوت‌نشده قابل مشاهده باشد',
+            urgency='medium',
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+
+        response = self.client.get(f'/api/services/requests/{req.id}/')
+
+        self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_unauthenticated(self):
         """تست دسترسی بدون توکن"""
         client = APIClient()
@@ -269,6 +283,12 @@ class ServiceAPITestCase(TestCase):
         )
         self.assertEqual(second_quote_response.status_code, status.HTTP_200_OK)
         self.assertEqual(req.quotes.count(), 2)
+
+        provider_view = self.client.get(f'/api/services/requests/{req.id}/')
+        self.assertEqual(provider_view.status_code, status.HTTP_200_OK)
+        self.assertNotIn('buyer_phone', provider_view.data)
+        self.assertEqual(len(provider_view.data['quotes']), 1)
+        self.assertEqual(provider_view.data['quotes'][0]['provider'], second_provider.id)
 
     # ============ انتخاب پیشنهاد و گردش اجرای خدمت ============
 
@@ -381,6 +401,49 @@ class ServiceAPITestCase(TestCase):
 
         req.refresh_from_db()
         self.assertEqual(req.status, ServiceRequest.Status.COMPLETED)
+
+    def test_completion_requires_a_work_report(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=self.service,
+            title='درخواست بدون گزارش',
+            description='گزارش کار برای تکمیل لازم است',
+            status=ServiceRequest.Status.IN_PROGRESS,
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+
+        response = self.client.post(f'/api/services/requests/{req.id}/complete_with_images/')
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        req.refresh_from_db()
+        self.assertEqual(req.status, ServiceRequest.Status.IN_PROGRESS)
+
+    def test_factory_can_request_completion_revision(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=None,
+            title='درخواست اصلاح گزارش',
+            description='پس از بررسی گزارش',
+            status=ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE,
+        )
+        ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=900000,
+            is_selected=True,
+        )
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
+
+        response = self.client.post(
+            f'/api/services/requests/{req.id}/request_revision/',
+            {'note': 'نتیجهٔ آزمون نهایی را به گزارش اضافه کنید'},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK, response.data)
+        req.refresh_from_db()
+        self.assertEqual(req.status, ServiceRequest.Status.IN_PROGRESS)
+        self.assertIn('نتیجهٔ آزمون نهایی', req.rejection_reason)
 
     def test_quote_cannot_be_selected_twice(self):
         """پس از انتخاب پیشنهاد اول، انتخاب پیشنهاد دوم برای همان درخواست رد شود."""

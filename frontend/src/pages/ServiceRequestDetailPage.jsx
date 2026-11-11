@@ -116,6 +116,29 @@ export default function ServiceRequestDetailPage() {
     }
   }
 
+  const acceptCompletion = async () => {
+    if (!window.confirm('آیا گزارش و نتیجهٔ کار را تأیید می‌کنید؟')) return
+    try {
+      const response = await serviceApi.acceptCompletion(id)
+      toast.success(response?.message || 'گزارش کار تأیید شد')
+      refetch()
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.userMessage || 'خطا در تأیید گزارش')
+    }
+  }
+
+  const requestCompletionRevision = async () => {
+    const note = window.prompt('نقص یا اصلاح موردنیاز را توضیح دهید:')
+    if (!note?.trim()) return
+    try {
+      const response = await serviceApi.requestCompletionRevision(id, note.trim())
+      toast.success(response?.message || 'درخواست اصلاح برای ارائه‌دهنده ارسال شد')
+      refetch()
+    } catch (error) {
+      toast.error(error?.response?.data?.error || error?.userMessage || 'خطا در ارسال درخواست اصلاح')
+    }
+  }
+
   // ============================================================
   // وضعیت‌ها و رنگ‌ها
   // ============================================================
@@ -128,6 +151,7 @@ export default function ServiceRequestDetailPage() {
       accepted: 'پذیرفته شده',
       rejected: 'رد شده',
       in_progress: 'در حال انجام',
+      submitted_for_acceptance: 'در انتظار تأیید کارخانه',
       completed: 'تکمیل شده',
       cancelled: 'لغو شده'
     }
@@ -141,6 +165,7 @@ export default function ServiceRequestDetailPage() {
       quoted: 'bg-indigo-100 text-indigo-800',
       accepted: 'bg-green-100 text-green-800',
       in_progress: 'bg-purple-100 text-purple-800',
+      submitted_for_acceptance: 'bg-amber-100 text-amber-800',
       completed: 'bg-emerald-100 text-emerald-800',
       cancelled: 'bg-red-100 text-red-800'
     }
@@ -187,17 +212,10 @@ export default function ServiceRequestDetailPage() {
   const hasUserQuoted = request.quotes?.some(q => q.provider === user?.id) || false
 
   // تشخیص ارائه‌دهنده انتخاب شده
-  let selectedProviderId = null
-  if (request.service && typeof request.service === 'object') {
-    selectedProviderId = request.service?.provider?.id || request.service?.provider_id
-  } else if (request.service && typeof request.service === 'number') {
-    // اگر service فقط ID باشد
-    selectedProviderId = request.provider_id
-  } else {
-    selectedProviderId = request.provider_id
-  }
-
-  const isSelectedProvider = selectedProviderId === user?.id
+  const selectedQuote = request.quotes?.find((quote) => quote.is_selected)
+  const selectedProviderId = selectedQuote?.provider ??
+    (typeof request.service === 'object' ? request.service?.provider?.id : request.provider_id)
+  const isSelectedProvider = String(selectedProviderId ?? '') === String(user?.id ?? '')
 
   // تشخیص اینکه آیا ارائه‌دهنده فعلی می‌تواند شروع کند
   const canStartWork = isProvider &&
@@ -495,7 +513,7 @@ export default function ServiceRequestDetailPage() {
                 <h3 className="font-semibold mb-3 text-gray-700 border-b pb-2">⚙️ اقدامات</h3>
 
                 {/* دکمه اعلام قیمت */}
-                {(request.status === 'pending' || request.status === 'reviewed') && !hasUserQuoted && (
+                {(request.status === 'pending' || request.status === 'reviewed' || request.status === 'quoted') && !hasUserQuoted && (
                   <button
                     onClick={() => {
                       if (!isProfileComplete) {
@@ -543,6 +561,29 @@ export default function ServiceRequestDetailPage() {
                      `وضعیت: ${getStatusLabel(request.status)}`}
                   </p>
                 )}
+              </div>
+            )}
+
+            {isBuyer && request.status === 'submitted_for_acceptance' && (
+              <div className="bg-white rounded-xl border border-amber-200 p-6">
+                <h3 className="font-semibold mb-2 text-amber-800">گزارش کار در انتظار بررسی شماست</h3>
+                {request.completion_notes && (
+                  <p className="text-sm text-gray-700 whitespace-pre-line mb-4">{request.completion_notes}</p>
+                )}
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={acceptCompletion}
+                    className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    تأیید و پذیرش کار
+                  </button>
+                  <button
+                    onClick={requestCompletionRevision}
+                    className="px-4 py-2 border border-amber-500 text-amber-800 rounded-lg hover:bg-amber-50"
+                  >
+                    درخواست اصلاح
+                  </button>
+                </div>
               </div>
             )}
 

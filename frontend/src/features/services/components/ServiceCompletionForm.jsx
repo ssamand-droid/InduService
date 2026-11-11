@@ -21,6 +21,11 @@ export const ServiceCompletionForm = ({ isOpen, onClose, request, onSuccess }) =
   }
 
   const handleSubmit = async () => {
+    if (!notes.trim()) {
+      toast.error('گزارش انجام کار را وارد کنید')
+      return
+    }
+
     setIsSubmitting(true)
     try {
       const formData = new FormData()

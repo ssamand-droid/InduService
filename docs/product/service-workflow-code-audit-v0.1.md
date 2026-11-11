@@ -1,12 +1,22 @@
 # InduService — Service Workflow Requirement-to-Code Audit v0.1
 
-**Status:** LOCAL BASELINE EXECUTED (20 PASSED, 1 FAILED); QUOTE-STATUS FIX AND REGRESSION TEST ADDED ON `fix/quote-status-workflow`; RERUN PENDING  
-**Review ref:** `fix/quote-status-workflow` (implementation change isolated on a dedicated branch)  
-**Review date:** 2026-10-28  
+**Status:** PARTIAL — targeted backend tests pass and frontend production build succeeds; full v0.1 definition of done remains unmet.
+**Review ref:** `fix/quote-acceptance-workflow`
+**Review date:** 2026-11-11
 **Scope:** Factory request → assessment → service quote → factory approval → execution/evidence → factory acceptance  
 **Change policy:** Initial audit was read-only. A minimal quote-status implementation change and a regression test were subsequently committed to a dedicated branch. No schema, migration, production setting or database was changed; the changed code has not yet been executed.
 
 > Statuses in this document describe evidence found in the source files only. `IMPLEMENTED — NOT VERIFIED` means code exists but has not been exercised. `PARTIAL` means some of the required behavior exists but important requirements are absent or inconsistent. A source review is not proof of runtime behavior.
+
+## 0. Current verification update (2026-11-11)
+
+- `python manage.py test services payment --settings=InduService.settings.development --verbosity 1`: 29 tests passed after the latest UI/API fixes. The Django check still reports `staticfiles.W004` because `backend/static` is absent.
+- `npm run build` completed successfully for the production frontend. Existing warnings remain for the stale Browserslist dataset and a JavaScript chunk over 500 kB.
+- Dev and local-prod smoke checks returned HTTP 200 for their home pages, service route and service-list API. This verifies local routing only; it is not a staging or production deployment test.
+- The buyer can now accept a submitted completion report or request a correction from the request detail page. A non-empty work report is required before submission.
+- Request-form attachments are now uploaded after request creation and failed uploads can be retried without creating another request.
+- Provider request access now relies on direct assignment, an invitation notification, or a selected quote. Provider responses expose only that provider's quote; the buyer phone is hidden until assignment and work approval.
+- The workflow is **not complete against v0.1**. Assessment/clarification, quote versioning and expiry, an approved-scope work-order snapshot, transition history, explicit rework history, change requests, cancellation/dispute paths, private file delivery, organization-level authorization and a full end-to-end environment test remain open.
 
 ## 1. Executive conclusion
 

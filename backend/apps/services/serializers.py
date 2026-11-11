@@ -191,7 +191,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     attachments = ServiceRequestAttachmentSerializer(many=True, read_only=True)
     completion_images = ServiceCompletionImageSerializer(many=True, read_only=True)
     remaining_amount = serializers.SerializerMethodField(read_only=True)
-    quotes = ServiceRequestQuoteSerializer(many=True, read_only=True)
+    quotes = serializers.SerializerMethodField()
 
     class Meta:
         model = ServiceRequest
@@ -218,6 +218,36 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
         if hasattr(obj, 'invoice'):
             return float(obj.invoice.remaining_amount)
         return None
+
+    def get_quotes(self, obj):
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        provider_roles = ['seller', 'service_provider', 'company_seller', 'company_provider']
+        quotes = obj.quotes.all()
+        if user and user.role in provider_roles and not user.is_staff:
+            quotes = quotes.filter(provider=user)
+        return ServiceRequestQuoteSerializer(quotes, many=True, context=self.context).data
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        user = getattr(request, 'user', None)
+        provider_roles = ['seller', 'service_provider', 'company_seller', 'company_provider']
+
+        if user and user.role in provider_roles and not user.is_staff:
+            is_assigned = ServiceRequestQuote.objects.filter(
+                service_request=instance, provider=user, is_selected=True
+            ).exists() or bool(instance.service_id and instance.service.provider_id == user.id)
+            work_started = instance.status in [
+                ServiceRequest.Status.ACCEPTED,
+                ServiceRequest.Status.IN_PROGRESS,
+                ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE,
+                ServiceRequest.Status.COMPLETED,
+            ]
+            if not is_assigned or not work_started:
+                data.pop('buyer_phone', None)
+
+        return data
 
 
 # ============================================================
