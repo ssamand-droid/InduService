@@ -10,7 +10,7 @@
 
 ## 0. Current verification update (2026-11-11)
 
-- `python manage.py test services payment --settings=InduService.settings.development --verbosity 1`: 29 tests passed after the latest UI/API fixes. The Django check still reports `staticfiles.W004` because `backend/static` is absent.
+- `python manage.py test services payment --settings=InduService.settings.development --verbosity 1`: 30 tests passed after the latest UI/API fixes, including a single API test spanning quote approval through factory acceptance. The Django check still reports `staticfiles.W004` because `backend/static` is absent.
 - `npm run build` completed successfully for the production frontend. Existing warnings remain for the stale Browserslist dataset and a JavaScript chunk over 500 kB.
 - Dev and local-prod smoke checks returned HTTP 200 for their home pages, service route and service-list API. This verifies local routing only; it is not a staging or production deployment test.
 - The buyer can now accept a submitted completion report or request a correction from the request detail page. A non-empty work report is required before submission.

@@ -328,6 +328,51 @@ class ServiceAPITestCase(TestCase):
         self.assertEqual(invoice.seller_id, self.provider.id)
         self.assertEqual(invoice.total, quote.quoted_price)
 
+    def test_end_to_end_quote_execution_and_factory_acceptance(self):
+        req = ServiceRequest.objects.create(
+            buyer=self.buyer,
+            service=None,
+            title='چرخهٔ اجرای خدمات',
+            description='پذیرش پیشنهاد، اجرا و تأیید نهایی',
+            urgency='high',
+            status=ServiceRequest.Status.QUOTED,
+        )
+        quote = ServiceRequestQuote.objects.create(
+            service_request=req,
+            provider=self.provider,
+            quoted_price=1500000,
+            provider_notes='دامنهٔ کار ثبت‌شده',
+        )
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
+        approval = self.client.post(
+            f'/api/services/requests/{req.id}/accept_quote/',
+            {'quote_id': quote.id},
+            format='json',
+        )
+        self.assertEqual(approval.status_code, status.HTTP_200_OK, approval.data)
+        req.refresh_from_db()
+        self.assertEqual(req.status, ServiceRequest.Status.ACCEPTED)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.provider_token}')
+        start = self.client.post(f'/api/services/requests/{req.id}/start_work/')
+        self.assertEqual(start.status_code, status.HTTP_200_OK, start.data)
+        report = self.client.post(
+            f'/api/services/requests/{req.id}/complete/',
+            {'completion_notes': 'آزمون نهایی انجام شد و نتیجه ثبت شد'},
+            format='json',
+        )
+        self.assertEqual(report.status_code, status.HTTP_200_OK, report.data)
+        req.refresh_from_db()
+        self.assertEqual(req.status, ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f'Bearer {self.buyer_token}')
+        acceptance = self.client.post(f'/api/services/requests/{req.id}/accept_completion/')
+        self.assertEqual(acceptance.status_code, status.HTTP_200_OK, acceptance.data)
+        req.refresh_from_db()
+        self.assertEqual(req.status, ServiceRequest.Status.COMPLETED)
+        self.assertIsNotNone(req.accepted_at)
+
     def test_selected_provider_can_start_and_complete_request_without_service(self):
         """درخواست بدون سرویس باید توسط ارائه‌دهنده پیشنهاد منتخب اجرا و تکمیل شود."""
         req = ServiceRequest.objects.create(
