@@ -9,7 +9,7 @@ import { Button, Card, Spinner } from '@components/ui'
 import { FormInput, FormSelect } from '@components/forms'
 import { useAuth } from '../hooks/useAuth'
 import { Link, useNavigate } from 'react-router-dom'
-import { BUYER_ROLES, PROVIDER_ROLES } from '@lib/constants'
+import { BUYER_ROLES } from '@lib/constants'
 import api from '@lib/axios'
 import toast from 'react-hot-toast'
 
@@ -40,6 +40,15 @@ const step2Schema = z.object({
   provider_sub_role: z.string().optional(),
   // حقوقی
   company_name: z.string().optional(),
+  company_registration_number: z.string().optional(),
+  tax_id: z.string().optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  province: z.string().optional(),
+  postal_code: z.string().optional(),
+}).refine((data) => data.person_type !== 'legal' || !!data.company_name?.trim(), {
+  message: 'نام ثبتی شرکت یا کارخانه الزامی است',
+  path: ['company_name'],
 })
 
 // ========================
@@ -71,7 +80,7 @@ export const RegisterForm = () => {
   // State
   const [step, setStep] = useState(1)
   const [selectedRole, setSelectedRole] = useState('')
-  const [userId, setUserId] = useState(null)
+  const [registrationToken, setRegistrationToken] = useState(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [contacts, setContacts] = useState([])
@@ -88,13 +97,14 @@ export const RegisterForm = () => {
     defaultValues: {
       first_name: '', last_name: '', person_type: 'individual',
       national_id: '', buyer_sub_role: '', provider_sub_role: '', company_name: '',
+      company_registration_number: '', tax_id: '', address: '', city: '', province: '', postal_code: '',
     },
   })
 
   const watchPersonType = step2Form.watch('person_type')
   const watchProviderSubRole = step2Form.watch('provider_sub_role')
   const isBuyerRole = BUYER_ROLES.includes(selectedRole)
-  const isProviderRole = PROVIDER_ROLES.includes(selectedRole)
+  const isProviderRole = selectedRole === 'provider'
 
   // ========================
   // Handlers
@@ -125,7 +135,7 @@ export const RegisterForm = () => {
         role: selectedRole,
       })
       if (response.data.success) {
-        setUserId(response.data.user_id)
+        setRegistrationToken(response.data.registration_token)
         toast.success('✅ مرحله اول با موفقیت انجام شد')
         setStep(2)
       }
@@ -140,7 +150,7 @@ export const RegisterForm = () => {
   const onStep2Submit = async (data) => {
     try {
       const payload = {
-        user_id: userId,
+        registration_token: registrationToken,
         ...data,
         company_contacts: contacts.length > 0 ? contacts : [],
       }
@@ -150,7 +160,12 @@ export const RegisterForm = () => {
         navigate('/login')
       }
     } catch (error) {
-      toast.error('خطا در تکمیل ثبت‌نام')
+      const errors = error.response?.data
+      const message = errors?.company_name?.[0]
+        || errors?.registration_token?.[0]
+        || errors?.detail
+        || 'خطا در تکمیل ثبت‌نام'
+      toast.error(message)
     }
   }
 
@@ -189,8 +204,8 @@ export const RegisterForm = () => {
             <label className="block text-sm font-medium mb-2">نوع شخصیت:</label>
             <div className="flex gap-4">
               {[
-                { value: 'individual', label: '👤 حقیقی', role: 'service_provider' },
-                { value: 'legal', label: '🏢 حقوقی (شرکت)', role: 'company_provider' },
+                { value: 'individual', label: '👤 حقیقی' },
+                { value: 'legal', label: '🏢 حقوقی (شرکت)' },
               ].map((opt) => (
                 <label key={opt.value} className={`flex-1 p-3 text-center rounded-lg border-2 cursor-pointer transition ${
                   watchPersonType === opt.value ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20' : 'border-secondary-200'
@@ -201,8 +216,6 @@ export const RegisterForm = () => {
                     {...step2Form.register('person_type')}
                     onChange={(e) => {
                       step2Form.setValue('person_type', e.target.value)
-                      // Set actual role based on person_type
-                      setSelectedRole(opt.role)
                     }}
                     className="hidden"
                   />
@@ -312,8 +325,18 @@ export const RegisterForm = () => {
 
       {/* Legal fields */}
       {watchPersonType === 'legal' && (
-        <FormInput label="نام شرکت / کارخانه *" name="company_name" register={step2Form.register}
-          error={step2Form.formState.errors.company_name} placeholder="نام کامل شرکت" />
+        <div className="space-y-4">
+          <FormInput label="نام ثبتی شرکت / کارخانه *" name="company_name" register={step2Form.register}
+            error={step2Form.formState.errors.company_name} placeholder="نام کامل ثبتی سازمان" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <FormInput label="شماره ثبت" name="company_registration_number" register={step2Form.register} placeholder="اختیاری" />
+            <FormInput label="شناسه ملی / اقتصادی" name="tax_id" register={step2Form.register} placeholder="اختیاری" />
+            <FormInput label="استان" name="province" register={step2Form.register} placeholder="استان" />
+            <FormInput label="شهر" name="city" register={step2Form.register} placeholder="شهر" />
+            <FormInput label="کد پستی" name="postal_code" register={step2Form.register} placeholder="اختیاری" />
+          </div>
+          <FormInput label="نشانی اصلی سازمان" name="address" register={step2Form.register} placeholder="نشانی" />
+        </div>
       )}
 
       {/* Buyer: Sub Role (متن آزاد) */}
@@ -339,7 +362,7 @@ export const RegisterForm = () => {
         <div>
           <div className="flex items-center justify-between mb-2">
             <h4 className="font-medium">رابطین شرکت</h4>
-            <Button variant="outline" size="sm" onClick={addContact}>
+            <Button type="button" variant="outline" size="sm" onClick={addContact}>
               <FiPlus className="ml-1" /> افزودن رابط
             </Button>
           </div>

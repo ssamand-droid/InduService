@@ -152,6 +152,10 @@ class ServiceRequest(TimeStampedModel):
 
     buyer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_requests',
                               limit_choices_to={'role': User.Role.BUYER})
+    organization = models.ForeignKey(
+        'organizations.Organization', on_delete=models.PROTECT, null=True, blank=True,
+        related_name='service_requests', verbose_name=_('سازمان درخواست‌کننده'),
+    )
     service = models.ForeignKey(Service, on_delete=models.SET_NULL, null=True, blank=True, related_name='requests')
     title = models.CharField(_('عنوان درخواست'), max_length=200)
     description = models.TextField(_('شرح مشکل/نیاز'))
@@ -234,6 +238,43 @@ class ServiceRequest(TimeStampedModel):
         default=True,
         help_text='در صورت غیرفعال بودن، فقط ارائه‌دهندگان مرتبط با سرویس می‌توانند درخواست را ببینند'
     )
+
+    def can_be_viewed_by(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_staff:
+            return True
+        if not self.organization_id:
+            return self.buyer_id == user.id
+        return bool(self.organization_id and self.organization.memberships.filter(user=user, is_active=True).exists())
+
+    def can_be_requested_by(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_staff:
+            return True
+        if not self.organization_id:
+            return self.buyer_id == user.id
+        from organizations.models import OrganizationMembership
+        return self.organization.memberships.filter(
+            user=user, is_active=True,
+            role__in=[OrganizationMembership.Role.OWNER, OrganizationMembership.Role.ADMIN,
+                      OrganizationMembership.Role.REQUESTER, OrganizationMembership.Role.MEMBER],
+        ).exists()
+
+    def can_be_approved_by(self, user):
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_staff:
+            return True
+        if not self.organization_id:
+            return self.buyer_id == user.id
+        from organizations.models import OrganizationMembership
+        return self.organization.memberships.filter(
+            user=user, is_active=True,
+            role__in=[OrganizationMembership.Role.OWNER, OrganizationMembership.Role.ADMIN,
+                      OrganizationMembership.Role.APPROVER],
+        ).exists()
 
     class Meta:
         verbose_name = _('درخواست خدمت')

@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { useAuthStore } from '@stores/authStore';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import api from '@lib/axios';
 import { Button, Spinner } from '@components/ui';
 import { FormInput, FormTextarea, FormSelect } from '@components/forms';
 import { SERVICE_SCENARIOS, BUYER_ROLES, PROVIDER_ROLES, ROLE_LABELS } from '@lib/constants';
@@ -176,8 +177,30 @@ export default function ProfilePage() {
   // ========================
   // Handlers
   // ========================
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     setSuccessMsg('');
+    const organizationMemberships = (user.organization_memberships || []).filter(
+      (membership) => membership.organization_type === 'factory' || membership.organization_type === 'service_provider'
+    );
+    const managedOrganizations = organizationMemberships.filter((membership) => ['owner', 'admin'].includes(membership.role));
+    if (managedOrganizations.length === 1) {
+      const membership = managedOrganizations[0];
+      try {
+        await api.patch(`/api/organizations/${membership.organization}/`, {
+          name: data.company_name,
+          registration_number: data.company_registration_number,
+          tax_id: data.tax_id,
+          address: data.address,
+          city: data.city,
+          province: data.province,
+          postal_code: data.postal_code,
+          website: data.website,
+        });
+      } catch (err) {
+        toast.error(err?.userMessage || 'ذخیره اطلاعات سازمان ناموفق بود');
+        return;
+      }
+    }
     updateProfile(data, {
       onSuccess: () => setSuccessMsg('✅ پروفایل با موفقیت بروزرسانی شد'),
       onError: (err) => toast.error(err?.userMessage || 'خطا در ذخیره'),

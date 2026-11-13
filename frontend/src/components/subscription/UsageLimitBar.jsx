@@ -11,7 +11,7 @@ const UsageLimitBar = ({ used, limit, className = '' }) => {
     <div className={`${className}`}>
       <div className="flex items-center justify-between text-xs mb-1">
         <span className="text-gray-500">
-          دارایی‌ها: {used} / {limit >= 999 ? '∞' : limit}
+          ماشین‌آلات و تجهیزات: {used} / {limit >= 999 ? '∞' : limit}
         </span>
         <span className={isAtLimit ? 'text-red-600 font-bold' : isNearLimit ? 'text-yellow-600' : 'text-gray-400'}>
           {percentage}٪

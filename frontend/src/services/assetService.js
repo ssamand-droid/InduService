@@ -4,7 +4,7 @@ const assetService = {
   // ============ داشبورد ============
   getGlobalDashboard: () => api.get('/api/assets/assets/global_dashboard/'),
 
-  // ============ دارایی‌ها ============
+  // ============ ماشین‌آلات و تجهیزات ============
   getAssets: (params) => api.get('/api/assets/all/', { params }),
   getAsset: (id) => api.get(`/api/assets/all/${id}/`),
   createAsset: (data) => {
@@ -20,7 +20,7 @@ const assetService = {
   updateAsset: (id, data) => api.patch(`/api/assets/all/${id}/`, data),
   deleteAsset: (id) => api.delete(`/api/assets/all/${id}/`),
 
-  // ============ عملیات دارایی ============
+  // ============ عملیات دستگاه ============
   getAssetDashboard: (id) => api.get(`/api/assets/assets/${id}/dashboard/`),
   updateHealth: (id, data) => api.post(`/api/assets/assets/${id}/update_health/`, data),
   emergencyStop: (id) => api.post(`/api/assets/assets/${id}/emergency_stop/`),

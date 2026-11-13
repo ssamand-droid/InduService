@@ -141,7 +141,7 @@ const AddAssetPage = () => {
         // خطای محدودیت اشتراک
         if (data?.upgrade_required) {
           setApiError({
-            title: 'محدودیت دارایی رایگان',
+            title: 'محدودیت سهمیه رایگان دستگاه',
             message: data.message,
             action: 'ارتقاء اشتراک'
           })
@@ -167,7 +167,7 @@ const AddAssetPage = () => {
     <div className="min-h-[60vh] flex items-center justify-center">
       <div className="text-center animate-bounce-in">
         <CheckCircle className="mx-auto text-green-500 mb-4" size={64} />
-        <h2 className="text-2xl font-bold text-green-700 mb-2">دارایی با موفقیت ثبت شد!</h2>
+        <h2 className="text-2xl font-bold text-green-700 mb-2">دستگاه با موفقیت ثبت شد!</h2>
       </div>
     </div>
   )}

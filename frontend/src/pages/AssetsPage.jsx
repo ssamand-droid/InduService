@@ -104,7 +104,7 @@ const AssetsPage = () => {
     <div className="p-6 max-w-7xl mx-auto animate-fade-in">
       {/* هدر */}
       <PageHeader
-        title="دارایی‌های من"
+        title="ماشین‌آلات و تجهیزات من"
         description="مدیریت هوشمند تجهیزات و ماشین‌آلات صنعتی"
         actions={
           <>
@@ -148,7 +148,7 @@ const AssetsPage = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 stagger-children">
           <StatsCard
             icon={Package}
-            title="کل دارایی‌ها"
+            title="کل ماشین‌آلات و تجهیزات"
             value={dashboard.total_assets}
             color="indigo"
           />
@@ -167,7 +167,7 @@ const AssetsPage = () => {
           />
           {/* در بخش کارت‌های آماری، کارت چهارم رو با این جایگزین کن: */}
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-            <p className="text-sm text-gray-500">مصرف دارایی</p>
+            <p className="text-sm text-gray-500">دستگاه‌های استفاده‌شده</p>
             <UsageLimitBar
               used={dashboard.asset_limit?.current || 0}
               limit={dashboard.asset_limit?.max || 5}
@@ -178,7 +178,7 @@ const AssetsPage = () => {
             title="ظرفیت باقی‌مانده"
             value={`${dashboard.asset_limit?.remaining || 0}/${dashboard.asset_limit?.max || 5}`}
             color="indigo"
-            subtitle="دارایی رایگان"
+            subtitle="سهمیه رایگان دستگاه"
           /> */}
         </div>
       )}
@@ -197,13 +197,13 @@ const AssetsPage = () => {
         </div>
       </div>
 
-      {/* لیست دارایی‌ها */}
+      {/* فهرست ماشین‌آلات و تجهیزات */}
       {loading ? (
         <SkeletonCard count={6} />
       ) : assets.length === 0 ? (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
           <EmptyState
-            title="هنوز دارایی ثبت نشده"
+            title="هنوز دستگاهی ثبت نشده"
             description="اولین دستگاه خود را ثبت کنید یا با فایل Excel به صورت انبوه وارد کنید"
             actionLink="/dashboard/assets/new"
             actionLabel="ثبت دستگاه جدید"

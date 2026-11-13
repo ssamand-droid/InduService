@@ -166,9 +166,10 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 'buyer', 'service__provider'
             ).prefetch_related('quotes', 'quotes__provider').order_by('-created_at').distinct()
 
-        if user.role == 'buyer':
+        if user.role in ['buyer', 'technician', 'maintenance_manager', 'procurement']:
             return ServiceRequest.objects.filter(
-                buyer=user
+                Q(buyer=user, organization__isnull=True)
+                | Q(organization__memberships__user=user, organization__memberships__is_active=True)
             ).select_related('service__provider').prefetch_related('quotes', 'quotes__provider').order_by('-created_at')
 
         return ServiceRequest.objects.none()
@@ -180,7 +181,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         if user.role == 'admin' or user.is_staff:
             return obj
 
-        if user.role == 'buyer' and obj.buyer == user:
+        if user.role in ['buyer', 'technician', 'maintenance_manager', 'procurement'] and obj.can_be_viewed_by(user):
             return obj
 
         if user.role in ['seller', 'service_provider', 'company_seller', 'company_provider']:
@@ -209,7 +210,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     def match_providers(self, request, pk=None):
         service_request = self.get_object()
 
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_requested_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         matching_enabled = service_request.extra_data.get('matching_enabled', True)
@@ -276,7 +277,30 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
                 industry=industry, asset_name=asset_name
             )
 
-        service_request = serializer.save(buyer=self.request.user, service=matched_service)
+        organization = serializer.validated_data.get('organization')
+        if organization is None:
+            from organizations.models import OrganizationMembership
+            available = list(OrganizationMembership.objects.filter(
+                user=self.request.user, is_active=True, role__in=[
+                    OrganizationMembership.Role.OWNER, OrganizationMembership.Role.ADMIN,
+                    OrganizationMembership.Role.REQUESTER, OrganizationMembership.Role.MEMBER,
+                ], organization__organization_type='factory',
+            ).select_related('organization'))
+            if len(available) == 1:
+                organization = available[0].organization
+            elif len(available) > 1:
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'organization': 'برای ثبت درخواست، سازمان موردنظر را انتخاب کنید.'})
+            elif (
+                getattr(self.request.user.profile, 'person_type', None) == 'legal'
+                and self.request.user.profile.registration_completed
+            ):
+                from rest_framework.exceptions import ValidationError
+                raise ValidationError({'organization': 'برای ثبت درخواست سازمانی، عضویت فعال با دسترسی درخواست لازم است.'})
+
+        service_request = serializer.save(
+            buyer=self.request.user, service=matched_service, organization=organization,
+        )
 
         if not matched_service:
             self.request.session['unmatched_request'] = True
@@ -308,7 +332,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
         if not quote_id:
             return Response({'error': 'شناسه پیشنهاد مشخص نشده'}, status=400)
 
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_approved_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         with transaction.atomic():
@@ -413,7 +437,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def pay_advance(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_approved_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if not service_request.advance_payment_required:
@@ -604,7 +628,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def accept_completion(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_approved_by(request.user):
             return Response({'error': 'فقط کارخانه می‌تواند تأیید کند'}, status=403)
 
         if service_request.status != ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE:
@@ -650,7 +674,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def reject_completion(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_approved_by(request.user):
             return Response({'error': 'فقط کارخانه می‌تواند رد کند'}, status=403)
 
         if service_request.status != ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE:
@@ -684,7 +708,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def request_revision(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_approved_by(request.user):
             return Response({'error': 'فقط کارخانه می‌تواند درخواست اصلاح دهد'}, status=403)
 
         if service_request.status != ServiceRequest.Status.SUBMITTED_FOR_ACCEPTANCE:
@@ -718,7 +742,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def final_payment(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user and not request.user.is_staff:
+        if not service_request.can_be_approved_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
 
         if service_request.status != ServiceRequest.Status.COMPLETED:
@@ -790,7 +814,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def upload_attachment(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user:
+        if not service_request.can_be_requested_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
         if service_request.status != ServiceRequest.Status.PENDING:
             return Response({'error': 'فقط درخواست‌های در انتظار بررسی قابل ویرایش هستند'}, status=400)
@@ -817,7 +841,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['patch'], permission_classes=[permissions.IsAuthenticated])
     def update_request(self, request, pk=None):
         service_request = self.get_object()
-        if service_request.buyer != request.user:
+        if not service_request.can_be_requested_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
         if service_request.status != ServiceRequest.Status.PENDING:
             return Response({'error': 'فقط درخواست‌های در انتظار بررسی قابل ویرایش هستند'}, status=400)
@@ -935,7 +959,7 @@ class ServiceRequestViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def submit_review(self, request, pk=None):
         service_request = self.get_object()
-        if request.user != service_request.buyer:
+        if not service_request.can_be_requested_by(request.user):
             return Response({'error': 'دسترسی غیرمجاز'}, status=403)
         if service_request.status != ServiceRequest.Status.COMPLETED:
             return Response({'error': 'خدمت هنوز تأیید نشده'}, status=400)

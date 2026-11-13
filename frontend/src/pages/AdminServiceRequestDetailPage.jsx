@@ -254,7 +254,7 @@ export default function AdminServiceRequestDetailPage() {
                 </div>
                 {request.related_asset && (
                   <div>
-                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>دارایی مرتبط:</span>
+                    <span style={{ color: '#6b7280', fontSize: '0.875rem' }}>دستگاه مرتبط:</span>
                     <p style={{ marginTop: '0.25rem' }}>
                       <span style={{ fontFamily: 'monospace', fontSize: '0.875rem' }}>{request.related_asset}</span>
                       {request.related_asset_name && <span style={{ color: '#6b7280', marginRight: '0.5rem' }}>({request.related_asset_name})</span>}

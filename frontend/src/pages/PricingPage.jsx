@@ -41,7 +41,7 @@ const PricingPage = () => {
                 <span className="text-sm text-gray-400">/ماه</span>
               </div>
               <ul className="mt-6 space-y-3">
-                <li><Check size={16} className="inline text-green-500" /> {plan.max_assets} دارایی</li>
+                <li><Check size={16} className="inline text-green-500" /> {plan.max_assets} دستگاه</li>
                 <li><Check size={16} className="inline text-green-500" /> {plan.max_users} کاربر</li>
                 {plan.has_predictive_maintenance && <li><Check size={16} className="inline text-green-500" /> نگهداری پیش‌بینانه</li>}
                 {plan.has_bulk_import && <li><Check size={16} className="inline text-green-500" /> واردات انبوه</li>}

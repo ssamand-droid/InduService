@@ -84,7 +84,7 @@ const ImportAssetsPage = () => {
     <div className="p-6 max-w-4xl mx-auto">
       {/* هدر */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">واردات انبوه دارایی‌ها</h1>
+        <h1 className="text-2xl font-bold text-gray-900">واردات انبوه ماشین‌آلات و تجهیزات</h1>
         <p className="text-gray-500 mt-1">
           با آپلود فایل Excel، چندین دستگاه را یکجا ثبت کنید
         </p>
@@ -249,7 +249,7 @@ const ImportAssetsPage = () => {
               to="/dashboard/assets"
               className="flex items-center gap-2 px-6 py-3 bg-indigo-600 text-white rounded-xl hover:bg-indigo-700 transition"
             >
-              مشاهده دارایی‌ها
+              مشاهده ماشین‌آلات و تجهیزات
               <ArrowRight size={18} />
             </Link>
           </div>

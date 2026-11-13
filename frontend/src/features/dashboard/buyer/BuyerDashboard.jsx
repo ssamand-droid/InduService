@@ -191,12 +191,12 @@ export default function BuyerDashboard() {
         </Card>
       </div>
             {/* ========================================================== */}
-      {/* بخش ۴: دارایی‌ها (Assets) */}
+      {/* بخش ۴: ماشین‌آلات و تجهیزات */}
       {/* ========================================================== */}
       <Card data-tour="assets">
         <div className="p-6">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">🏭 دارایی‌های من</h3>
+            <h3 className="text-lg font-semibold">🏭 ماشین‌آلات و تجهیزات من</h3>
             <Link
               to="/dashboard/assets"
               className="text-blue-600 text-sm hover:underline"
@@ -208,7 +208,7 @@ export default function BuyerDashboard() {
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <FiGrid className="h-8 w-8 text-purple-500 mx-auto mb-2" />
               <p className="text-2xl font-bold text-slate-800">0</p>
-              <p className="text-xs text-slate-500">کل دارایی‌ها</p>
+              <p className="text-xs text-slate-500">کل ماشین‌آلات و تجهیزات</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <span className="text-2xl block mb-2">✅</span>

@@ -114,6 +114,7 @@ class Profile(models.Model):
     پروفایل جامع کاربر - همه نقش‌ها
     """
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile', verbose_name=_('کاربر'))
+    registration_completed = models.BooleanField(_('ثبت‌نام تکمیل شده'), default=False)
 
     # ========================
     # نوع شخص (حقیقی / حقوقی)

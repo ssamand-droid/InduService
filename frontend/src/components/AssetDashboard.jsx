@@ -50,7 +50,7 @@ const AssetDashboard = () => {
       <div className="flex justify-between items-center mb-8">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">
-            اتاق فرمان دارایی‌ها
+            مرکز مدیریت ماشین‌آلات و تجهیزات
           </h1>
           <p className="text-gray-500 mt-2">
             سلامت کلی: {' '}
@@ -72,7 +72,7 @@ const AssetDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard
           icon={<Activity className="text-blue-500" />}
-          title="کل دارایی‌ها"
+          title="کل ماشین‌آلات و تجهیزات"
           value={dashboardData.total_assets}
           bgColor="bg-blue-50"
         />
@@ -97,9 +97,9 @@ const AssetDashboard = () => {
         />
       </div>
 
-      {/* وضعیت‌های دارایی‌ها */}
+      {/* وضعیت ماشین‌آلات و تجهیزات */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-8">
-        <h2 className="text-xl font-bold text-gray-800 mb-4">وضعیت دارایی‌ها</h2>
+        <h2 className="text-xl font-bold text-gray-800 mb-4">وضعیت ماشین‌آلات و تجهیزات</h2>
         <div className="flex gap-4">
           <StatusBadge
             label="عملیاتی"
@@ -119,7 +119,7 @@ const AssetDashboard = () => {
         </div>
       </div>
 
-      {/* دارایی‌های نیازمند توجه */}
+      {/* دستگاه‌های نیازمند توجه */}
       {dashboardData.assets_needing_attention?.length > 0 && (
         <div className="mb-8">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -134,7 +134,7 @@ const AssetDashboard = () => {
         </div>
       )}
 
-      {/* مودال ایجاد دارایی */}
+      {/* مودال ثبت دستگاه */}
       {showCreateModal && (
         <CreateAssetModal
           onClose={() => setShowCreateModal(false)}

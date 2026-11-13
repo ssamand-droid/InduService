@@ -53,7 +53,7 @@ const SubscriptionPage = () => {
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
           <h2 className="font-bold text-lg mb-4">میزان مصرف</h2>
           <div className="space-y-4">
-            <UsageBar label="دارایی‌ها" used={usage.assets_used} limit={plan.max_assets} />
+            <UsageBar label="ماشین‌آلات و تجهیزات" used={usage.assets_used} limit={plan.max_assets} />
             <UsageBar label="سنسورها" used={usage.sensors_used || 0} limit={plan.max_sensors} />
             <UsageBar label="کاربران" used={usage.users_used || 1} limit={plan.max_users} />
           </div>

@@ -132,7 +132,7 @@ const HeroSection = ({ slides }) => {
         <div className="max-w-4xl">
           <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full border border-blue-400/30 bg-blue-950/60 backdrop-blur-md mb-6">
             <FiCpu className="text-blue-400" />
-            <span className="text-sm font-medium tracking-[2px] text-blue-300">IIoT • PREDICTIVE MAINTENANCE • ASSET MANAGEMENT</span>
+            <span className="text-sm font-medium tracking-[2px] text-blue-300">IIoT • PREDICTIVE MAINTENANCE • EQUIPMENT MANAGEMENT</span>
           </div>
 
           <div className="transition-all duration-700" key={current}>

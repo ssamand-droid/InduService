@@ -43,7 +43,7 @@ export const ScenarioStep = ({ serviceType, value, onChange }) => {
   )
 }
 
-// ─── انتخاب دارایی ───────────────────────────────────────────
+// ─── انتخاب دستگاه ───────────────────────────────────────────
 export const AssetStep = ({ assets, selectedAsset, onSelectAsset, onClearAsset, assetSearch, onSearchChange }) => {
   const [open, setOpen] = React.useState(false)
   const filtered = assets.filter(a =>
@@ -76,7 +76,7 @@ export const AssetStep = ({ assets, selectedAsset, onSelectAsset, onClearAsset, 
             className="flex items-center gap-2 w-full px-4 py-3 border-2 border-dashed border-slate-300 rounded-xl text-slate-500 hover:border-blue-400 hover:text-blue-600 transition text-sm"
           >
             <Search size={16} />
-            <span>جستجو از دارایی‌های ثبت‌شده (اختیاری)</span>
+            <span>جست‌وجو میان ماشین‌آلات و تجهیزات ثبت‌شده (اختیاری)</span>
           </button>
           {open && (
             <div className="absolute top-full right-0 left-0 mt-1 border border-slate-200 rounded-xl bg-white shadow-lg z-10 overflow-hidden">
@@ -89,7 +89,7 @@ export const AssetStep = ({ assets, selectedAsset, onSelectAsset, onClearAsset, 
               />
               <div className="max-h-52 overflow-y-auto">
                 {filtered.length === 0
-                  ? <p className="text-center text-sm text-slate-400 py-4">دارایی یافت نشد</p>
+                  ? <p className="text-center text-sm text-slate-400 py-4">دستگاهی یافت نشد</p>
                   : filtered.map(asset => (
                     <button
                       key={asset.id}

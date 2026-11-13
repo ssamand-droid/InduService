@@ -105,7 +105,7 @@ const BUYER_TOUR_STEPS = [
   },
   {
     target: '[data-tour="assets"]',
-    title: '🏭 ثبت دارایی',
+    title: '🏭 ثبت دستگاه',
     content: 'دستگاه‌ها و تجهیزات خود را ثبت کنید تا درخواست‌های تعمیر سریعتر انجام شود.',
     placement: 'bottom',
     disableBeacon: true,

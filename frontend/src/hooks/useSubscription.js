@@ -54,8 +54,8 @@ export const useSubscription = () => {
   }
 
   const getLimitMessage = () => {
-    if (isAtLimit()) return 'به حداکثر دارایی رسیده‌اید'
-    if (isNearLimit()) return 'نزدیک به محدودیت دارایی'
+    if (isAtLimit()) return 'به سقف تعداد دستگاه‌ها رسیده‌اید'
+    if (isNearLimit()) return 'به سقف تعداد دستگاه‌ها نزدیک شده‌اید'
     return null
   }
 

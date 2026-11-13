@@ -658,8 +658,8 @@ Release must not be approved until:
 | SEC-01 | Security gate | P0 | Review secrets/configuration, auth, object permissions, file access, and tenant boundaries | **PENDING** |
 | API-01 | API contract baseline | P0 | Export current OpenAPI schema; map each endpoint to consumer, permission, and state effects | **PENDING** |
 | DATA-01 | Data/migration plan | P0 | Map current Profile/roles/provider data to Organization/Membership; define backfill and rollback | **PENDING** |
-| ORG-01 | Organization foundation | P0 | Organization and membership model/API/tests, introduced with backward-compatible migration | **NOT STARTED / VERIFY** |
-| TEN-01 | Tenant authorization | P0 | Centralized queryset/object permission strategy plus negative tests for cross-tenant access | **NOT STARTED / VERIFY** |
+| ORG-01 | Organization foundation | P0 | Organization and membership model/API/tests, introduced with backward-compatible migration | **IN PROGRESS — customer foundation slice; see `docs/product/organization-customer-foundation-v0.1.md`** |
+| TEN-01 | Tenant authorization | P0 | Centralized queryset/object permission strategy plus negative tests for cross-tenant access | **PARTIAL — service-request access only; assets and other domains remain open** |
 | AUD-01 | Audit foundation | P0 | Structured audit for sensitive actions, with actor, timestamp, object, action, and outcome | **NOT STARTED / VERIFY** |
 | SRV-01 | Service lifecycle specification | P0 | Approved state machine, quote rules, approval rules, cancellation and rework paths | **PENDING approval** |
 | SRV-02 | Service quote separation | P0 | Versioned ServiceQuote contract and migration away from embedded request-quote semantics | **NOT STARTED / VERIFY** |

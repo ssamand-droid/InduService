@@ -5,6 +5,8 @@ from .models import (
     ServiceRequestAttachment, ServiceCompletionImage, ServiceRequestQuote
 )
 from users.serializers import UserSerializer
+from organizations.models import Organization
+from organizations.permissions import user_can_request
 
 
 # ============================================================
@@ -184,6 +186,10 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
         required=False,
         allow_null=True
     )
+    organization = serializers.PrimaryKeyRelatedField(
+        queryset=Organization.objects.all(), required=False, allow_null=True,
+    )
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
     service_title = serializers.CharField(source='service.title', read_only=True)
     provider_name = serializers.CharField(source='service.provider.full_name', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
@@ -196,7 +202,7 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
     class Meta:
         model = ServiceRequest
         fields = [
-            'id', 'buyer', 'buyer_name', 'buyer_phone',
+            'id', 'buyer', 'buyer_name', 'buyer_phone', 'organization', 'organization_name',
             'service', 'service_title', 'provider_name',
             'title', 'description', 'equipment_details',
             'desired_start_date', 'urgency',
@@ -213,6 +219,19 @@ class ServiceRequestSerializer(serializers.ModelSerializer):
             'quotes',
         ]
         read_only_fields = ['buyer', 'status', 'created_at', 'updated_at', 'accepted_at', 'rejected_at']
+
+    def validate_organization(self, organization):
+        request = self.context.get('request')
+        if organization and organization.organization_type != Organization.Type.FACTORY:
+            raise serializers.ValidationError('درخواست خدمت باید به یک کارخانه یا سازمان دریافت‌کننده تعلق داشته باشد.')
+        if organization and not user_can_request(request.user, organization):
+            raise serializers.ValidationError('عضویت شما اجازه ثبت درخواست برای این سازمان را نمی‌دهد.')
+        return organization
+
+    def validate(self, attrs):
+        if self.instance and 'organization' in attrs and attrs['organization'] != self.instance.organization:
+            raise serializers.ValidationError({'organization': 'سازمان یک درخواست پس از ثبت قابل تغییر نیست.'})
+        return attrs
 
     def get_remaining_amount(self, obj):
         if hasattr(obj, 'invoice'):

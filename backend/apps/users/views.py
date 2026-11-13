@@ -2,6 +2,7 @@ from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAdminUser
+from django.core import signing
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth import get_user_model
 from .models import Profile, PortfolioItem, Certification
@@ -10,6 +11,7 @@ from .serializers import (
     PortfolioItemSerializer, CertificationSerializer, RegisterStep1Serializer, RegisterStep2Serializer
 )
 from core.permissions import IsOwnerOrReadOnly
+from organizations.serializers import OrganizationMembershipSerializer
 
 User = get_user_model()
 
@@ -46,6 +48,9 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         data = UserSerializer(user).data
         data['profile'] = ProfileSerializer(user.profile).data
+        data['organization_memberships'] = OrganizationMembershipSerializer(
+            user.organization_memberships.filter(is_active=True).select_related('organization'), many=True,
+        ).data
         data['role_display'] = user.get_role_display()
         return Response(data)
 
@@ -73,6 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     'success': {'type': 'boolean'},
                     'message': {'type': 'string'},
                     'user_id': {'type': 'integer'},
+                    'registration_token': {'type': 'string'},
                     'role': {'type': 'string'},
                 }
             }
@@ -88,6 +94,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'success': True,
             'message': 'مرحله اول با موفقیت انجام شد',
             'user_id': user.id,
+            'registration_token': signing.dumps({'user_id': user.id}, salt='users.registration'),
             'role': user.role,
         }, status=status.HTTP_201_CREATED)
 
@@ -97,7 +104,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'application/json': {
                 'type': 'object',
                 'properties': {
-                    'user_id': {'type': 'integer', 'example': 13},
+                    'registration_token': {'type': 'string'},
                     'first_name': {'type': 'string', 'example': 'رضا'},
                     'last_name': {'type': 'string', 'example': 'محمدی'},
                     'person_type': {'type': 'string', 'enum': ['individual', 'legal'], 'example': 'individual'},
@@ -108,8 +115,13 @@ class UserViewSet(viewsets.ModelViewSet):
                     'company_registration_number': {'type': 'string', 'nullable': True},
                     'tax_id': {'type': 'string', 'nullable': True},
                     'company_contacts': {'type': 'array', 'items': {'type': 'object'}},
+                    'address': {'type': 'string'},
+                    'city': {'type': 'string'},
+                    'province': {'type': 'string'},
+                    'postal_code': {'type': 'string'},
+                    'website': {'type': 'string'},
                 },
-                'required': ['user_id', 'first_name', 'last_name', 'person_type']
+                'required': ['registration_token', 'first_name', 'last_name', 'person_type']
             }
         },
         responses={
@@ -130,7 +142,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'application/json': {
                 'type': 'object',
                 'properties': {
-                    'user_id': {'type': 'integer', 'example': 13},
+                    'registration_token': {'type': 'string'},
                     'first_name': {'type': 'string', 'example': 'رضا'},
                     'last_name': {'type': 'string', 'example': 'محمدی'},
                     'person_type': {'type': 'string', 'enum': ['individual', 'legal'], 'example': 'individual'},
@@ -141,8 +153,13 @@ class UserViewSet(viewsets.ModelViewSet):
                     'company_registration_number': {'type': 'string', 'nullable': True},
                     'tax_id': {'type': 'string', 'nullable': True},
                     'company_contacts': {'type': 'array', 'items': {'type': 'object'}},
+                    'address': {'type': 'string'},
+                    'city': {'type': 'string'},
+                    'province': {'type': 'string'},
+                    'postal_code': {'type': 'string'},
+                    'website': {'type': 'string'},
                 },
-                'required': ['user_id', 'first_name', 'last_name', 'person_type']
+                'required': ['registration_token', 'first_name', 'last_name', 'person_type']
             }
         },
         responses={
@@ -162,8 +179,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = RegisterStep2Serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user_id = serializer.validated_data.pop('user_id')
-        user = User.objects.get(id=user_id)
+        user = serializer.validated_data.pop('registration_token')
         user = serializer.update(user, serializer.validated_data)
 
         return Response({

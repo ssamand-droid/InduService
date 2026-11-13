@@ -45,7 +45,7 @@ const EditAssetPage = () => {
         hourly_downtime_cost: asset.hourly_downtime_cost || '',
       })
     } catch (err) {
-      setError('خطا در دریافت اطلاعات دارایی')
+      setError('خطا در دریافت اطلاعات دستگاه')
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ const EditAssetPage = () => {
     <div className="p-6 max-w-3xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-          ویرایش دارایی
+          ویرایش دستگاه
         </h1>
       </div>
 

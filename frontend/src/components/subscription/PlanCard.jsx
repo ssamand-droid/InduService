@@ -69,7 +69,7 @@ const PlanCard = ({ plan, isCurrentPlan, onSelect, isLoading }) => {
 
       {/* ویژگی‌ها */}
       <ul className="space-y-3 mb-6">
-        <FeatureItem label={`${plan.max_assets >= 999 ? 'نامحدود' : plan.max_assets} دارایی`} />
+        <FeatureItem label={`${plan.max_assets >= 999 ? 'نامحدود' : plan.max_assets} دستگاه`} />
         <FeatureItem label={`${plan.max_users} کاربر`} />
         <FeatureItem label={`${plan.max_sensors} سنسور`} available={plan.max_sensors > 0} />
         <FeatureItem label="تحلیل پیشرفته" available={plan.has_advanced_analytics} />

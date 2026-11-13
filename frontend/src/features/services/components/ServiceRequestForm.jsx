@@ -4,7 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useNavigate } from 'react-router-dom'
 import { FiUpload, FiX, FiFile } from 'react-icons/fi'
-import { useService, useCreateServiceRequest } from '../hooks/useServices'
+import { useService, useCreateServiceRequest, useMyOrganizations } from '../hooks/useServices'
 import { serviceApi } from '../services/serviceApi'
 import { Button, Alert } from '@components/ui'
 import { FormInput, FormTextarea, FormSelect } from '@components/forms'
@@ -18,6 +18,7 @@ const baseSchema = z.object({
   equipment_details: z.string().optional(),
   desired_start_date: z.string().optional(),
   urgency: z.enum(['low', 'medium', 'high', 'critical']),
+  organization: z.string().optional(),
 })
 
 const urgencyOptions = [
@@ -41,6 +42,10 @@ const getScenarioSchema = (scenario) => {
 export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
   const navigate = useNavigate()
   const { data: service } = useService(serviceId)
+  const { data: organizations = [] } = useMyOrganizations()
+  const factoryOrganizations = organizations.filter((organization) =>
+    organization.organization_type === 'factory' && ['owner', 'admin', 'requester', 'member'].includes(organization.my_role)
+  )
   const { mutateAsync: createRequest, isPending, error } = useCreateServiceRequest()
 
   const [files, setFiles] = useState([])
@@ -66,6 +71,7 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
       urgency: 'medium',
       has_drawing: false,
       test_method: 'UT',
+      organization: '',
     },
   })
 
@@ -79,7 +85,7 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
   }
 
   const onSubmit = async (data) => {
-    const { service, title, description, equipment_details, desired_start_date, urgency, ...extraData } = data
+    const { service, title, description, equipment_details, desired_start_date, urgency, organization, ...extraData } = data
 
     const payload = {
       service,
@@ -88,6 +94,7 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
       equipment_details,
       desired_start_date,
       urgency,
+      ...(organization ? { organization } : {}),
       extra_data: extraData,
     }
 
@@ -202,6 +209,12 @@ export const ServiceRequestForm = ({ serviceId, serviceTitle, onSuccess }) => {
 
       <FormTextarea label="مشخصات تجهیز (اختیاری)" name="equipment_details" register={register}
         placeholder="برند، مدل، سال ساخت..." rows={2} />
+
+      {factoryOrganizations.length > 1 && (
+        <FormSelect label="سازمان درخواست‌کننده" name="organization" register={register}
+          options={factoryOrganizations.map((item) => ({ value: item.id, label: item.name }))}
+          placeholder="کارخانه یا سازمان را انتخاب کنید" />
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <FormInput label="تاریخ شروع مطلوب" name="desired_start_date" type="date" register={register} />

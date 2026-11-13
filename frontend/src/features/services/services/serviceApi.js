@@ -4,6 +4,10 @@ import api from '@lib/axios'
 import { buildQueryString } from '@lib/utils'
 
 export const serviceApi = {
+  getMyOrganizations: async () => {
+    const response = await api.get('/api/organizations/')
+    return response.data.results || response.data
+  },
   // ========================
   // Services
   // ========================

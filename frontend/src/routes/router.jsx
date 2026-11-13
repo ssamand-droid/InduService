@@ -222,7 +222,7 @@ export const router = createBrowserRouter([
             ],
           },
 
-          // ========== مسیرهای دارایی‌ها ==========
+          // ========== مسیرهای ماشین‌آلات و تجهیزات ==========
           {
             path: 'assets',
             element: <PrivateRoute />,

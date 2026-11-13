@@ -158,7 +158,7 @@ const AssetDetailPage = () => {
 
   // رندر شرطی - همه Hook ها قبل از این اجرا شدن
   if (loading) return <div className="flex justify-center py-20"><Spinner size="lg" /></div>
-  if (!asset) return <div className="text-center py-20 text-gray-500">دارایی یافت نشد</div>
+  if (!asset) return <div className="text-center py-20 text-gray-500">دستگاه یافت نشد</div>
 
   const healthColor = asset.health_index >= 80 ? 'text-green-600' : asset.health_index >= 60 ? 'text-yellow-600' : 'text-red-600'
 
