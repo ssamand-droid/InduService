@@ -203,7 +203,7 @@ class AssetViewSet(SubscriptionLimitMixin, viewsets.ModelViewSet):
             },
             'average_health': assets.aggregate(avg=Avg('health_index'))['avg'] or 0,
             'critical_alerts': AssetAlert.objects.filter(
-                asset__owner=request.user, severity='critical', is_read=False
+                asset__in=assets, severity='critical', is_read=False
             ).count(),
             'upcoming_maintenance': assets.filter(
                 next_maintenance_date__lte=timezone.now() + timedelta(days=7)

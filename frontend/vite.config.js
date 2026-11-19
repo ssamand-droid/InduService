@@ -1,22 +1,25 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
-import path from 'path'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const rootDir = path.dirname(fileURLToPath(import.meta.url))
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(__dirname, './src'),
-      '@components': path.resolve(__dirname, './src/components'),
-      '@features': path.resolve(__dirname, './src/features'),
-      '@hooks': path.resolve(__dirname, './src/hooks'),
-      '@lib': path.resolve(__dirname, './src/lib'),
-      '@stores': path.resolve(__dirname, './src/stores'),
-      '@pages': path.resolve(__dirname, './src/pages'),
-      '@data': path.resolve(__dirname, './src/data'),
-      '@assets': path.resolve(__dirname, './src/assets'),
-      '@routes': path.resolve(__dirname, './src/routes'),
-      '@services': path.resolve(__dirname, './src/services'),
+      '@': path.resolve(rootDir, './src'),
+      '@components': path.resolve(rootDir, './src/components'),
+      '@features': path.resolve(rootDir, './src/features'),
+      '@hooks': path.resolve(rootDir, './src/hooks'),
+      '@lib': path.resolve(rootDir, './src/lib'),
+      '@stores': path.resolve(rootDir, './src/stores'),
+      '@pages': path.resolve(rootDir, './src/pages'),
+      '@data': path.resolve(rootDir, './src/data'),
+      '@assets': path.resolve(rootDir, './src/assets'),
+      '@routes': path.resolve(rootDir, './src/routes'),
+      '@services': path.resolve(rootDir, './src/services'),
     }
   },
   server: {

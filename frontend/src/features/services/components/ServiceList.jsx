@@ -3,7 +3,7 @@ import { ServiceCard } from './ServiceCard'
 import { ServiceFilters } from './ServiceFilters'
 import { Spinner, Alert, Button } from '@components/ui'
 import { useServices } from '../hooks/useServices'
-import { FiFilter, FiX } from 'react-icons/fi'
+import { FiFilter, FiX, FiGrid, FiList } from 'react-icons/fi'
 
 // تابع امن فرمت عدد با هزارگان
 const safeFormatNumber = (num) => {
@@ -16,6 +16,7 @@ const safeFormatNumber = (num) => {
 export const ServiceList = () => {
   const [filters, setFilters] = useState({})
   const [showMobileFilters, setShowMobileFilters] = useState(false)
+  const [viewMode, setViewMode] = useState('grid')
   const { data, isLoading, error } = useServices(filters)
 
   const services = data?.results || []
@@ -119,6 +120,31 @@ export const ServiceList = () => {
 
         {/* لیست خدمات */}
         <div className="flex-1">
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-sm text-gray-500">
+              {safeFormatNumber(totalCount)} خدمات یافت شد
+            </p>
+            <div className="flex items-center gap-1" role="group" aria-label="حالت نمایش خدمات">
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                aria-label="نمایش گریدی"
+                aria-pressed={viewMode === 'grid'}
+                className={`p-2 rounded-lg ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
+              >
+                <FiGrid className="w-5 h-5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                aria-label="نمایش فهرستی"
+                aria-pressed={viewMode === 'list'}
+                className={`p-2 rounded-lg ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
+              >
+                <FiList className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
           {services.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-gray-500">
@@ -134,11 +160,7 @@ export const ServiceList = () => {
             </div>
           ) : (
             <>
-              <div className="text-sm text-gray-500 mb-4 md:hidden">
-                {safeFormatNumber(services.length)} نتیجه از {safeFormatNumber(totalCount)}
-              </div>
-
-              <div className="grid grid-cols-1 gap-4 sm:gap-6">
+              <div className={`grid gap-4 sm:gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 xl:grid-cols-3' : 'grid-cols-1'}`}>
                 {services.map((service) => (
                   <ServiceCard key={service.id} service={service} />
                 ))}

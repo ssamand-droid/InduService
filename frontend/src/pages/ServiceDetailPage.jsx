@@ -6,6 +6,7 @@ import { ServiceRequestForm } from '@features/services/components/ServiceRequest
 import { Spinner, Alert, Button, Badge, Card, Modal, Tabs, TabList, Tab, TabPanels, TabPanel } from '@components/ui'
 import { SERVICE_TYPE_LABELS } from '@lib/constants'
 import { WorkflowPreview } from '@features/services/components/WorkflowPreview'
+import { useAuthStore } from '@stores/authStore'
 
 // تابع امن فرمت قیمت
 const safeFormatPrice = (price) => {
@@ -19,6 +20,9 @@ export default function ServiceDetailPage() {
   const { slug } = useParams()
   const { data: service, isLoading, error } = useService(slug)
   const [isRequestModalOpen, setIsRequestModalOpen] = useState(false)
+  const isBuyer = useAuthStore((state) => state.isBuyer())
+  const isAdmin = useAuthStore((state) => state.isAdmin())
+  const canRequest = isBuyer || isAdmin
 
   if (isLoading) return (
     <div className="flex justify-center items-center min-h-[60vh]">
@@ -127,6 +131,7 @@ export default function ServiceDetailPage() {
                 </div>
               )}
 
+              {canRequest && (
               <Button
                 variant="primary"
                 fullWidth
@@ -136,11 +141,13 @@ export default function ServiceDetailPage() {
               >
                 ثبت درخواست خدمت
               </Button>
+              )}
             </div>
           </Card>
         </div>
       </div>
 
+      {canRequest && (
       <Modal
         isOpen={isRequestModalOpen}
         onClose={() => setIsRequestModalOpen(false)}
@@ -153,6 +160,7 @@ export default function ServiceDetailPage() {
           onSuccess={() => setIsRequestModalOpen(false)}
         />
       </Modal>
+      )}
     </div>
   )
 }

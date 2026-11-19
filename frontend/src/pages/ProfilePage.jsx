@@ -202,7 +202,7 @@ export default function ProfilePage() {
       }
     }
     updateProfile(data, {
-      onSuccess: () => setSuccessMsg('✅ پروفایل با موفقیت بروزرسانی شد'),
+      onSuccess: () => setSuccessMsg('پروفایل با موفقیت بروزرسانی شد'),
       onError: (err) => toast.error(err?.userMessage || 'خطا در ذخیره'),
     });
   };
@@ -211,7 +211,7 @@ export default function ProfilePage() {
     setPwSuccess('');
     setPwError('');
     changePassword(data, {
-      onSuccess: () => { setPwSuccess('✅ رمز عبور با موفقیت تغییر کرد'); rsp(); },
+      onSuccess: () => { setPwSuccess('رمز عبور با موفقیت تغییر کرد'); rsp(); },
       onError: (e) => setPwError(e?.userMessage || 'خطا در تغییر رمز عبور'),
     });
   };

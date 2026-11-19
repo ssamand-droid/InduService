@@ -5,6 +5,7 @@ import { FiSearch, FiUser, FiShoppingCart, FiMoon, FiSun, FiMenu, FiDollarSign, 
 import { useAuthStore } from '@stores/authStore'
 import { useThemeStore } from '@stores/themeStore'
 import { useUIStore } from '@stores/uiStore'
+import { PROVIDER_ROLES } from '@lib/constants'
 import { NotificationBell } from '@features/notifications/components/NotificationBell'
 import { useCartStore } from '@features/cart/store/cartStore'
 import { Sidebar } from './Sidebar'  // اضافه شد
@@ -53,9 +54,11 @@ export const Header = () => {
     }
   }
 
+  const isProvider = PROVIDER_ROLES.includes(user?.role)
+
   const navItems = [
     { path: '/services', label: 'خدمات MRO' },
-    { path: '/request-service', label: 'درخواست خدمت' },
+    ...(isProvider ? [] : [{ path: '/request-service', label: 'درخواست خدمت' }]),
     { path: '/products', label: 'محصولات' },
     { path: '/blog', label: 'وبلاگ' },
     { path: '/about', label: 'درباره ما' },

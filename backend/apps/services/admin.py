@@ -66,6 +66,17 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     # فیلدهای نمایشی
     # ========================
 
+    def _extra_dict(self, obj):
+        data = obj.extra_data
+        if isinstance(data, str):
+            try:
+                import json
+                parsed = json.loads(data)
+                return parsed if isinstance(parsed, dict) else {}
+            except (ValueError, TypeError):
+                return {}
+        return data if isinstance(data, dict) else {}
+
     def buyer_company(self, obj):
         if obj.organization_id:
             return obj.organization.name
@@ -83,7 +94,7 @@ class ServiceRequestAdmin(admin.ModelAdmin):
 
     def matching_enabled(self, obj):
         """نمایش وضعیت Matching Engine"""
-        is_enabled = obj.extra_data.get('matching_enabled', True)
+        is_enabled = self._extra_dict(obj).get('matching_enabled', True)
         if is_enabled:
             return '✅ فعال'
         return '❌ غیرفعال'
@@ -91,13 +102,13 @@ class ServiceRequestAdmin(admin.ModelAdmin):
 
     def match_count(self, obj):
         """تعداد پیمانکاران پیدا شده"""
-        matched = obj.extra_data.get('matched_providers', [])
+        matched = self._extra_dict(obj).get('matched_providers', [])
         return len(matched) if matched else 0
     match_count.short_description = 'تعداد تطابق'
 
     def match_providers_display(self, obj):
         """نمایش پیمانکاران تطابق یافته"""
-        matched = obj.extra_data.get('matched_providers', [])
+        matched = self._extra_dict(obj).get('matched_providers', [])
         if not matched:
             return 'هنوز تطابقی انجام نشده'
 

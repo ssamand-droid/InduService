@@ -145,6 +145,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             'max_concurrent_requests', 'has_vehicle',
             'base_hourly_rate', 'base_daily_rate',
             'province',
+            'provider_sub_role_custom',
         ]
         read_only_fields = ['id', 'user', 'rating', 'rating_count', 'completed_orders', 'total_revenue', 'avg_response_time_hours']
 
@@ -209,6 +210,7 @@ class RegisterStep2Serializer(serializers.Serializer):
 
     # خدمات‌دهنده
     provider_sub_role = serializers.CharField(required=False, allow_blank=True)
+    provider_sub_role_custom = serializers.CharField(required=False, allow_blank=True)
 
     # حقوقی
     company_name = serializers.CharField(required=False, allow_blank=True)
@@ -236,6 +238,8 @@ class RegisterStep2Serializer(serializers.Serializer):
             raise serializers.ValidationError({'company_name': 'نام ثبتی شرکت یا کارخانه الزامی است.'})
         if attrs.get('company_contacts') and not isinstance(attrs['company_contacts'], list):
             raise serializers.ValidationError({'company_contacts': 'فهرست رابط‌ها باید آرایه باشد.'})
+        if attrs.get('provider_sub_role') == 'other' and not attrs.get('provider_sub_role_custom', '').strip():
+            raise serializers.ValidationError({'provider_sub_role_custom': 'در انتخاب "سایر"، لطفاً نوع خدمات‌دهنده را مشخص کنید.'})
         return attrs
 
     def update(self, instance, validated_data):
@@ -257,7 +261,7 @@ class RegisterStep2Serializer(serializers.Serializer):
             profile, _ = Profile.objects.get_or_create(user=user)
             profile.person_type = person_type
             for field in (
-                'national_id', 'buyer_sub_role', 'provider_sub_role', 'company_name',
+                'national_id', 'buyer_sub_role', 'provider_sub_role', 'provider_sub_role_custom', 'company_name',
                 'company_registration_number', 'tax_id', 'company_contacts',
                 'address', 'city', 'province', 'postal_code', 'website',
             ):

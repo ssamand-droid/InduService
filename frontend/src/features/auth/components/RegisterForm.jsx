@@ -38,6 +38,7 @@ const step2Schema = z.object({
   buyer_sub_role: z.string().optional(),
   // خدمات‌دهنده
   provider_sub_role: z.string().optional(),
+  provider_sub_role_custom: z.string().optional(),
   // حقوقی
   company_name: z.string().optional(),
   company_registration_number: z.string().optional(),
@@ -49,6 +50,9 @@ const step2Schema = z.object({
 }).refine((data) => data.person_type !== 'legal' || !!data.company_name?.trim(), {
   message: 'نام ثبتی شرکت یا کارخانه الزامی است',
   path: ['company_name'],
+}).refine((data) => data.provider_sub_role !== 'other' || !!data.provider_sub_role_custom?.trim(), {
+  message: 'در انتخاب "سایر"، لطفاً نوع خدمات‌دهنده را مشخص کنید',
+  path: ['provider_sub_role_custom'],
 })
 
 // ========================
@@ -96,7 +100,7 @@ export const RegisterForm = () => {
     resolver: zodResolver(step2Schema),
     defaultValues: {
       first_name: '', last_name: '', person_type: 'individual',
-      national_id: '', buyer_sub_role: '', provider_sub_role: '', company_name: '',
+      national_id: '', buyer_sub_role: '', provider_sub_role: '', provider_sub_role_custom: '', company_name: '',
       company_registration_number: '', tax_id: '', address: '', city: '', province: '', postal_code: '',
     },
   })
@@ -136,7 +140,7 @@ export const RegisterForm = () => {
       })
       if (response.data.success) {
         setRegistrationToken(response.data.registration_token)
-        toast.success('✅ مرحله اول با موفقیت انجام شد')
+        toast.success('مرحله اول با موفقیت انجام شد')
         setStep(2)
       }
     } catch (error) {
@@ -353,7 +357,7 @@ export const RegisterForm = () => {
 
       {/* Provider: Other role */}
       {isProviderRole && watchProviderSubRole === 'other' && (
-        <FormInput label="نوع خدمات‌دهنده (سایر)" name="provider_sub_role" register={step2Form.register}
+        <FormInput label="نوع خدمات‌دهنده (سایر)" name="provider_sub_role_custom" register={step2Form.register}
           placeholder="توضیح دهید" />
       )}
 

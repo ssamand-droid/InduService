@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
 import {
   Camera, Upload, X, CheckCircle, AlertCircle,
   Info, ChevronRight
@@ -16,6 +17,7 @@ const CRITICALITY_OPTIONS = [
 
 const AddAssetPage = () => {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState([])
   const [previewImage, setPreviewImage] = useState(null)
@@ -118,6 +120,7 @@ const AddAssetPage = () => {
 
       const response = await assetService.createAsset(submitData)
 
+      await queryClient.invalidateQueries({ queryKey: ['assets', 'global-dashboard'] })
       setSuccess(true)
       setTimeout(() => {
         navigate(`/dashboard/assets/${response.data.id}`)

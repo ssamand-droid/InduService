@@ -442,6 +442,56 @@ class Transaction(TimeStampedModel):
 # ========================
 # Settlement
 # ========================
+class LedgerAccount(TimeStampedModel):
+    class AccountType(models.TextChoices):
+        CASH = 'cash', _('بانک / وجه نقد')
+        EXPENSE = 'expense', _('هزینه')
+        REVENUE = 'revenue', _('درآمد')
+
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT, related_name='ledger_accounts')
+    code = models.CharField(max_length=40)
+    name = models.CharField(max_length=120)
+    account_type = models.CharField(max_length=12, choices=AccountType.choices)
+    currency = models.CharField(max_length=3, default='IRR')
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'code', 'currency'], name='uniq_org_ledger_account')]
+
+    @property
+    def balance(self):
+        totals = self.entries.aggregate(debit=models.Sum('debit'), credit=models.Sum('credit'))
+        debit = totals['debit'] or Decimal('0')
+        credit = totals['credit'] or Decimal('0')
+        if self.account_type in (self.AccountType.CASH, self.AccountType.EXPENSE):
+            return debit - credit
+        return credit - debit
+
+
+class LedgerJournal(TimeStampedModel):
+    organization = models.ForeignKey('organizations.Organization', on_delete=models.PROTECT, related_name='ledger_journals')
+    source_key = models.CharField(max_length=100)
+    memo = models.CharField(max_length=250)
+    currency = models.CharField(max_length=3, default='IRR')
+    posted_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['organization', 'source_key'], name='uniq_org_ledger_source')]
+
+
+class LedgerEntry(TimeStampedModel):
+    journal = models.ForeignKey(LedgerJournal, on_delete=models.PROTECT, related_name='entries')
+    account = models.ForeignKey(LedgerAccount, on_delete=models.PROTECT, related_name='entries')
+    description = models.CharField(max_length=250, blank=True)
+    debit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+    credit = models.DecimalField(max_digits=18, decimal_places=2, default=0)
+
+    class Meta:
+        constraints = [models.CheckConstraint(
+            check=(models.Q(debit__gt=0, credit=0) | models.Q(credit__gt=0, debit=0)),
+            name='ledger_entry_one_sided_positive',
+        )]
+
+
 class Settlement(TimeStampedModel):
     """درخواست تسویه حساب"""
 

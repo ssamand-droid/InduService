@@ -12,8 +12,7 @@ import {
 } from './steps'
 import assetService from '@services/assetService'
 import { serviceApi } from '@features/services/services/serviceApi'
-import { INDUSTRIES } from '@/data/industries'
-import IndustrySelector from '@components/forms/IndustrySelector'
+
 
 const STEP_LABELS = {
   scenario: 'نوع خدمت دقیق',
@@ -50,7 +49,6 @@ export default function ServiceWizard({ initialServiceType = null, initialAssetI
   const [submitted, setSubmitted]       = useState(false)
   const [submittedId, setSubmittedId]   = useState(null)
   const [noMatch, setNoMatch]           = useState(false)
-  const [industry, setIndustry]         = useState('')
 
   const [assets, setAssets]             = useState([])
   const [selectedAsset, setSelectedAsset] = useState(null)
@@ -154,7 +152,6 @@ export default function ServiceWizard({ initialServiceType = null, initialAssetI
     fd.append('urgency',     stepData.urgency || 'medium')
     fd.append('service_type', serviceType)
     if (scenarioKey)     fd.append('service_scenario', scenarioKey)
-    if (industry)        fd.append('industry', industry)
     if (selectedAsset?.id) fd.append('related_asset', selectedAsset.id)
     if (equipParts)      fd.append('equipment_details', equipParts)
     if (stepData.desired_date || stepData.delivery_deadline)
@@ -193,7 +190,7 @@ export default function ServiceWizard({ initialServiceType = null, initialAssetI
   const resetAll = () => {
     setSubmitted(false); setServiceType(null); setStepIndex(0)
     setStepData({ urgency: 'medium', unit: 'عدد' }); setAttachments([]); setPreviewUrls([])
-    setSelectedAsset(null); setIndustry('')
+    setSelectedAsset(null)
   }
 
   // ─── صفحه موفقیت ─────────────────────────────────────────────
@@ -232,12 +229,7 @@ export default function ServiceWizard({ initialServiceType = null, initialAssetI
     <div className="max-w-2xl mx-auto px-4 py-8">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-slate-900">درخواست خدمت جدید</h1>
-        <p className="text-sm text-slate-500 mt-1">ابتدا صنعت خود را انتخاب کنید، سپس نوع خدمت</p>
-      </div>
-
-      <div className="mb-6">
-        <label className="block text-sm font-medium text-slate-600 mb-2">صنعت (اختیاری)</label>
-        <IndustrySelector value={industry} onChange={setIndustry} />
+        <p className="text-sm text-slate-500 mt-1">نوع خدمت را انتخاب کنید</p>
       </div>
 
       <p className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-3">نوع خدمت</p>

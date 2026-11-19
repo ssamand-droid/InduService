@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom'
 import { FiMail, FiPhone, FiMapPin, FiShield, FiTruck } from 'react-icons/fi'
+import { useAuthStore } from '@stores/authStore'
+import { PROVIDER_ROLES } from '@lib/constants'
 
 export const Footer = () => {
+  const user = useAuthStore((state) => state.user)
+  const isProvider = PROVIDER_ROLES.includes(user?.role)
   return (
     <footer className="bg-secondary-50 dark:bg-secondary-900/50 border-t border-secondary-200 dark:border-secondary-800 mt-auto">
       <div className="container-custom py-12">
@@ -28,7 +32,9 @@ export const Footer = () => {
             <ul className="space-y-2 text-sm">
               <li><Link to="/services" className="text-secondary-600 dark:text-secondary-400 hover:text-primary-600">خدمات MRO</Link></li>
               <li><Link to="/products" className="text-secondary-600 dark:text-secondary-400 hover:text-primary-600">محصولات صنعتی</Link></li>
-              <li><Link to="/request-service" className="text-secondary-600 dark:text-secondary-400 hover:text-primary-600">درخواست خدمت</Link></li>
+              {!isProvider && (
+                <li><Link to="/request-service" className="text-secondary-600 dark:text-secondary-400 hover:text-primary-600">درخواست خدمت</Link></li>
+              )}
               <li><Link to="/blog" className="text-secondary-600 dark:text-secondary-400 hover:text-primary-600">وبلاگ تخصصی</Link></li>
             </ul>
           </div>

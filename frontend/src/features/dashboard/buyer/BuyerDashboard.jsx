@@ -7,7 +7,10 @@ import { useOrders } from '@features/orders/hooks/useOrders'
 import { useServiceRequests } from '@features/services/hooks/useServices'
 import { useAuthStore } from '@stores/authStore'
 import { formatPrice } from '@lib/utils'
+import { PROVIDER_ROLES } from '@lib/constants'
 import { useNavigate } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import assetService from '@services/assetService'
 
 const StatCard = ({ title, value, icon: Icon, color, link, dataTour }) => (
   <Link to={link} data-tour={dataTour}>
@@ -25,9 +28,19 @@ const StatCard = ({ title, value, icon: Icon, color, link, dataTour }) => (
 
 export default function BuyerDashboard() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
   const { data: ordersData, isLoading: ordersLoading } = useOrders()
   const { data: requestsData, isLoading: requestsLoading } = useServiceRequests()
+  const { data: assetDashboard, isLoading: assetsLoading, isError: assetsError } = useQuery({
+    queryKey: ['assets', 'global-dashboard', user?.id],
+    queryFn: async () => (await assetService.getGlobalDashboard()).data,
+    enabled: isAuthenticated,
+    staleTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+  })
+
+  const isProvider = PROVIDER_ROLES.includes(user?.role)
 
   if (!isAuthenticated) {
     return null
@@ -40,7 +53,7 @@ export default function BuyerDashboard() {
   const pendingRequests = requests.filter(r => ['pending', 'reviewed', 'quoted'].includes(r.status)).length
   const inProgressRequests = requests.filter(r => r.status === 'in_progress').length
 
-  if (ordersLoading || requestsLoading) {
+  if (ordersLoading || requestsLoading || assetsLoading) {
     return (
       <div className="flex justify-center py-12">
         <Spinner size="lg" />
@@ -82,13 +95,15 @@ export default function BuyerDashboard() {
           onClick={() => navigate('/dashboard/assets')}
           color="purple"
         />
-        <QuickAction
-          dataTour="request-service"
-          icon={FiTool}
-          label="درخواست خدمت جدید"
-          onClick={() => navigate('/request-service')}
-          color="blue"
-        />
+        {!isProvider && (
+          <QuickAction
+            dataTour="request-service"
+            icon={FiTool}
+            label="درخواست خدمت جدید"
+            onClick={() => navigate('/request-service')}
+            color="blue"
+          />
+        )}
         <QuickAction
           icon={FiShoppingBag}
           label="سفارشات من"
@@ -106,7 +121,7 @@ export default function BuyerDashboard() {
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
           title="دستگاه‌ها و تجهیزات"
-          value={inProgressRequests}
+          value={assetsError ? '—' : assetDashboard?.total_assets ?? 0}
           icon={FiTool}
           color="bg-purple-500"
           link="/dashboard/assets"
@@ -204,25 +219,30 @@ export default function BuyerDashboard() {
               مشاهده همه
             </Link>
           </div>
+          {assetsError && (
+            <p className="mb-3 text-sm text-red-600" role="status">
+              دریافت آمار ماشین‌آلات و تجهیزات ناموفق بود.
+            </p>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <FiGrid className="h-8 w-8 text-purple-500 mx-auto mb-2" />
-              <p className="text-2xl font-bold text-slate-800">0</p>
+              <p className="text-2xl font-bold text-slate-800">{assetsError ? '—' : assetDashboard?.total_assets ?? 0}</p>
               <p className="text-xs text-slate-500">کل ماشین‌آلات و تجهیزات</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <span className="text-2xl block mb-2">✅</span>
-              <p className="text-2xl font-bold text-green-600">0</p>
+              <p className="text-2xl font-bold text-green-600">{assetsError ? '—' : assetDashboard?.assets_by_status?.operational ?? 0}</p>
               <p className="text-xs text-slate-500">فعال</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <span className="text-2xl block mb-2">⚠️</span>
-              <p className="text-2xl font-bold text-yellow-600">0</p>
+              <p className="text-2xl font-bold text-yellow-600">{assetsError ? '—' : (assetDashboard?.assets_by_status?.degraded ?? 0) + (assetDashboard?.assets_by_status?.maintenance ?? 0)}</p>
               <p className="text-xs text-slate-500">نیاز به توجه</p>
             </div>
             <div className="p-4 bg-slate-50 rounded-xl text-center">
               <span className="text-2xl block mb-2">🔴</span>
-              <p className="text-2xl font-bold text-red-600">0</p>
+              <p className="text-2xl font-bold text-red-600">{assetsError ? '—' : assetDashboard?.critical_alerts ?? 0}</p>
               <p className="text-xs text-slate-500">اضطراری</p>
             </div>
           </div>

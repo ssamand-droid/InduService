@@ -56,6 +56,8 @@ const AdminServiceRequestDetailPage = lazy(() => import('@pages/AdminServiceRequ
 const WalletPage = lazy(() => import('@pages/WalletPage'))
 const InvoicesPage = lazy(() => import('@pages/InvoicesPage'))
 const SettlementPage = lazy(() => import('@pages/SettlementPage'))
+const WorkOrdersPage = lazy(() => import('@pages/WorkOrdersPage'))
+const ProcurementPage = lazy(() => import('@pages/ProcurementPage'))
 
 // صفحات داشبورد خریدار
 const BuyerDashboard = lazy(() => import('@features/dashboard/buyer/BuyerDashboard'))
@@ -220,6 +222,16 @@ export const router = createBrowserRouter([
             children: [
               { index: true, element: <LazyLoad><MyServiceRequests /></LazyLoad> },
             ],
+          },
+          {
+            path: 'work-orders',
+            element: <PrivateRoute allowedRoles={[...BUYER_ROLES, ...PROVIDER_ROLES, 'admin']} />,
+            children: [{ index: true, element: <LazyLoad><WorkOrdersPage /></LazyLoad> }],
+          },
+          {
+            path: 'procurement',
+            element: <PrivateRoute allowedRoles={['buyer', 'procurement', 'admin']} />,
+            children: [{ index: true, element: <LazyLoad><ProcurementPage /></LazyLoad> }],
           },
 
           // ========== مسیرهای ماشین‌آلات و تجهیزات ==========

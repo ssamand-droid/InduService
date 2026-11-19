@@ -157,8 +157,15 @@ class Profile(models.Model):
             ('engineer', _('مهندس مشاور')),
             ('repairman', _('تعمیرکار')),
             ('technician', _('تکنسین فنی')),
+            ('electrician', _('برقکار')),
+            ('welder', _('جوشکار')),
+            ('mechanic', _('مکانیک')),
+            ('inspector', _('بازرس / کنترل کیفیت')),
+            ('operator', _('اپراتور')),
             ('other', _('سایر')),
         ])
+    provider_sub_role_custom = models.CharField(_('تفکیک سایر (متن آزاد)'), max_length=100, blank=True,
+        help_text='در صورت انتخاب "سایر"، نوع خدمات‌دهنده را بنویسید')
 
     # ========================
     # تخصص و خدمات

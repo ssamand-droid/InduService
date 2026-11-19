@@ -118,11 +118,12 @@ class AssetCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Asset
         fields = [
-            'name', 'category', 'tag_number', 'brand', 'model_number',
+            'id', 'name', 'category', 'tag_number', 'brand', 'model_number',
             'serial_number', 'location', 'production_line', 'criticality',
             'main_image', 'nameplate_image', 'installation_date',
             'purchase_price', 'hourly_downtime_cost'
         ]
+        read_only_fields = ['id']
 
     def validate_tag_number(self, value):
         if Asset.objects.filter(tag_number=value).exists():

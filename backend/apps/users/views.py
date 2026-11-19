@@ -40,6 +40,17 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
 
+    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny], url_path='register')
+    def register(self, request):
+        """Backward-compatible one-step registration; newer clients use register_step1/2."""
+        data = request.data.copy()
+        if 'password_confirm' not in data and 'password2' in data:
+            data['password_confirm'] = data['password2']
+        serializer = RegisterSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({'success': True, 'user': UserSerializer(user).data}, status=status.HTTP_201_CREATED)
+
     # ========================
     # GET /api/users/me/
     # ========================

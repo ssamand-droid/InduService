@@ -54,11 +54,12 @@ class ServiceCategory(TimeStampedModel):
     description = models.TextField(_('توضیحات'), blank=True)
     icon = models.ImageField(_('آیکون'), upload_to='services/categories/', blank=True)
     is_active = models.BooleanField(_('فعال'), default=True)
+    order = models.PositiveSmallIntegerField(_('ترتیب نمایش'), default=0, help_text=_('ترتیب نمایش در لیست'))
 
     class Meta:
         verbose_name = _('دسته‌بندی خدمات')
         verbose_name_plural = _('دسته‌بندی‌های خدمات')
-        ordering = ['name']
+        ordering = ['order', 'name']
 
     def __str__(self):
         return f'🔧 {self.name}'
