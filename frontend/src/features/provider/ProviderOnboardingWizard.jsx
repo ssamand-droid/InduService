@@ -47,6 +47,7 @@ const onboardingSchema = z.object({
   education_level: z.string().optional(),
   education_field: z.string().optional(),
   provider_sub_role: z.string().optional(),
+  provider_sub_role_custom: z.string().max(100).optional(),
 
   // مرحله ۳: اطلاعات پایه
   first_name: z.string().min(1, 'نام الزامی است'),
@@ -67,7 +68,16 @@ const onboardingSchema = z.object({
   has_vehicle: z.boolean().optional(),
   base_hourly_rate: z.coerce.number().min(0, 'عدد معتبر وارد کنید').optional(),
   base_daily_rate: z.coerce.number().min(0, 'عدد معتبر وارد کنید').optional(),
-});
+})
+.refine(
+  (data) =>
+    data.provider_sub_role !== 'other' ||
+    !!data.provider_sub_role_custom?.trim(),
+  {
+    message: 'لطفاً نوع خدمات‌دهنده را در قسمت سایر توضیح دهید.',
+    path: ['provider_sub_role_custom'],
+  }
+);
 
 export default function ProviderOnboardingWizard() {
   const navigate = useNavigate();
@@ -105,6 +115,7 @@ export default function ProviderOnboardingWizard() {
       education_level: profile?.education_level || '',
       education_field: profile?.education_field || '',
       provider_sub_role: profile?.provider_sub_role || '',
+      provider_sub_role_custom: profile?.provider_sub_role_custom || '',
       city: profile?.city || '',
       province: profile?.province || '',
       max_distance_km: profile?.max_distance_km || 50,
@@ -125,7 +136,7 @@ export default function ProviderOnboardingWizard() {
   const validateStep = async () => {
     const fieldsToValidate = {
       services: ['service_types_offered'],
-      expertise: ['specializations', 'years_of_experience', 'bio', 'education_level', 'education_field', 'provider_sub_role'],
+      expertise: ['specializations', 'years_of_experience', 'bio', 'education_level', 'education_field', 'provider_sub_role', 'provider_sub_role_custom'],
       personal: ['first_name', 'last_name', 'phone_number', 'person_type', 'national_id', 'company_name', 'company_registration_number', 'tax_id'],
       location: ['city', 'province', 'max_distance_km', 'response_time', 'max_concurrent_requests', 'has_vehicle', 'base_hourly_rate', 'base_daily_rate'],
       confirm: [],

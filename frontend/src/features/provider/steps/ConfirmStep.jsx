@@ -53,6 +53,11 @@ export default function ConfirmStep({ form, data }) {
     engineer: 'مهندس مشاور',
     repairman: 'تعمیرکار',
     technician: 'تکنسین فنی',
+    electrician: 'برقکار',
+    welder: 'جوشکار',
+    mechanic: 'مکانیک',
+    inspector: 'بازرس / کنترل کیفیت',
+    operator: 'اپراتور',
     other: 'سایر',
   };
 

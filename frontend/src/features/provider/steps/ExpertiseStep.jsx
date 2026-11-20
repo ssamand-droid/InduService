@@ -56,9 +56,15 @@ export default function ExpertiseStep({ form }) {
           </label>
           <input
             {...register('provider_sub_role_custom')}
+            maxLength={100}
             placeholder="نوع خدمات‌دهنده را بنویسید"
             className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
           />
+          {errors.provider_sub_role_custom && (
+            <p className="text-red-500 text-xs mt-1">
+              {errors.provider_sub_role_custom.message}
+            </p>
+          )}
         </div>
       })
 

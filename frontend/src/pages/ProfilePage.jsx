@@ -56,16 +56,22 @@ const profileSchema = z.object({
   base_hourly_rate: z.coerce.number().optional(),
   base_daily_rate: z.coerce.number().optional(),
   person_type: z.enum(['individual', 'legal']).optional(),
-  role: z.enum([
-    'buyer', 'technician', 'maintenance_manager', 'procurement',
-    'seller', 'service_provider', 'company_seller', 'company_provider', 'admin',
-  ]).optional(),
   national_id: z.string().optional(),
   buyer_sub_role: z.string().optional(),
   provider_sub_role: z.string().optional(),
+  provider_sub_role_custom: z.string().max(100).optional(),
   education_level: z.string().optional(),
   education_field: z.string().optional(),
-});
+})
+.refine(
+  (data) =>
+    data.provider_sub_role !== 'other' ||
+    !!data.provider_sub_role_custom?.trim(),
+  {
+    message: 'لطفاً نوع خدمات‌دهنده را در قسمت سایر توضیح دهید.',
+    path: ['provider_sub_role_custom'],
+  }
+);
 
 const changePasswordSchema = z.object({
   old_password: z.string().min(1, 'رمز عبور فعلی الزامی است'),
@@ -162,10 +168,10 @@ export default function ProfilePage() {
       base_hourly_rate: p.base_hourly_rate || '',
       base_daily_rate: p.base_daily_rate || '',
       person_type: p.person_type || 'individual',
-      role: user.role || '',
       national_id: p.national_id || '',
       buyer_sub_role: p.buyer_sub_role || '',
       provider_sub_role: p.provider_sub_role || '',
+      provider_sub_role_custom: p.provider_sub_role_custom || '',
       education_level: p.education_level || '',
       education_field: p.education_field || '',
     },
@@ -396,15 +402,6 @@ export default function ProfilePage() {
                   </div>
 
                   {/* نقش کاربر */}
-                  <FormSelect
-                    label="نقش کاربر"
-                    name="role"
-                    register={register}
-                    error={errors.role}
-                    options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
-                    placeholder="انتخاب کنید..."
-                  />
-
                   {wpt === 'individual' && (
                     <FormInput label="کد ملی" name="national_id" register={register} maxLength={10} />
                   )}
