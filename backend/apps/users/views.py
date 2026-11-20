@@ -240,7 +240,7 @@ class UserViewSet(viewsets.ModelViewSet):
     # ========================
     # *** جعل هویت ***
     # ========================
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminUserr])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
     def impersonate(self, request, pk=None):
         """ادمین: جعل هویت کاربر"""
         target_user = self.get_object()
