@@ -1,24 +1,24 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUse
+from rest_framework.permissions import IsAdminUser
 from django.core import signing
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth import get_user_model
 from .models import Profile, PortfolioItem, Certification
 from .serializers import (
     UserSerializer, RegisterSerializer, ChangePasswordSerializer, ProfileSerializer,
-    PortfolioItemSerializer, CertificationSerializer, RegisterStep1Serializer, RegisterStep2Serialize
+    PortfolioItemSerializer, CertificationSerializer, RegisterStep1Serializer, RegisterStep2Serializer
 )
 from core.permissions import IsOwnerOrReadOnly
-from organizations.serializers import OrganizationMembershipSerialize
+from organizations.serializers import OrganizationMembershipSerializer
 
 User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerialize
+    serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
 
     def get_permissions(self):
@@ -240,7 +240,7 @@ class UserViewSet(viewsets.ModelViewSet):
     # ========================
     # *** جعل هویت ***
     # ========================
-    @action(detail=True, methods=['post'], permission_classes=[IsAdminUser])
+    @action(detail=True, methods=['post'], permission_classes=[IsAdminUserr])
     def impersonate(self, request, pk=None):
         """ادمین: جعل هویت کاربر"""
         target_user = self.get_object()
@@ -280,16 +280,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Profile.objects.select_related('user').all()
-    serializer_class = ProfileSerialize
+    serializer_class = ProfileSerializer
     permission_classes = [permissions.AllowAny]
 
 class PortfolioItemViewSet(viewsets.ModelViewSet):
     """نمونه کارهای کاربر"""
-    serializer_class = PortfolioItemSerialize
+    serializer_class = PortfolioItemSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.use
+        user = self.request.user
         if user.is_staff:
             return PortfolioItem.objects.all()
         # کاربران دیگر فقط نمونه کارهای عمومی را ببینند
@@ -301,11 +301,11 @@ class PortfolioItemViewSet(viewsets.ModelViewSet):
 
 class CertificationViewSet(viewsets.ModelViewSet):
     """مدارک و گواهینامه‌های کاربر"""
-    serializer_class = CertificationSerialize
+    serializer_class = CertificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.use
+        user = self.request.user
         if user.is_staff:
             return Certification.objects.all()
         return Certification.objects.filter(user=user)

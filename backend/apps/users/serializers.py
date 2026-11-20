@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     provider_sub_role = serializers.CharField(source='profile.provider_sub_role', read_only=True, default='')
 
     class Meta:
-        model = Use
+        model = User
         fields = [
             'id', 'phone_number', 'email', 'first_name', 'last_name',
             'full_name', 'role', 'role_display', 'is_verified', 'date_joined', 'date_joined_jalali',
@@ -54,7 +54,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Use
+        model = User
         fields = [
             'phone_number', 'email', 'password', 'password_confirm',
             'first_name', 'last_name', 'role',
@@ -70,7 +70,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         if not validated_data.get('email'):
             validated_data['email'] = f"{phone_number}@induservice.local"
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        return use
+        return user
 
     # ========================
     # Validators
@@ -110,7 +110,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             validated_data['email'] = f"{phone_number}@induservice.local"
 
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        return use
+        return user
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -180,7 +180,7 @@ class RegisterStep1Serializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = Use
+        model = User
         fields = ['phone_number', 'password', 'password_confirm', 'role']
 
     def validate_phone_number(self, value):
@@ -207,7 +207,7 @@ class RegisterStep1Serializer(serializers.ModelSerializer):
             validated_data['email'] = f"{phone_number}@induservice.local"
 
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        return use
+        return user
 
 
 class RegisterStep2Serializer(serializers.Serializer):
@@ -256,7 +256,7 @@ class RegisterStep2Serializer(serializers.Serializer):
             raise serializers.ValidationError('اعتبار مرحله ثبت‌نام منقضی یا نامعتبر است. ثبت‌نام را دوباره آغاز کنید.')
         if user.profile.registration_completed:
             raise serializers.ValidationError('ثبت‌نام این حساب قبلاً تکمیل شده است.')
-        return use
+        return user
 
     def validate(self, attrs):
         if attrs['person_type'] == User.PersonType.LEGAL and not attrs.get('company_name', '').strip():
@@ -326,7 +326,7 @@ class RegisterStep2Serializer(serializers.Serializer):
                     organization=organization, user=user,
                     defaults={'role': OrganizationMembership.Role.OWNER, 'is_active': True},
                 )
-        return use
+        return user
 # 🆕 سریالایزرهای جدید
 class PortfolioItemSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
