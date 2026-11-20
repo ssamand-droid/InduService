@@ -15,10 +15,13 @@ urlpatterns = [
 
     # Apps
     path('api/', include('users.urls')),
+    path('api/', include('organizations.urls')),
     path('api/', include('core.urls')),
     path('api/products/', include('products.urls')),
     path('api/services/', include('services.urls')),
     path('api/orders/', include('orders.urls')),
+    path('api/work-orders/', include('work_orders.urls')),
+    path('api/procurement/', include('procurement.urls')),
     path('api/payment/', include('payment.urls')),
     path('api/reviews/', include('reviews.urls')),
     path('api/notifications/', include('notification.urls')),

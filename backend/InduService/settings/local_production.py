@@ -25,3 +25,7 @@ CSRF_TRUSTED_ORIGINS = [
     'http://localhost:4173',
     'http://127.0.0.1:4173',
 ]
+
+# No project-level static directory exists in this local test environment.
+# App-level static files remain discoverable through Django's app directories.
+STATICFILES_DIRS = []

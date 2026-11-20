@@ -167,3 +167,9 @@ python manage.py test apps.services apps.orders --verbosity 2
 ```
 
 If the project virtual environment is not already active, activate the existing environment first. Do not create/apply migrations or point these commands at production. After running the new branch, record the full terminal summary and fix any regression before merging. If test settings require an environment variable, share the variable name and error message but do not paste secrets or database passwords.
+
+## 8. Customer organization foundation update (2026-11-12)
+
+The repository now has an initial Organizations app and a first factory-customer slice. New legal registrations create an unverified factory organization and owner membership; requests can carry an organization ID; membership is checked for request visibility, edits, quote approval, work acceptance, and payment actions. Public registration step two now requires a signed, 30-minute token and can be completed once.
+
+This is source-level implementation only. The Organizations, Profile, and ServiceRequest migrations have not been applied, and no runtime test or frontend build was run for this update. It does not close RQ-17 across other domains: assets, orders, invoices, contracts, documents, support, exports, and company-level notifications still need explicit organization ownership/authorization. Existing legal profiles are not automatically matched or merged into organizations. See `organization-customer-foundation-v0.1.md` for scope and rollout rules.

@@ -31,6 +31,13 @@ export const useServiceCategories = () => {
   })
 }
 
+export const useMyOrganizations = () => useQuery({
+  queryKey: ['my-organizations'],
+  queryFn: serviceApi.getMyOrganizations,
+  staleTime: 60000,
+  retry: 1,
+})
+
 export const useMyServices = () => {
   return useQuery({
     queryKey: ['my-services'],

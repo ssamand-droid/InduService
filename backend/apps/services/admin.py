@@ -38,7 +38,7 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     list_filter = ('status', 'urgency', 'created_at')
     list_editable = ['matching_enabled']
     search_fields = ('title', 'description', 'buyer__phone_number', 'buyer__first_name')
-    raw_id_fields = ('buyer', 'service', 'order', 'related_asset')
+    raw_id_fields = ('buyer', 'organization', 'service', 'order', 'related_asset')
     readonly_fields = ('created_at', 'updated_at', 'match_providers_display', 'matching_enabled')
 
     fieldsets = (
@@ -46,7 +46,7 @@ class ServiceRequestAdmin(admin.ModelAdmin):
             'fields': ('title', 'description', 'equipment_details', 'urgency', 'desired_start_date')
         }),
         (_('طرفین'), {
-            'fields': ('buyer', 'service', 'related_asset')
+            'fields': ('buyer', 'organization', 'service', 'related_asset')
         }),
         (_('وضعیت و مالی'), {
             'fields': ('status', 'quoted_price', 'final_price', 'advance_payment_required', 'advance_payment_amount')
@@ -67,6 +67,8 @@ class ServiceRequestAdmin(admin.ModelAdmin):
     # ========================
 
     def buyer_company(self, obj):
+        if obj.organization_id:
+            return obj.organization.name
         profile = getattr(obj.buyer, 'profile', None)
         if profile and profile.company_name:
             return profile.company_name

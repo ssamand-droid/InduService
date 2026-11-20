@@ -66,7 +66,7 @@ export default function ExpertiseStep({ form }) {
             </p>
           )}
         </div>
-      })
+      )}
 
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1.5">

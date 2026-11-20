@@ -42,9 +42,12 @@ THIRD_PARTY_APPS = [
 LOCAL_APPS = [
     'core',
     'users',
+    'organizations',
     'products',
     'services',
     'orders',
+    'work_orders',
+    'procurement',
     'payment',
     'reviews',
     'notification',
