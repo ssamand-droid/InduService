@@ -1,22 +1,24 @@
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUse
+from django.core import signing
 from drf_spectacular.utils import extend_schema
 from django.contrib.auth import get_user_model
 from .models import Profile, PortfolioItem, Certification
 from .serializers import (
     UserSerializer, RegisterSerializer, ChangePasswordSerializer, ProfileSerializer,
-    PortfolioItemSerializer, CertificationSerializer, RegisterStep1Serializer, RegisterStep2Serializer
+    PortfolioItemSerializer, CertificationSerializer, RegisterStep1Serializer, RegisterStep2Serialize
 )
 from core.permissions import IsOwnerOrReadOnly
+from organizations.serializers import OrganizationMembershipSerialize
 
 User = get_user_model()
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = UserSerializer
+    serializer_class = UserSerialize
     permission_classes = [permissions.AllowAny]
 
     def get_permissions(self):
@@ -38,14 +40,28 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all()
         return User.objects.filter(id=self.request.user.id)
 
+    @action(detail=False, methods=['post'], permission_classes=[permissions.AllowAny], url_path='register')
+    def register(self, request):
+        """Backward-compatible one-step registration; newer clients use register_step1/2."""
+        data = request.data.copy()
+        if 'password_confirm' not in data and 'password2' in data:
+            data['password_confirm'] = data['password2']
+        serializer = RegisterSerializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        return Response({'success': True, 'user': UserSerializer(user).data}, status=status.HTTP_201_CREATED)
+
     # ========================
     # GET /api/users/me/
     # ========================
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
-        user = request.user
+        user = request.use
         data = UserSerializer(user).data
         data['profile'] = ProfileSerializer(user.profile).data
+        data['organization_memberships'] = OrganizationMembershipSerializer(
+            user.organization_memberships.filter(is_active=True).select_related('organization'), many=True,
+        ).data
         data['role_display'] = user.get_role_display()
         return Response(data)
 
@@ -73,6 +89,7 @@ class UserViewSet(viewsets.ModelViewSet):
                     'success': {'type': 'boolean'},
                     'message': {'type': 'string'},
                     'user_id': {'type': 'integer'},
+                    'registration_token': {'type': 'string'},
                     'role': {'type': 'string'},
                 }
             }
@@ -88,6 +105,7 @@ class UserViewSet(viewsets.ModelViewSet):
             'success': True,
             'message': 'مرحله اول با موفقیت انجام شد',
             'user_id': user.id,
+            'registration_token': signing.dumps({'user_id': user.id}, salt='users.registration'),
             'role': user.role,
         }, status=status.HTTP_201_CREATED)
 
@@ -97,19 +115,25 @@ class UserViewSet(viewsets.ModelViewSet):
             'application/json': {
                 'type': 'object',
                 'properties': {
-                    'user_id': {'type': 'integer', 'example': 13},
+                    'registration_token': {'type': 'string'},
                     'first_name': {'type': 'string', 'example': 'رضا'},
                     'last_name': {'type': 'string', 'example': 'محمدی'},
                     'person_type': {'type': 'string', 'enum': ['individual', 'legal'], 'example': 'individual'},
                     'national_id': {'type': 'string', 'nullable': True},
                     'buyer_sub_role': {'type': 'string', 'nullable': True},
                     'provider_sub_role': {'type': 'string', 'nullable': True},
+                    'provider_sub_role_custom': {'type': 'string', 'maxLength': 100},
                     'company_name': {'type': 'string', 'nullable': True},
                     'company_registration_number': {'type': 'string', 'nullable': True},
                     'tax_id': {'type': 'string', 'nullable': True},
                     'company_contacts': {'type': 'array', 'items': {'type': 'object'}},
+                    'address': {'type': 'string'},
+                    'city': {'type': 'string'},
+                    'province': {'type': 'string'},
+                    'postal_code': {'type': 'string'},
+                    'website': {'type': 'string'},
                 },
-                'required': ['user_id', 'first_name', 'last_name', 'person_type']
+                'required': ['registration_token', 'first_name', 'last_name', 'person_type']
             }
         },
         responses={
@@ -130,19 +154,25 @@ class UserViewSet(viewsets.ModelViewSet):
             'application/json': {
                 'type': 'object',
                 'properties': {
-                    'user_id': {'type': 'integer', 'example': 13},
+                    'registration_token': {'type': 'string'},
                     'first_name': {'type': 'string', 'example': 'رضا'},
                     'last_name': {'type': 'string', 'example': 'محمدی'},
                     'person_type': {'type': 'string', 'enum': ['individual', 'legal'], 'example': 'individual'},
                     'national_id': {'type': 'string', 'nullable': True},
                     'buyer_sub_role': {'type': 'string', 'nullable': True},
                     'provider_sub_role': {'type': 'string', 'nullable': True},
+                    'provider_sub_role_custom': {'type': 'string', 'maxLength': 100},
                     'company_name': {'type': 'string', 'nullable': True},
                     'company_registration_number': {'type': 'string', 'nullable': True},
                     'tax_id': {'type': 'string', 'nullable': True},
                     'company_contacts': {'type': 'array', 'items': {'type': 'object'}},
+                    'address': {'type': 'string'},
+                    'city': {'type': 'string'},
+                    'province': {'type': 'string'},
+                    'postal_code': {'type': 'string'},
+                    'website': {'type': 'string'},
                 },
-                'required': ['user_id', 'first_name', 'last_name', 'person_type']
+                'required': ['registration_token', 'first_name', 'last_name', 'person_type']
             }
         },
         responses={
@@ -162,8 +192,7 @@ class UserViewSet(viewsets.ModelViewSet):
         serializer = RegisterStep2Serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        user_id = serializer.validated_data.pop('user_id')
-        user = User.objects.get(id=user_id)
+        user = serializer.validated_data.pop('registration_token')
         user = serializer.update(user, serializer.validated_data)
 
         return Response({
@@ -201,7 +230,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def change_password(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = request.user
+        user = request.use
         if not user.check_password(serializer.validated_data['old_password']):
             return Response({'success': False, 'error': 'رمز عبور فعلی نادرست است.'}, status=400)
         user.set_password(serializer.validated_data['new_password'])
@@ -251,16 +280,16 @@ class UserViewSet(viewsets.ModelViewSet):
 
 class ProfileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Profile.objects.select_related('user').all()
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileSerialize
     permission_classes = [permissions.AllowAny]
 
 class PortfolioItemViewSet(viewsets.ModelViewSet):
     """نمونه کارهای کاربر"""
-    serializer_class = PortfolioItemSerializer
+    serializer_class = PortfolioItemSerialize
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
+        user = self.request.use
         if user.is_staff:
             return PortfolioItem.objects.all()
         # کاربران دیگر فقط نمونه کارهای عمومی را ببینند
@@ -272,11 +301,11 @@ class PortfolioItemViewSet(viewsets.ModelViewSet):
 
 class CertificationViewSet(viewsets.ModelViewSet):
     """مدارک و گواهینامه‌های کاربر"""
-    serializer_class = CertificationSerializer
+    serializer_class = CertificationSerialize
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
+        user = self.request.use
         if user.is_staff:
             return Certification.objects.all()
         return Certification.objects.filter(user=user)

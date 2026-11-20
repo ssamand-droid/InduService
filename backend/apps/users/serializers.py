@@ -1,7 +1,10 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from django.core import signing
+from django.db import transaction
 from .models import User, Profile, PortfolioItem, Certification
 from core.utils import to_jalali_datetime
+from organizations.models import Organization, OrganizationMembership
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -17,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
     provider_sub_role = serializers.CharField(source='profile.provider_sub_role', read_only=True, default='')
 
     class Meta:
-        model = User
+        model = Use
         fields = [
             'id', 'phone_number', 'email', 'first_name', 'last_name',
             'full_name', 'role', 'role_display', 'is_verified', 'date_joined', 'date_joined_jalali',
@@ -51,7 +54,7 @@ class RegisterSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = User
+        model = Use
         fields = [
             'phone_number', 'email', 'password', 'password_confirm',
             'first_name', 'last_name', 'role',
@@ -67,7 +70,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         if not validated_data.get('email'):
             validated_data['email'] = f"{phone_number}@induservice.local"
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        return user
+        return use
 
     # ========================
     # Validators
@@ -107,7 +110,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             validated_data['email'] = f"{phone_number}@induservice.local"
 
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        return user
+        return use
 
 
 class ChangePasswordSerializer(serializers.Serializer):
@@ -132,6 +135,7 @@ class ProfileSerializer(serializers.ModelSerializer):
             'rating', 'rating_count', 'completed_orders', 'total_revenue', 'avg_response_time_hours',
             'website', 'linkedin', 'instagram',
             'company_name', 'company_registration_number', 'tax_id',
+            'buyer_sub_role', 'provider_sub_role', 'provider_sub_role_custom',
             'address', 'city', 'postal_code',
             'bank_name', 'bank_account_number', 'bank_card_number', 'bank_shaba', 'bank_account_holder',
             # 🆕 جدید
@@ -145,7 +149,24 @@ class ProfileSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'user', 'rating', 'rating_count', 'completed_orders', 'total_revenue', 'avg_response_time_hours']
 
-# apps/users/serializers.py - اضافه کردن RegisterStep1Serializer و RegisterStep2Serializer
+    def validate(self, attrs):
+        provider_sub_role = attrs.get(
+            'provider_sub_role',
+            getattr(self.instance, 'provider_sub_role', ''),
+        )
+        custom = attrs.get(
+            'provider_sub_role_custom',
+            getattr(self.instance, 'provider_sub_role_custom', ''),
+        )
+        if provider_sub_role == 'other' and not custom.strip():
+            raise serializers.ValidationError({
+                'provider_sub_role_custom': 'در انتخاب «سایر»، لطفاً نوع خدمات‌دهنده را مشخص کنید.'
+            })
+        if provider_sub_role != 'other':
+            attrs['provider_sub_role_custom'] = ''
+        return attrs
+
+# apps/users/serializers.py - اضافه کردن RegisterStep1Serializer و RegisterStep2Serialize
 
 # apps/users/serializers.py - چک کن RegisterStep1Serializer وجود دارد
 
@@ -159,7 +180,7 @@ class RegisterStep1Serializer(serializers.ModelSerializer):
     password_confirm = serializers.CharField(write_only=True, required=True)
 
     class Meta:
-        model = User
+        model = Use
         fields = ['phone_number', 'password', 'password_confirm', 'role']
 
     def validate_phone_number(self, value):
@@ -186,12 +207,12 @@ class RegisterStep1Serializer(serializers.ModelSerializer):
             validated_data['email'] = f"{phone_number}@induservice.local"
 
         user = User.objects.create_user(phone_number=phone_number, **validated_data)
-        return user
+        return use
 
 
 class RegisterStep2Serializer(serializers.Serializer):
     """مرحله دوم ثبت‌نام: تکمیل اطلاعات بر اساس نقش"""
-    user_id = serializers.IntegerField(required=True)
+    registration_token = serializers.CharField(write_only=True, required=True)
 
     # مشترک
     first_name = serializers.CharField(required=True)
@@ -205,46 +226,107 @@ class RegisterStep2Serializer(serializers.Serializer):
     buyer_sub_role = serializers.CharField(required=False, allow_blank=True)  # متن آزاد
 
     # خدمات‌دهنده
-    provider_sub_role = serializers.CharField(required=False, allow_blank=True)
+    provider_sub_role = serializers.ChoiceField(
+        choices=Profile._meta.get_field('provider_sub_role').choices,
+        required=False,
+        allow_blank=True,
+    )
+    provider_sub_role_custom = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        max_length=100,
+    )
 
     # حقوقی
     company_name = serializers.CharField(required=False, allow_blank=True)
     company_registration_number = serializers.CharField(required=False, allow_blank=True)
     tax_id = serializers.CharField(required=False, allow_blank=True)
     company_contacts = serializers.JSONField(required=False, default=list)
+    address = serializers.CharField(required=False, allow_blank=True)
+    city = serializers.CharField(required=False, allow_blank=True)
+    province = serializers.CharField(required=False, allow_blank=True)
+    postal_code = serializers.CharField(required=False, allow_blank=True)
+    website = serializers.URLField(required=False, allow_blank=True)
 
-    def validate_user_id(self, value):
-        if not User.objects.filter(id=value).exists():
-            raise serializers.ValidationError("کاربر یافت نشد")
-        return value
+    def validate_registration_token(self, value):
+        try:
+            payload = signing.loads(value, salt='users.registration', max_age=30 * 60)
+            user = User.objects.select_related('profile').get(pk=payload['user_id'])
+        except (signing.BadSignature, signing.SignatureExpired, User.DoesNotExist, KeyError, TypeError):
+            raise serializers.ValidationError('اعتبار مرحله ثبت‌نام منقضی یا نامعتبر است. ثبت‌نام را دوباره آغاز کنید.')
+        if user.profile.registration_completed:
+            raise serializers.ValidationError('ثبت‌نام این حساب قبلاً تکمیل شده است.')
+        return use
+
+    def validate(self, attrs):
+        if attrs['person_type'] == User.PersonType.LEGAL and not attrs.get('company_name', '').strip():
+            raise serializers.ValidationError({'company_name': 'نام ثبتی شرکت یا کارخانه الزامی است.'})
+        if attrs.get('company_contacts') and not isinstance(attrs['company_contacts'], list):
+            raise serializers.ValidationError({'company_contacts': 'فهرست رابط‌ها باید آرایه باشد.'})
+        if attrs.get('provider_sub_role') == 'other' and not attrs.get('provider_sub_role_custom', '').strip():
+            raise serializers.ValidationError({'provider_sub_role_custom': 'در انتخاب "سایر"، لطفاً نوع خدمات‌دهنده را مشخص کنید.'})
+        return attrs
 
     def update(self, instance, validated_data):
         user = instance
-        user.first_name = validated_data.get('first_name', user.first_name)
-        user.last_name = validated_data.get('last_name', user.last_name)
+        person_type = validated_data['person_type']
+        role = user.role
+        if role == User.Role.SERVICE_PROVIDER and person_type == User.PersonType.LEGAL:
+            role = User.Role.COMPANY_PROVIDER
+        elif role == User.Role.COMPANY_PROVIDER and person_type == User.PersonType.INDIVIDUAL:
+            role = User.Role.SERVICE_PROVIDER
 
-        # 🆕 اصلاح role بر اساس person_type برای خدمات‌دهندگان
-        person_type = validated_data.get('person_type', 'individual')
-        if user.role == 'service_provider' and person_type == 'legal':
-            user.role = 'company_provider'
+        with transaction.atomic():
+            user.first_name = validated_data['first_name']
+            user.last_name = validated_data['last_name']
+            user.person_type = person_type
+            user.role = role
+            user.save(update_fields=['first_name', 'last_name', 'person_type', 'role', 'updated_at'])
 
-        user.save()
+            profile, _ = Profile.objects.get_or_create(user=user)
+            profile.person_type = person_type
 
-        # 🆕 تضمین وجود پروفایل
-        profile, _ = Profile.objects.get_or_create(user=user)
+            # اگر تخصص «سایر» نیست، توضیح قبلی باید پاک شود.
+            if (
+                'provider_sub_role' in validated_data
+                and validated_data['provider_sub_role'] != 'other'
+            ):
+                validated_data['provider_sub_role_custom'] = ''
 
-        # به‌روزرسانی پروفایل
-        profile.person_type = person_type
-        profile.national_id = validated_data.get('national_id', profile.national_id)
-        profile.buyer_sub_role = validated_data.get('buyer_sub_role', profile.buyer_sub_role)
-        profile.provider_sub_role = validated_data.get('provider_sub_role', profile.provider_sub_role)
-        profile.company_name = validated_data.get('company_name', profile.company_name)
-        profile.company_registration_number = validated_data.get('company_registration_number', profile.company_registration_number)
-        profile.tax_id = validated_data.get('tax_id', profile.tax_id)
-        profile.company_contacts = validated_data.get('company_contacts', profile.company_contacts)
-        profile.save()
+            for field in (
+                'national_id', 'buyer_sub_role', 'provider_sub_role', 'provider_sub_role_custom', 'company_name',
+                'company_registration_number', 'tax_id', 'company_contacts',
+                'address', 'city', 'province', 'postal_code', 'website',
+            ):
+                if field in validated_data:
+                    setattr(profile, field, validated_data[field])
+            profile.registration_completed = True
+            profile.save()
 
-        return user
+            if person_type == User.PersonType.LEGAL:
+                organization_type = (
+                    Organization.Type.FACTORY if role == User.Role.BUYER
+                    else Organization.Type.SERVICE_PROVIDER
+                )
+                organization, _ = Organization.objects.get_or_create(
+                    created_by=user,
+                    name=validated_data['company_name'].strip(),
+                    organization_type=organization_type,
+                    defaults={
+                        'registration_number': validated_data.get('company_registration_number', '').strip(),
+                        'tax_id': validated_data.get('tax_id', '').strip(),
+                        'address': validated_data.get('address', '').strip(),
+                        'city': validated_data.get('city', '').strip(),
+                        'province': validated_data.get('province', '').strip(),
+                        'postal_code': validated_data.get('postal_code', '').strip(),
+                        'website': validated_data.get('website', '').strip(),
+                    },
+                )
+                OrganizationMembership.objects.update_or_create(
+                    organization=organization, user=user,
+                    defaults={'role': OrganizationMembership.Role.OWNER, 'is_active': True},
+                )
+        return use
 # 🆕 سریالایزرهای جدید
 class PortfolioItemSerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
