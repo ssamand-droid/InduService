@@ -14,6 +14,7 @@ import {
 } from 'react-icons/fi';
 import { useAuthStore } from '@stores/authStore';
 import { useAuth } from '@features/auth/hooks/useAuth';
+import api from '@lib/axios';
 import { Button, Spinner } from '@components/ui';
 import { FormInput, FormTextarea, FormSelect } from '@components/forms';
 import { SERVICE_SCENARIOS, BUYER_ROLES, PROVIDER_ROLES, ROLE_LABELS } from '@lib/constants';
@@ -55,6 +56,10 @@ const profileSchema = z.object({
   base_hourly_rate: z.coerce.number().optional(),
   base_daily_rate: z.coerce.number().optional(),
   person_type: z.enum(['individual', 'legal']).optional(),
+  role: z.enum([
+    'buyer', 'technician', 'maintenance_manager', 'procurement',
+    'seller', 'service_provider', 'company_seller', 'company_provider', 'admin',
+  ]).optional(),
   national_id: z.string().optional(),
   buyer_sub_role: z.string().optional(),
   provider_sub_role: z.string().optional(),
@@ -157,6 +162,7 @@ export default function ProfilePage() {
       base_hourly_rate: p.base_hourly_rate || '',
       base_daily_rate: p.base_daily_rate || '',
       person_type: p.person_type || 'individual',
+      role: user.role || '',
       national_id: p.national_id || '',
       buyer_sub_role: p.buyer_sub_role || '',
       provider_sub_role: p.provider_sub_role || '',
@@ -176,10 +182,32 @@ export default function ProfilePage() {
   // ========================
   // Handlers
   // ========================
-  const onSubmit = (data) => {
+  const onSubmit = async (data) => {
     setSuccessMsg('');
+    const organizationMemberships = (user.organization_memberships || []).filter(
+      (membership) => membership.organization_type === 'factory' || membership.organization_type === 'service_provider'
+    );
+    const managedOrganizations = organizationMemberships.filter((membership) => ['owner', 'admin'].includes(membership.role));
+    if (managedOrganizations.length === 1) {
+      const membership = managedOrganizations[0];
+      try {
+        await api.patch(`/api/organizations/${membership.organization}/`, {
+          name: data.company_name,
+          registration_number: data.company_registration_number,
+          tax_id: data.tax_id,
+          address: data.address,
+          city: data.city,
+          province: data.province,
+          postal_code: data.postal_code,
+          website: data.website,
+        });
+      } catch (err) {
+        toast.error(err?.userMessage || 'ذخیره اطلاعات سازمان ناموفق بود');
+        return;
+      }
+    }
     updateProfile(data, {
-      onSuccess: () => setSuccessMsg('✅ پروفایل با موفقیت بروزرسانی شد'),
+      onSuccess: () => setSuccessMsg('پروفایل با موفقیت بروزرسانی شد'),
       onError: (err) => toast.error(err?.userMessage || 'خطا در ذخیره'),
     });
   };
@@ -188,7 +216,7 @@ export default function ProfilePage() {
     setPwSuccess('');
     setPwError('');
     changePassword(data, {
-      onSuccess: () => { setPwSuccess('✅ رمز عبور با موفقیت تغییر کرد'); rsp(); },
+      onSuccess: () => { setPwSuccess('رمز عبور با موفقیت تغییر کرد'); rsp(); },
       onError: (e) => setPwError(e?.userMessage || 'خطا در تغییر رمز عبور'),
     });
   };
@@ -216,7 +244,7 @@ export default function ProfilePage() {
   ];
 
   // ========================
-  // Render
+  // Rende
   // ========================
   return (
     <div className="bg-slate-50 min-h-screen py-6 md:py-10">
@@ -367,6 +395,16 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
+                  {/* نقش کاربر */}
+                  <FormSelect
+                    label="نقش کاربر"
+                    name="role"
+                    register={register}
+                    error={errors.role}
+                    options={Object.entries(ROLE_LABELS).map(([value, label]) => ({ value, label }))}
+                    placeholder="انتخاب کنید..."
+                  />
+
                   {wpt === 'individual' && (
                     <FormInput label="کد ملی" name="national_id" register={register} maxLength={10} />
                   )}
@@ -389,13 +427,28 @@ export default function ProfilePage() {
                         label="نوع خدمات‌دهنده"
                         name="provider_sub_role"
                         register={register}
+                        error={errors.provider_sub_role}
                         options={[
                           { value: 'engineer', label: 'مهندس مشاور' },
                           { value: 'repairman', label: 'تعمیرکار' },
                           { value: 'technician', label: 'تکنسین فنی' },
+                          { value: 'electrician', label: 'برقکار' },
+                          { value: 'welder', label: 'جوشکار' },
+                          { value: 'mechanic', label: 'مکانیک' },
+                          { value: 'inspector', label: 'بازرس / کنترل کیفیت' },
+                          { value: 'operator', label: 'اپراتور' },
                           { value: 'other', label: 'سایر' },
                         ]}
                       />
+                      {watch('provider_sub_role') === 'other' && (
+                        <FormInput
+                          label="تفکیک سایر (متن آزاد)"
+                          name="provider_sub_role_custom"
+                          register={register}
+                          error={errors.provider_sub_role_custom}
+                          placeholder="نوع خدمات‌دهنده را بنویسید"
+                        />
+                      )}
                       <div className="grid md:grid-cols-2 gap-4">
                         <FormSelect
                           label="مدرک تحصیلی"

@@ -24,6 +24,7 @@ export default function ConfirmStep({ form, data }) {
     education_level,
     education_field,
     provider_sub_role,
+    provider_sub_role_custom,
     city,
     province,
     max_distance_km,
@@ -92,6 +93,9 @@ export default function ConfirmStep({ form, data }) {
           <div className="space-y-1.5 text-sm">
             {provider_sub_role && (
               <div className="flex justify-between"><span className="text-slate-500">نوع خدمات‌دهنده</span><span className="font-medium">{providerSubLabels[provider_sub_role]}</span></div>
+            )}
+            {provider_sub_role === 'other' && provider_sub_role_custom && (
+              <div className="flex justify-between"><span className="text-slate-500">تفکیک سایر</span><span className="font-medium">{provider_sub_role_custom}</span></div>
             )}
             {education_level && (
               <div className="flex justify-between"><span className="text-slate-500">مدرک تحصیلی</span><span className="font-medium">{educationLabels[education_level]}</span></div>

@@ -5,6 +5,11 @@ const PROVIDER_SUB_ROLES = [
   { value: 'engineer', label: 'مهندس مشاور' },
   { value: 'repairman', label: 'تعمیرکار' },
   { value: 'technician', label: 'تکنسین فنی' },
+  { value: 'electrician', label: 'برقکار' },
+  { value: 'welder', label: 'جوشکار' },
+  { value: 'mechanic', label: 'مکانیک' },
+  { value: 'inspector', label: 'بازرس / کنترل کیفیت' },
+  { value: 'operator', label: 'اپراتور' },
   { value: 'other', label: 'سایر' },
 ];
 
@@ -17,7 +22,8 @@ const EDUCATION_LEVELS = [
 ];
 
 export default function ExpertiseStep({ form }) {
-  const { register, formState: { errors } } = form;
+  const { register, formState: { errors }, watch } = form;
+  const watchRole = watch('provider_sub_role');
 
   return (
     <div className="space-y-5">
@@ -42,6 +48,19 @@ export default function ExpertiseStep({ form }) {
           ))}
         </select>
       </div>
+
+      {watchRole === 'other' && (
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            تفکیک سایر (متن آزاد)
+          </label>
+          <input
+            {...register('provider_sub_role_custom')}
+            placeholder="نوع خدمات‌دهنده را بنویسید"
+            className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-sm"
+          />
+        </div>
+      })
 
       <div>
         <label className="block text-sm font-medium text-slate-700 mb-1.5">
