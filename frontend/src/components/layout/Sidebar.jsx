@@ -36,6 +36,7 @@ export const Sidebar = () => {
   const isBuyer = BUYER_ROLES.includes(user?.role)
   const isProvider = PROVIDER_ROLES.includes(user?.role)
   const isAdmin = user?.role === 'admin' || user?.is_staff
+  const hasActiveOrganization = (user?.organization_memberships || []).some((membership) => membership.is_active)
 
   // لینک‌های عمومی (برای کاربران نالاگین)
   const publicLinks = [
@@ -51,7 +52,9 @@ export const Sidebar = () => {
     { to: '/dashboard', icon: FiGrid, label: 'داشبورد' },
     { to: '/dashboard/assets', icon: FiMonitor, label: 'دستگاه‌ها و تجهیزات' },
     { to: '/dashboard/service-requests', icon: FiTool, label: 'درخواست‌های خدمت' },
+    { to: '/dashboard/work-orders', icon: FiClipboard, label: 'دستورکارها' },
     { to: '/dashboard/orders', icon: FiShoppingBag, label: 'سفارش‌های من' },
+    ...(hasActiveOrganization ? [{ to: '/dashboard/procurement', icon: FiBookOpen, label: 'تدارکات و دفترکل' }] : []),
     { to: '/invoices', icon: FiFileText, label: 'فاکتورها' },
     { to: '/dashboard/support', icon: FiMessageSquare, label: 'پشتیبانی' },
     // ========== اضافه شده ==========
@@ -72,6 +75,8 @@ export const Sidebar = () => {
     { to: '/dashboard/service-requests', icon: FiClipboard, label: 'درخواست‌های خدمت' },
     { to: '/dashboard/products', icon: FiPackage, label: 'محصولات من' },
     { to: '/dashboard/manage-orders', icon: FiShoppingBag, label: 'مدیریت سفارشات' },
+    { to: '/dashboard/work-orders', icon: FiClipboard, label: 'دستورکارها' },
+    ...(hasActiveOrganization ? [{ to: '/dashboard/procurement', icon: FiBookOpen, label: 'تدارکات و دفترکل' }] : []),
     { to: '/wallet', icon: FiDollarSign, label: 'کیف پول' },
     { to: '/invoices', icon: FiFileText, label: 'فاکتورها' },
     { to: '/dashboard/support', icon: FiMessageSquare, label: 'پشتیبانی' },
@@ -94,6 +99,8 @@ export const Sidebar = () => {
     { to: '/dashboard/admin/service-requests', icon: FiClipboard, label: 'مدیریت درخواست‌ها' },
     { to: '/dashboard/admin/products', icon: FiPackage, label: 'مدیریت محصولات' },
     { to: '/dashboard/admin/orders', icon: FiShoppingBag, label: 'مدیریت سفارشات' },
+    { to: '/dashboard/work-orders', icon: FiClipboard, label: 'دستورکارها' },
+    { to: '/dashboard/procurement', icon: FiBookOpen, label: 'تدارکات و دفترکل' },
     { to: '/dashboard/admin/finance', icon: FiDollarSign, label: 'مدیریت مالی' },
     { to: '/dashboard/admin/blog', icon: FiFileText, label: 'مدیریت وبلاگ' },
     { to: '/dashboard/admin/settings', icon: FiSettings, label: 'تنظیمات پلتفرم' },

@@ -56,6 +56,8 @@ const AdminServiceRequestDetailPage = lazy(() => import('@pages/AdminServiceRequ
 const WalletPage = lazy(() => import('@pages/WalletPage'))
 const InvoicesPage = lazy(() => import('@pages/InvoicesPage'))
 const SettlementPage = lazy(() => import('@pages/SettlementPage'))
+const WorkOrdersPage = lazy(() => import('@pages/WorkOrdersPage'))
+const ProcurementPage = lazy(() => import('@pages/ProcurementPage'))
 
 // صفحات داشبورد خریدار
 const BuyerDashboard = lazy(() => import('@features/dashboard/buyer/BuyerDashboard'))
@@ -176,6 +178,22 @@ export const router = createBrowserRouter([
           {
             index: true,
             element: <LazyLoad><DashboardPage /></LazyLoad>,
+          },
+
+          // ========== دستورکارها و تدارکات سازمانی ==========
+          {
+            path: 'work-orders',
+            element: <PrivateRoute allowedRoles={[...BUYER_ROLES, ...PROVIDER_ROLES, 'admin']} allowStaff />,
+            children: [
+              { index: true, element: <LazyLoad><WorkOrdersPage /></LazyLoad> },
+            ],
+          },
+          {
+            path: 'procurement',
+            element: <PrivateRoute requiredOrganizationMembership />,
+            children: [
+              { index: true, element: <LazyLoad><ProcurementPage /></LazyLoad> },
+            ],
           },
 
           // ========== مسیرهای پشتیبانی (کاربر عادی) ==========

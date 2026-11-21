@@ -56,7 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
     # ========================
     @action(detail=False, methods=['get'], permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
-        user = request.use
+        user = request.user
         data = UserSerializer(user).data
         data['profile'] = ProfileSerializer(user.profile).data
         data['organization_memberships'] = OrganizationMembershipSerializer(
@@ -230,7 +230,7 @@ class UserViewSet(viewsets.ModelViewSet):
     def change_password(self, request):
         serializer = ChangePasswordSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = request.use
+        user = request.user
         if not user.check_password(serializer.validated_data['old_password']):
             return Response({'success': False, 'error': 'رمز عبور فعلی نادرست است.'}, status=400)
         user.set_password(serializer.validated_data['new_password'])

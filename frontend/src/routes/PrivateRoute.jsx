@@ -8,7 +8,7 @@ import { Spinner } from '@components/ui'
  *
  * @param {Array} allowedRoles - آرایه‌ای از نقش‌های مجاز (مثلاً ['buyer']). اگر خالی باشد، هر کاربر لاگین‌شده مجاز است.
  */
-export const PrivateRoute = ({ allowedRoles = [] }) => {
+export const PrivateRoute = ({ allowedRoles = [], allowStaff = false, requiredOrganizationMembership = false }) => {
   const { isAuthenticated, user, isLoading } = useAuthStore()
 
   // اگر در حال بارگذاری اولیه هستیم (بررسی توکن ذخیره شده)
@@ -28,8 +28,15 @@ export const PrivateRoute = ({ allowedRoles = [] }) => {
     return <Navigate to="/login" replace />
   }
 
-  // اگر نقش‌های مجاز تعیین شده باشد و نقش کاربر در آن‌ها نباشد
-  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role)) {
+  // نقش‌های مجاز؛ در صورت تصریح مسیر، staff نیز مجاز است.
+  if (allowedRoles.length > 0 && !allowedRoles.includes(user?.role) && !(allowStaff && user?.is_staff)) {
+    return <Navigate to="/" replace />
+  }
+
+  // تدارکات و دفترکل فقط برای مدیر سیستم یا عضو فعال یک سازمان.
+  const isAdmin = user?.role === 'admin' || user?.is_staff
+  const hasActiveOrganization = (user?.organization_memberships || []).some((membership) => membership.is_active)
+  if (requiredOrganizationMembership && !isAdmin && !hasActiveOrganization) {
     return <Navigate to="/" replace />
   }
 
